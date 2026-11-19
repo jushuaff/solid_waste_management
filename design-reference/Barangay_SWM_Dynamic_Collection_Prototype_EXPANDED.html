@@ -1,0 +1,2703 @@
+<!DOCTYPE html>
+<!-- Expanded, readable version of the existing single-file SWM prototype.
+     HTML, CSS and JavaScript remain embedded for offline use. -->
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Barangay Solid Waste | Dynamic Collection Design Prototype
+  </title>
+  <style>
+   :root {
+       --dark:#123534;
+       --deep:#0b2526;
+       --green:#16745e;
+       --bright:#159b7d;
+       --mint:#e7f5ee;
+       --bg:#f4f7f6;
+       --border:#dbe6e1;
+       --grey:#57706b;
+       --text:#193b37;
+       --amber:#af6c17;
+       --red:#a93633;
+       --shadow:0 10px 30px #0e393015
+   }
+   * {
+       box-sizing:border-box
+   }
+   body {
+       margin:0;
+       background:var(--bg);
+       font-family:Arial,'Helvetica Neue',sans-serif;
+       color:var(--text);
+       font-size:15px
+   }
+   button,input,textarea,select {
+       font:inherit
+   }
+   button {
+       cursor:pointer
+   }
+   button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {
+       outline:3px solid #f3b552;
+       outline-offset:2px
+   }
+   a {
+       text-decoration:none;
+       color:inherit
+   }
+   .app {
+       display:flex;
+       min-height:100vh
+   }
+   .side {
+       width:248px;
+       flex:none;
+       background:var(--deep);
+       color:#d4e4de;
+       padding:25px 17px;
+       position:sticky;
+       top:0;
+       height:100vh;
+       display:flex;
+       flex-direction:column
+   }
+   .brand {
+       display:flex;
+       align-items:center;
+       gap:11px;
+       color:white;
+       font-size:15px;
+       font-weight:800;
+       letter-spacing:.2px;
+       padding:8px 10px 28px
+   }
+   .mark {
+       background:#1fb48f;
+       color:white;
+       width:42px;
+       height:42px;
+       border-radius:13px;
+       display:grid;
+       place-items:center;
+       font-size:24px
+   }
+   .brand small {
+       display:block;
+       font-size:11px;
+       color:#94b5aa;
+       margin-top:5px;
+       font-weight:500
+   }
+   .navHead {
+       font-size:10px;
+       letter-spacing:1.3px;
+       color:#76a296;
+       margin:18px 12px 10px;
+       font-weight:700
+   }
+   .navitem {
+       width:100%;
+       display:flex;
+       align-items:center;
+       gap:12px;
+       background:transparent;
+       border:0;
+       color:#c3d7cf;
+       text-align:left;
+       padding:13px;
+       border-radius:11px;
+       margin:3px 0;
+       font-size:13px
+   }
+   .navitem:hover {
+       background:#16423c
+   }
+   .navitem.active {
+       background:#236454;
+       color:white;
+       font-weight:700
+   }
+   .navitem .ico {
+       width:22px;
+       text-align:center;
+       font-size:17px
+   }
+   .sidefoot {
+       margin-top:auto;
+       padding:12px 10px 5px;
+       font-size:12px;
+       color:#a0beb3;
+       line-height:1.7;
+       border-top:1px solid #365951
+   }
+   .sidefoot b {
+       color:#e4f1e9
+   }
+   .main {
+       min-width:0;
+       flex:1
+   }
+   .topbar {
+       height:73px;
+       background:#fff;
+       display:flex;
+       align-items:center;
+       justify-content:space-between;
+       border-bottom:1px solid var(--border);
+       padding:0 44px
+   }
+   .crumb {
+       font-size:13px;
+       color:var(--grey)
+   }
+   .crumb strong {
+       color:var(--dark)
+   }
+   .topR {
+       display:flex;
+       align-items:center;
+       gap:13px
+   }
+   .tag {
+       font-size:11px;
+       background:#e7f4ed;
+       color:#0f7355;
+       padding:7px 11px;
+       border-radius:999px;
+       font-weight:700
+   }
+   .avatar {
+       width:34px;
+       height:34px;
+       display:grid;
+       place-items:center;
+       background:#d1e8de;
+       color:#125842;
+       border-radius:50%;
+       font-weight:800;
+       font-size:12px
+   }
+   .page {
+       max-width:1160px;
+       margin:0 auto;
+       padding:34px 42px 55px
+   }
+   .eyebrow {
+       color:#13806a;
+       font-size:11px;
+       font-weight:800;
+       letter-spacing:1.5px;
+       text-transform:uppercase
+   }
+   .heading {
+       display:flex;
+       align-items:end;
+       justify-content:space-between;
+       gap:15px;
+       margin:7px 0 25px
+   }
+   .heading h1 {
+       font-size:29px;
+       letter-spacing:-.8px;
+       margin:6px 0 8px;
+       color:#163f37
+   }
+   .heading p {
+       color:#627872;
+       line-height:1.5;
+       margin:0;
+       font-size:14px
+   }
+   .btn {
+       display:inline-flex;
+       gap:9px;
+       align-items:center;
+       justify-content:center;
+       border-radius:10px;
+       border:1px solid var(--border);
+       padding:12px 19px;
+       background:white;
+       color:var(--dark);
+       font-weight:700;
+       white-space:nowrap;
+       font-size:13px
+   }
+   .btn:hover {
+       filter:brightness(.97)
+   }
+   .primary {
+       color:white;
+       background:var(--green);
+       border-color:var(--green)
+   }
+   .outline {
+       background:#fff;
+       color:var(--green);
+       border:1px solid #aad1c3
+   }
+   .danger {
+       background:#fff3f3;
+       color:#a32b2b;
+       border-color:#f4d1d1
+   }
+   .small {
+       padding:8px 12px;
+       font-size:12px
+   }
+   .cards3 {
+       display:grid;
+       grid-template-columns:repeat(3,1fr);
+       gap:16px;
+       margin-bottom:20px
+   }
+   .card {
+       background:#fff;
+       border:1px solid var(--border);
+       border-radius:16px;
+       box-shadow:var(--shadow);
+       padding:22px
+   }
+   .statlab {
+       font-size:12px;
+       color:#69827b;
+       font-weight:600
+   }
+   .statval {
+       font-size:29px;
+       letter-spacing:-.6px;
+       color:var(--dark);
+       font-weight:800;
+       margin:12px 0 5px
+   }
+   .statsub {
+       font-size:12px;
+       color:#6b8278
+   }
+   .greenText {
+       color:#11775f
+   }
+   .cols {
+       display:grid;
+       grid-template-columns:minmax(0,1.7fr) minmax(285px,1fr);
+       gap:18px
+   }
+   .paneltitle {
+       font-weight:800;
+       font-size:16px;
+       letter-spacing:-.2px;
+       margin:0 0 13px
+   }
+   .muted {
+       color:#6a807a;
+       font-size:13px;
+       line-height:1.55
+   }
+   .pickup {
+       border-radius:14px;
+       background:linear-gradient(115deg,#146e5c,#13846c);
+       color:white;
+       padding:25px 28px;
+       margin:0 0 19px
+   }
+   .pickup .soft {
+       color:#d1f0e2;
+       font-size:12px
+   }
+   .pickup h2 {
+       font-size:28px;
+       margin:10px 0 7px
+   }
+   .pickup .sub {
+       font-size:13px;
+       color:#d7f2e7
+   }
+   .pickuprow {
+       display:flex;
+       align-items:center;
+       justify-content:space-between;
+       gap:18px
+   }
+   .badge {
+       display:inline-flex;
+       align-items:center;
+       gap:7px;
+       font-size:11px;
+       font-weight:800;
+       border-radius:999px;
+       padding:7px 11px;
+       background:#e6f5ee;
+       color:#106b56
+   }
+   .badge.amber {
+       background:#fff1d8;
+       color:#8c5717
+   }
+   .badge.blue {
+       background:#e9f1ff;
+       color:#375a93
+   }
+   .badge.grey {
+       background:#ecf1f0;
+       color:#436159
+   }
+   .badge.red {
+       background:#fae7e6;
+       color:#9d3932
+   }
+   .notice {
+       background:#fff8e8;
+       border:1px solid #f1dfbd;
+       color:#87621e;
+       border-radius:12px;
+       padding:14px 17px;
+       font-size:13px;
+       line-height:1.5;
+       margin:0 0 19px
+   }
+   .listrow {
+       display:flex;
+       align-items:center;
+       gap:14px;
+       border-bottom:1px solid #e9efec;
+       padding:15px 0
+   }
+   .listrow:last-child {
+       border:none;
+       padding-bottom:0
+   }
+   .roundico {
+       width:42px;
+       height:42px;
+       background:#e6f4eb;
+       display:grid;
+       place-items:center;
+       border-radius:12px;
+       color:#0a7152;
+       font-size:20px;
+       flex:none
+   }
+   .listmain {
+       flex:1
+   }
+   .listmain b {
+       display:block;
+       font-size:13px
+   }
+   .listmain small {
+       display:block;
+       color:#7e908b;
+       margin-top:6px;
+       font-size:12px
+   }
+   .listrow .right {
+       font-size:12px;
+       color:#5e7770
+   }
+   .steps {
+       display:grid;
+       grid-template-columns:repeat(3,1fr);
+       gap:14px
+   }
+   .step {
+       border:1px solid #e1eae6;
+       border-radius:12px;
+       padding:17px
+   }
+   .step b {
+       display:block;
+       font-size:13px;
+       margin:11px 0 4px
+   }
+   .step p {
+       font-size:12px;
+       color:#71857c;
+       margin:0;
+       line-height:1.5
+   }
+   .circle {
+       border:1px solid #b9ddcc;
+       border-radius:10px;
+       width:36px;
+       height:36px;
+       background:#edf8f1;
+       display:grid;
+       place-items:center;
+       font-weight:800;
+       color:#087a5f
+   }
+   .scheduleGrid {
+       display:grid;
+       grid-template-columns:repeat(3,1fr);
+       gap:16px
+   }
+   .daycard {
+       border-radius:14px;
+       border:1px solid #e1eae6;
+       background:#fff;
+       padding:20px
+   }
+   .daycard .date {
+       font-size:12px;
+       color:#7a8f86
+   }
+   .daycard h3 {
+       font-size:20px;
+       margin:9px 0
+   }
+   .daycard p {
+       font-size:13px;
+       color:#607b70;
+       line-height:1.5
+   }
+   .daycard .time {
+       display:flex;
+       align-items:center;
+       gap:7px;
+       margin-top:16px;
+       font-size:12px;
+       font-weight:700
+   }
+   .daycard:first-child {
+       border:2px solid #50b28e;
+       background:#f7fffa
+   }
+   .formgrid {
+       display:grid;
+       grid-template-columns:repeat(2,1fr);
+       gap:19px
+   }
+   .field {
+       display:flex;
+       flex-direction:column;
+       gap:8px
+   }
+   .field label {
+       font-size:12px;
+       font-weight:800;
+       color:#305950
+   }
+   .req {
+       color:#c13932
+   }
+   .field input,.field textarea,.field select {
+       width:100%;
+       border:1px solid #cddfd6;
+       border-radius:10px;
+       background:#fff;
+       padding:12px 13px;
+       min-height:45px;
+       color:#1a3b33
+   }
+   .field textarea {
+       height:112px;
+       resize:vertical;
+       line-height:1.6
+   }
+   .field .hint {
+       font-size:11px;
+       color:#81958d
+   }
+   .full {
+       grid-column:1/-1
+   }
+   .formfoot {
+       border-top:1px solid #e6eeea;
+       margin-top:22px;
+       padding-top:20px;
+       display:flex;
+       justify-content:space-between;
+       align-items:center;
+       gap:14px
+   }
+   .checkline {
+       font-size:12px;
+       display:flex;
+       gap:9px;
+       align-items:start;
+       color:#556e65
+   }
+   .checkline input {
+       margin-top:1px;
+       accent-color:#14765c
+   }
+   .err {
+       display:none;
+       background:#fff0ef;
+       color:#a82f28;
+       border:1px solid #f6c9c6;
+       padding:13px 15px;
+       border-radius:10px;
+       margin:0 0 20px;
+       font-size:13px
+   }
+   .err.on {
+       display:block
+   }
+   .successRound {
+       width:72px;
+       height:72px;
+       border-radius:50%;
+       display:grid;
+       place-items:center;
+       margin:5px auto 18px;
+       background:#e4f4ec;
+       color:#16805f;
+       font-size:38px
+   }
+   .center {
+       text-align:center
+   }
+   .tracking {
+       margin:20px auto;
+       max-width:450px;
+       border:1px dashed #9fcdbb;
+       background:#f6fcf8;
+       border-radius:12px;
+       padding:17px
+   }
+   .tracking .ref {
+       font-size:27px;
+       font-weight:800;
+       letter-spacing:1.8px;
+       margin:8px 0
+   }
+   .timeline {
+       border-left:2px solid #d1e7dd;
+       margin:23px 0 0 14px;
+       padding-left:25px
+   }
+   .event {
+       position:relative;
+       padding-bottom:22px
+   }
+   .event:before {
+       content:'';
+       position:absolute;
+       left:-34px;
+       top:2px;
+       width:14px;
+       height:14px;
+       border-radius:50%;
+       background:#19a57b;
+       border:4px solid #ddf2e9
+   }
+   .event:last-child {
+       padding-bottom:0
+   }
+   .event strong {
+       display:block;
+       font-size:13px
+   }
+   .event time {
+       display:block;
+       color:#7e948b;
+       font-size:11px;
+       margin:6px 0
+   }
+   .event p {
+       font-size:12px;
+       color:#688178;
+       line-height:1.5;
+       margin:0
+   }
+   .table {
+       width:100%;
+       border-collapse:collapse;
+       text-align:left
+   }
+   .table th {
+       background:#f2f7f4;
+       font-size:11px;
+       color:#5b766a;
+       padding:13px;
+       border-bottom:1px solid #dce6df
+   }
+   .table td {
+       padding:14px 13px;
+       border-bottom:1px solid #e8efeb;
+       font-size:12px
+   }
+   .table tr:last-child td {
+       border-bottom:0
+   }
+   .table b {
+       font-size:12px
+   }
+   .table small {
+       display:block;
+       color:#7a9188;
+       margin-top:5px
+   }
+   .filterbar {
+       display:flex;
+       gap:10px;
+       align-items:center;
+       margin-bottom:16px
+   }
+   .filterbar .field {
+       min-width:180px
+   }
+   .filterbar input,.filterbar select {
+       min-height:40px
+   }
+   .info {
+       display:flex;
+       align-items:start;
+       gap:16px;
+       background:#f5f9f7;
+       padding:18px;
+       border:1px solid #e2ece7;
+       border-radius:12px
+   }
+   .info b {
+       font-size:12px
+   }
+   .info p {
+       font-size:13px;
+       line-height:1.5;
+       margin:7px 0 0;
+       color:#5e756c
+   }
+   .split {
+       display:grid;
+       grid-template-columns:1.25fr .9fr;
+       gap:18px
+   }
+   .line {
+       height:1px;
+       background:#e4ede8;
+       margin:18px 0
+   }
+   .kv {
+       display:grid;
+       grid-template-columns:145px 1fr;
+       gap:12px;
+       margin:12px 0;
+       font-size:12px
+   }
+   .kv b {
+       color:#6f857d;
+       font-weight:600
+   }
+   .kv span {
+       font-weight:700
+   }
+   .actions {
+       display:flex;
+       gap:9px;
+       flex-wrap:wrap
+   }
+   .view {
+       display:none
+   }
+   .view.show {
+       display:block
+   }
+   .miniLabel {
+       font-size:11px;
+       color:#628075;
+       font-weight:800;
+       letter-spacing:1px;
+       text-transform:uppercase;
+       margin-bottom:14px
+   }
+   .footnote {
+       font-size:11px;
+       color:#81968e;
+       margin-top:28px
+   }
+   .mobilemenu {
+       display:none
+   }
+   .progress {
+       display:flex;
+       gap:8px;
+       margin:0 0 18px
+   }
+   .progress span {
+       flex:1;
+       background:#e3ece8;
+       height:5px;
+       border-radius:9px
+   }
+   .progress span.ok {
+       background:#20a27b
+   }
+   @media(max-width:950px) {
+       .side {
+           width:205px
+       }
+       .page {
+           padding:24px
+       }
+       .topbar {
+           padding:0 24px
+       }
+       .cards3,.scheduleGrid {
+           grid-template-columns:1fr 1fr
+       }
+       .cols,.split {
+           grid-template-columns:1fr
+       }
+   }
+   @media(max-width:690px) {
+       .side {
+           display:none;
+           position:fixed;
+           z-index:20;
+           height:auto;
+           max-height:80vh;
+           top:70px;
+           left:10px;
+           width:250px;
+           border-radius:14px;
+           box-shadow:0 10px 60px #0007
+       }
+       .side.open {
+           display:flex
+       }
+       .mobilemenu {
+           display:inline-flex
+       }
+       .page {
+           padding:23px 16px
+       }
+       .topbar {
+           height:66px;
+           padding:0 16px
+       }
+       .crumb {
+           font-size:11px
+       }
+       .tag {
+           display:none
+       }
+       .heading {
+           align-items:start;
+           flex-direction:column
+       }
+       .heading h1 {
+           font-size:24px
+       }
+       .cards3,.scheduleGrid,.formgrid,.steps {
+           grid-template-columns:1fr
+       }
+       .full {
+           grid-column:auto
+       }
+       .card {
+           padding:18px
+       }
+       .formfoot {
+           flex-direction:column;
+           align-items:stretch
+       }
+       .pickup h2 {
+           font-size:23px
+       }
+       .pickuprow {
+           align-items:start;
+           flex-direction:column
+       }
+       .kv {
+           grid-template-columns:115px 1fr
+       }
+       .table td,.table th {
+           padding:9px 6px
+       }
+       .table {
+           font-size:10px
+       }
+       .filterbar {
+           flex-wrap:wrap
+       }
+   }
+
+   /* Additional collection-configuration interfaces */
+   .side { overflow-y: auto; }
+   .sidefoot { flex: none; }
+   .scheduleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+   .daycard { display: flex; flex-direction: column; gap: 9px; }
+   .daycard h3 { margin: 3px 0 0; font-size: 20px; }
+   .daycard p { margin: 0; }
+   .daycard .time { margin-top: 0; }
+   .schedule-meta { display:flex; flex-wrap:wrap; gap:7px; margin:5px 0; }
+   .hint-chip { border-radius:6px; background:#eff6f2; color:#285a4e; padding:5px 8px; font-size:11px; font-weight:700; }
+   .schedule-note { background:#f3f8f5; border-left:3px solid #2c8b71; border-radius:7px; padding:10px 12px; font-size:12px; line-height:1.6; }
+   .status-tag { font-weight:800; font-size:11px; border-radius:12px; padding:5px 9px; color:#20594c; background:#e8f6ee; }
+   .status-tag.draft { background:#fff0d5; color:#8c5717; }
+   .status-tag.archived { background:#e7ebec; color:#64726c; }
+   .config-list { display:grid; gap:12px; }
+   .config-row { border:1px solid #e0e9e5; border-radius:13px; padding:17px; background:white; }
+   .config-header { display:flex; align-items:start; justify-content:space-between; gap:13px; }
+   .config-header h3 { margin:4px 0 6px; font-size:16px; }
+   .config-row p { color:#526f63; font-size:13px; line-height:1.6; margin:8px 0; }
+   .form-actions { display:flex; gap:9px; flex-wrap:wrap; margin-top:19px; }
+   .sectionhead { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:12px; }
+   .sectionhead h2 { margin:0; font-size:19px; }
+   .method-info { margin-top:10px; font-size:12px; color:#395d50; background:#f6faf7; padding:11px 13px; border-radius:8px; line-height:1.65; }
+   .callout-quiet { background:#eef7f3; padding:13px 16px; border-radius:11px; color:#27594a; font-size:13px; line-height:1.65; border:1px solid #d5e8df; }
+   .empty-state { padding:25px; border:1px dashed #b7d4c8; border-radius:13px; background:#f9fcfa; color:#57766a; font-size:13px; text-align:center; }
+   .stack { display:grid; gap:15px; }
+   .divider-light { border:0; border-top:1px solid #e2eee7; margin:20px 0; }
+   @media(max-width:950px) { .scheduleGrid {grid-template-columns:1fr;} }
+   @media(max-width:690px) { .side.open { max-height:85vh; overflow-y:auto; } .sectionhead, .config-header { align-items:stretch; flex-direction:column; } }
+  </style>
+ </head>
+ <body>
+  <div class="app">
+   <aside class="side" id="sidebar">
+    <div class="brand">
+     <span class="mark">
+      ♻
+     </span>
+     <div>
+      BARANGAY SWM
+      <small>
+       Collection &amp; Monitoring
+      </small>
+     </div>
+    </div>
+    <div class="navHead">
+     RESIDENT PORTAL
+    </div>
+    <button class="navitem" data-screen="S1">
+     <span class="ico">
+      ▦
+     </span>
+     Dashboard
+    </button>
+    <button class="navitem" data-screen="S2">
+     <span class="ico">
+      ▣
+     </span>
+     Collection Schedule
+    </button>
+    <button class="navitem" data-screen="S3">
+     <span class="ico">
+      ＋
+     </span>
+     Report Missed Pickup
+    </button>
+    <button class="navitem" data-screen="S5">
+     <span class="ico">
+      ◎
+     </span>
+     Track My Report
+    </button>
+    <button class="navitem" data-screen="P1">
+     <span class="ico">☰</span>
+     Local Rules &amp; Guide
+    </button>
+    <div class="navHead">
+     STAFF DEMONSTRATION
+    </div>
+    <button class="navitem" data-screen="S6">
+     <span class="ico">
+      ☷
+     </span>
+     Coordinator Queue
+    </button>
+    <button class="navitem" data-screen="S7">
+     <span class="ico">
+      ✓
+     </span>
+     Review &amp; Assign
+    </button>
+    <button class="navitem" data-screen="S8">
+     <span class="ico">
+      ▤
+     </span>
+     Crew Task Outcome
+    </button>
+    <div class="navHead">LOCAL CONFIGURATION · DEMO</div>
+    <button class="navitem" data-screen="P2"><span class="ico">▣</span> Manage Schedules</button>
+    <button class="navitem" data-screen="P3"><span class="ico">✎</span> Rules &amp; Exceptions</button>
+    <div class="sidefoot">
+     <b>
+      Interactive academic prototype
+     </b>
+     <br/>
+     Illustrative zones and records.
+     <br/>
+     No real accounts or database.
+    </div>
+   </aside>
+   <main class="main">
+    <header class="topbar">
+     <div style="display:flex;align-items:center;gap:12px">
+      <button aria-label="Toggle menu" class="btn small mobilemenu" onclick="document.getElementById('sidebar').classList.toggle('open')">
+       ☰
+      </button>
+      <div class="crumb">
+       Prototype /
+       <strong id="crumbName">
+        Resident Dashboard
+       </strong>
+      </div>
+     </div>
+     <div class="topR">
+      <span class="tag">
+       ● Sample Barangay · Zone A
+      </span>
+      <span class="avatar">
+       JD
+      </span>
+     </div>
+    </header>
+    <div class="page">
+     <section class="view" id="S1">
+      <span class="eyebrow">
+       RESIDENT DASHBOARD · S1
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Good morning, resident 👋
+        </h1>
+        <p>
+         Stay informed about collection activities in your zone.
+        </p>
+       </div>
+       <button class="btn primary" data-screen="S3">
+        ＋ Report Missed Collection
+       </button>
+      </div>
+      <div class="cards3">
+       <div class="card">
+        <div class="statlab">
+         My collection zone
+        </div>
+        <div class="statval">
+         Zone A
+        </div>
+        <div class="statsub">
+         Sample Purok 1
+        </div>
+       </div>
+       <div class="card">
+        <div class="statlab">
+         Next scheduled pickup
+        </div>
+        <div class="statval" id="dashNextDate">Next slot</div>
+        <div class="statsub" id="dashNextTime">Configured by local staff</div>
+       </div>
+       <div class="card">
+        <div class="statlab">
+         My active reports
+        </div>
+        <div class="statval" id="residentCount">
+         01
+        </div>
+        <div class="statsub">
+         Track updates anytime
+        </div>
+       </div>
+      </div>
+      <div class="cols">
+       <div>        <div class="pickup">
+         <div class="pickuprow">
+          <div>
+           <div class="soft">
+            UPCOMING COLLECTION
+           </div>
+           <h2 id="dashNextCollection">Next collection</h2>
+           <div class="sub">
+            <span id="dashNextSummary">Collection information is configured by barangay staff.</span>
+           </div>
+          </div>
+          <button class="btn" data-screen="S2">
+           View full schedule →
+          </button>
+         </div>
+        </div>
+        <div class="card">
+         <div class="paneltitle">
+          Quick guide
+         </div>
+         <div class="steps">
+          <div class="step">
+           <span class="circle">
+            1
+           </span>
+           <b>
+            Check schedule
+           </b>
+           <p>
+            Confirm zone and waste category.
+           </p>
+          </div>
+          <div class="step">
+           <span class="circle">
+            2
+           </span>
+           <b>
+            Report issue
+           </b>
+           <p>
+            Send details of a missed pickup.
+           </p>
+          </div>
+          <div class="step">
+           <span class="circle">
+            3
+           </span>
+           <b>
+            Track progress
+           </b>
+           <p>
+            See review and collection updates.
+           </p>
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="card">
+        <div class="paneltitle">
+         Collection notices
+        </div>
+        <div class="notice" style="margin:0">
+         ℹ
+         <b>
+          Sample notice:
+         </b>
+         Please segregate biodegradable and reusable materials before collection. Actual schedules must be verified with the barangay.
+        </div>
+        <div class="listrow">
+         <span class="roundico">
+          ◷
+         </span>
+         <div class="listmain">
+          <b>
+           Most recent report
+          </b>
+          <small id="dashReportLine">
+           SWM-2026-001 · Zone A · Missed collection
+          </small>
+         </div>
+         <button class="btn small outline" data-screen="S5">
+          View status →
+         </button>
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="view" id="S2">
+      <span class="eyebrow">
+       COLLECTION SCHEDULE · S2
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Collection schedule
+        </h1>
+        <p>
+         Check pickup dates and waste categories for your area.
+        </p>
+       </div>
+       <button class="btn primary" data-screen="S3">
+        Report missed pickup
+       </button>
+      </div>
+      <div class="notice">
+       Illustrative schedules only. Each Philippine barangay can configure its own zones, collection days, accepted waste categories and responsible offices according to its local policies.
+      </div>
+      <div class="card" style="margin-bottom:18px">
+       <div class="formgrid">
+        <div class="field">
+         <label for="scheduleZone">
+          Collection zone
+         </label>
+         <select id="scheduleZone">
+          <option>
+           Zone A · Sample Purok 1
+          </option>
+          <option>
+           Zone B · Sample Purok 2
+          </option>
+          <option>
+           Zone C · Sample Purok 3
+          </option>
+         </select>
+        </div>
+        <div class="field">
+         <label for="scheduleCat">
+          Waste category
+         </label>
+         <select id="scheduleCat">
+          <option value="All">All waste categories</option>
+          <option value="Residual / regular">Residual / regular</option>
+          <option value="Reusable / recyclable">Reusable / recyclable</option>
+          <option value="Biodegradable / compostable">Biodegradable / compostable</option>
+         </select>
+        </div>
+       </div>
+      </div>
+      <div class="callout-quiet" id="scheduleContext" style="margin-bottom:17px">
+       Each card below represents one published weekly collection slot. Days and times are sample configurations and are not official schedules.
+      </div>
+      <div class="scheduleGrid" id="dynamicScheduleCards" aria-live="polite"></div>
+      <div class="card" id="residentScheduleExceptionNotice" style="margin-top:17px;display:none"></div>
+      <p class="notice" id="scheduleEmpty" style="display:none;margin-top:15px">
+       No published sample schedule matches this zone and category. A live deployment would show only published schedules configured by the barangay.
+      </p>
+      <div class="callout-quiet" style="margin-top:18px">
+       Rules and handover methods vary across barangays. <button class="btn small outline" data-screen="P1" style="margin-left:9px">Read current local rules →</button>
+      </div>
+      <div class="card" style="margin-top:20px">
+       <div class="paneltitle">
+        Need help with a missed collection?
+       </div>
+       <p class="muted">
+        If the scheduled pickup did not happen, submit a short report with your zone, date and address. A tracking reference will be provided.
+       </p>
+       <button class="btn primary" data-screen="S3">
+        Continue to report →
+       </button>
+      </div>
+     </section>
+     <!-- P1: resident-facing approved local rules and handover instructions -->
+     <section class="view" id="P1">
+      <span class="eyebrow">RESIDENT COLLECTION GUIDE · P1</span>
+      <div class="heading"><div><h1>Local rules &amp; collection guide</h1>
+       <p>Read approved instructions for your collection zone and waste category.</p></div>
+       <button class="btn primary" data-screen="S2">View collection schedule →</button>
+      </div>
+      <div class="notice">Academic demo: the content below is illustrative and must be confirmed with each adopting barangay. Only published rules appear to residents.</div>
+      <div class="card" style="margin-bottom:19px"><div class="formgrid">
+       <div class="field"><label for="guideZone">Collection zone</label><select id="guideZone"><option>Zone A</option><option>Zone B</option><option>Zone C</option></select></div>
+       <div class="field"><label for="guideCategory">Waste category</label><select id="guideCategory">
+        <option value="All">All categories</option><option>Residual / regular</option><option>Reusable / recyclable</option><option>Biodegradable / compostable</option>
+       </select></div>
+      </div></div>
+      <div class="sectionhead"><h2>Applicable published rules</h2><span class="badge">Local guidance</span></div>
+      <div id="publishedRuleList" class="config-list"></div>
+      <div class="sectionhead" style="margin-top:27px"><h2>Collection methods and locations</h2></div>
+      <div id="zoneMethodGuide" class="config-list"></div>
+     </section>
+
+     <!-- P2: demonstration-only schedule configuration -->
+     <section class="view" id="P2">
+      <span class="eyebrow">CONFIGURATION DEMONSTRATION · P2</span>
+      <div class="heading"><div><h1>Manage recurring schedules</h1>
+       <p>Configure multiple weekly slots, pickup methods and publication status for each zone.</p></div>
+       <button class="btn outline" data-screen="S2">Resident schedule preview →</button>
+      </div>
+      <div class="notice"><b>Demo permissions only:</b> This interface simulates coordinator configuration and publication. It has no login, server validation or persistent database.</div>
+      <div class="split">
+       <div class="card">
+        <h2 class="paneltitle" id="scheduleEditorTitle">Add weekly collection slot</h2>
+        <form id="scheduleEditor" novalidate>
+         <input type="hidden" id="settingScheduleId" />
+         <div class="formgrid">
+          <div class="field"><label for="settingZone">Zone *</label><select id="settingZone"><option>Zone A</option><option>Zone B</option><option>Zone C</option></select></div>
+          <div class="field"><label for="settingCategory">Category *</label><select id="settingCategory"><option>Residual / regular</option><option>Reusable / recyclable</option><option>Biodegradable / compostable</option></select></div>
+          <div class="field"><label for="settingDay">Collection day *</label><select id="settingDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
+          <div class="field"><label for="settingMethod">Collection method *</label><select id="settingMethod"><option value="POINT">Designated collection point</option><option value="TRUCK">Meet the passing truck</option><option value="CURBSIDE">Curbside / house-front</option></select></div>
+          <div class="field"><label for="settingStart">Start time *</label><input type="time" id="settingStart" value="07:00" required /></div>
+          <div class="field"><label for="settingEnd">End time *</label><input type="time" id="settingEnd" value="09:00" required /></div>
+          <div class="field full" id="pointField"><label for="settingPoint">Designated collection point *</label><select id="settingPoint"><option value="">Choose a pickup point</option></select></div>
+          <div class="field full"><label for="settingInstructions">Handover instructions</label><textarea id="settingInstructions" rows="3" placeholder="What should residents do when collection arrives?"></textarea></div>
+          <div class="field"><label for="settingEffective">Effective from *</label><input type="date" id="settingEffective" value="2026-11-01" /></div>
+          <div class="field"><label for="settingState">Publication</label><select id="settingState"><option value="Draft">Save as draft</option><option value="Published">Publish (simulated approval)</option></select></div>
+         </div>
+         <div class="err" id="scheduleEditorError" role="alert">Enter a valid start/end time and select a collection point when required.</div>
+         <div class="form-actions"><button class="btn primary" type="submit" id="saveScheduleButton">Save collection slot</button><button class="btn outline" type="button" id="resetScheduleButton">Clear form</button></div>
+        </form>
+       </div>
+       <div class="stack">
+        <div class="card"><h2 class="paneltitle">Local collection methods</h2>
+         <div class="listrow"><span class="roundico">⌖</span><div class="listmain"><b>Designated collection point</b><small>Residents bring segregated waste to an approved location.</small></div></div>
+         <div class="listrow"><span class="roundico">⇄</span><div class="listmain"><b>Meet the truck</b><small>Residents hand over waste when the truck reaches the area.</small></div></div>
+         <div class="listrow"><span class="roundico">⌂</span><div class="listmain"><b>House-front / curbside</b><small>Prepared waste is presented at the locally approved frontage.</small></div></div>
+        </div>
+        <div class="card"><h2 class="paneltitle">Manage sample collection points</h2>
+         <div class="field"><label for="newPointZone">Zone</label><select id="newPointZone"><option>Zone A</option><option>Zone B</option><option>Zone C</option></select></div>
+         <div class="field" style="margin-top:12px"><label for="newPointName">Point name</label><input id="newPointName" placeholder="e.g., Covered court staging area" /></div>
+         <div class="field" style="margin-top:12px"><label for="newPointDirections">Landmark / instructions</label><input id="newPointDirections" placeholder="Near the main gate" /></div>
+         <button class="btn outline" id="addPointButton" type="button" style="margin-top:14px">+ Add collection point</button>
+         <div id="pointList" style="margin-top:14px" class="muted"></div>
+        </div>
+       </div>
+      </div>
+      <div class="sectionhead" style="margin-top:27px"><h2>Weekly schedule slots</h2><span class="badge">Draft / Published / Archived</span></div>
+      <div id="scheduleConfigList" class="config-list"></div>
+     </section>
+
+     <!-- P3: demonstration-only rules and date-specific exceptions -->
+     <section class="view" id="P3">
+      <span class="eyebrow">RULES AND DATE-SPECIFIC CHANGES · P3</span>
+      <div class="heading"><div><h1>Local rules &amp; schedule changes</h1>
+       <p>Revise resident instructions and record approved one-date collection exceptions.</p></div>
+       <button class="btn outline" data-screen="P1">View resident guide →</button>
+      </div>
+      <div class="notice">Academic demo: publishing actions here simulate approval. No real barangay notifications are sent.</div>
+      <div class="split">
+       <div class="card">
+        <h2 class="paneltitle" id="ruleEditorTitle">Create or revise local rule</h2>
+        <form id="ruleEditor" novalidate>
+         <input type="hidden" id="settingRuleId" />
+         <div class="formgrid">
+          <div class="field"><label for="ruleZone">Applies to zone</label><select id="ruleZone"><option value="All">All zones</option><option>Zone A</option><option>Zone B</option><option>Zone C</option></select></div>
+          <div class="field"><label for="ruleCategory">Waste category</label><select id="ruleCategory"><option value="All">All categories</option><option>Residual / regular</option><option>Reusable / recyclable</option><option>Biodegradable / compostable</option></select></div>
+          <div class="field full"><label for="ruleTitle">Rule title *</label><input id="ruleTitle" placeholder="e.g., Collection point preparation" /></div>
+          <div class="field full"><label for="ruleText">Resident-facing instructions *</label><textarea id="ruleText" placeholder="Clear, specific instructions for residents..." rows="4"></textarea></div>
+          <div class="field"><label for="ruleEffective">Effective from *</label><input type="date" id="ruleEffective" value="2026-11-01" /></div>
+          <div class="field"><label for="ruleState">Approval / publication</label><select id="ruleState"><option value="Draft">Draft</option><option value="Published">Publish (simulated approval)</option></select></div>
+         </div>
+         <div class="err" id="ruleEditorError" role="alert">Provide a title, resident instructions and effective date.</div>
+         <div class="form-actions"><button class="btn primary" type="submit">Save local rule</button><button class="btn outline" id="resetRuleButton" type="button">Clear form</button></div>
+        </form>
+       </div>
+       <div class="card">
+        <h2 class="paneltitle">Schedule exception for one date</h2>
+        <form id="exceptionEditor" novalidate>
+         <div class="field"><label for="exceptionSchedule">Affected weekly schedule *</label><select id="exceptionSchedule"></select></div>
+         <div class="formgrid" style="margin-top:14px">
+          <div class="field"><label for="exceptionDate">Affected date *</label><input id="exceptionDate" type="date" /></div>
+          <div class="field"><label for="exceptionAction">Action *</label><select id="exceptionAction"><option value="Cancelled">Cancel collection</option><option value="Time changed">Change time</option><option value="Replacement pickup">Replacement pickup date</option></select></div>
+          <div class="field" id="replacementDateField" style="display:none"><label for="exceptionReplacementDate">Replacement date *</label><input id="exceptionReplacementDate" type="date" /></div>
+          <div class="field" id="replacementStartField" style="display:none"><label for="exceptionStart">Updated start *</label><input id="exceptionStart" type="time" /></div>
+          <div class="field" id="replacementEndField" style="display:none"><label for="exceptionEnd">Updated end *</label><input id="exceptionEnd" type="time" /></div>
+          <div class="field full"><label for="exceptionReason">Reason / notice to residents *</label><textarea id="exceptionReason" placeholder="Explain the change in plain language." rows="3"></textarea></div>
+         </div>
+         <div class="err" id="exceptionEditorError" role="alert">Enter a valid date, reason and any required replacement details.</div>
+         <button class="btn primary" style="margin-top:15px" type="submit">Publish sample schedule change</button>
+        </form>
+       </div>
+      </div>
+      <div class="sectionhead" style="margin-top:28px"><h2>Local rule publication history</h2></div>
+      <div id="ruleConfigList" class="config-list"></div>
+      <div class="sectionhead" style="margin-top:28px"><h2>Approved date-specific changes</h2></div>
+      <div id="exceptionConfigList" class="config-list"></div>
+     </section>
+
+     <section class="view" id="S3">
+      <span class="eyebrow">
+       REPORT MISSED COLLECTION · S3
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Report a missed pickup
+        </h1>
+        <p>
+         Enter the collection details so the coordinator can review the concern.
+        </p>
+       </div>
+       <span class="badge blue">
+        Step 1 of 2 · Report details
+       </span>
+      </div>
+      <div class="split">
+       <div class="card">
+        <div class="paneltitle">
+         Collection details
+        </div>
+        <div class="err" id="validationError" role="alert">
+         Please complete all required fields and confirm the privacy notice.
+        </div>
+        <div class="callout-quiet" id="reportScheduleAdvisory" style="margin-bottom:17px">Check the published schedule and collection method before filing a missed-pickup report.</div>
+       <form id="reportForm" novalidate="">
+         <div class="formgrid">
+          <div class="field">
+           <label for="fzone">
+            Zone / Purok
+            <span class="req">
+             *
+            </span>
+           </label>
+           <select id="fzone" required="">
+            <option value="">
+             Select zone
+            </option>
+            <option value="Zone A">
+             Zone A · Sample Purok 1
+            </option>
+            <option value="Zone B">
+             Zone B · Sample Purok 2
+            </option>
+            <option value="Zone C">
+             Zone C · Sample Purok 3
+            </option>
+           </select>
+          </div>
+          <div class="field">
+           <label for="fdate">
+            Missed pickup date
+            <span class="req">
+             *
+            </span>
+           </label>
+           <input id="fdate" required="" type="date" value="2026-11-10"/>
+          </div>
+          <div class="field full">
+           <label for="faddress">
+            Street or nearest landmark
+            <span class="req">
+             *
+            </span>
+           </label>
+           <input id="faddress" placeholder="e.g., Near barangay covered court" required=""/>
+          </div>
+          <div class="field full">
+           <label for="fcategory">
+            Waste category
+            <span class="req">
+             *
+            </span>
+           </label>
+           <select id="fcategory" required="">
+            <option value="">
+             Choose category
+            </option>
+            <option>
+             Biodegradable / compostable
+            </option>
+            <option>
+             Reusable / recyclable
+            </option>
+            <option>Residual / regular</option>
+           </select>
+          </div>
+          <div class="field full">
+           <label for="fdescription">
+            Describe the concern
+            <span class="req">
+             *
+            </span>
+           </label>
+           <textarea id="fdescription" placeholder="Describe where waste was left and any relevant details..." required=""></textarea>
+           <span class="hint">
+            Do not include sensitive personal information in the description.
+           </span>
+          </div>
+         </div>
+         <div class="formfoot">
+          <label class="checkline">
+           <input id="fprivacy" type="checkbox"/>
+           <span>
+            I have read the privacy notice and understand this is a demo submission.
+           </span>
+          </label>
+          <button class="btn primary" type="submit">
+           Submit report →
+          </button>
+         </div>
+        </form>
+       </div>
+       <div>
+        <div class="card">
+         <div class="miniLabel">
+          BEFORE YOU SUBMIT
+         </div>
+         <div class="listrow">
+          <span class="roundico">
+           1
+          </span>
+          <div class="listmain">
+           <b>
+            Check your schedule
+           </b>
+           <small>
+            Confirm the collection was due.
+           </small>
+          </div>
+         </div>
+         <div class="listrow">
+          <span class="roundico">
+           2
+          </span>
+          <div class="listmain">
+           <b>
+            Use a clear landmark
+           </b>
+           <small>
+            Help staff locate the concern.
+           </small>
+          </div>
+         </div>
+         <div class="listrow">
+          <span class="roundico">
+           3
+          </span>
+          <div class="listmain">
+           <b>
+            Keep your tracking ID
+           </b>
+           <small>
+            Use it to follow the outcome.
+           </small>
+          </div>
+         </div>
+        </div>
+        <div class="notice" style="margin-top:16px">
+         🔒
+         <b>
+          Privacy note:
+         </b>
+         This prototype uses sample data in your browser only. It does not transmit information to barangay personnel.
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="view" id="S4">
+      <span class="eyebrow">
+       SUBMISSION CONFIRMATION · S4
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Report confirmation
+        </h1>
+        <p>
+         Your design-prototype report has been created successfully.
+        </p>
+       </div>
+      </div>
+      <div class="card center" style="max-width:650px;margin:auto;padding:42px">
+       <div class="successRound">
+        ✓
+       </div>
+       <h2 style="font-size:25px;margin:0 0 10px;color:var(--dark)">
+        Report submitted
+       </h2>
+       <p class="muted">
+        This report exists in browser memory only. The demo automatically queues it for coordinator review; no real barangay receives the submission.
+       </p>
+       <div class="tracking">
+        <div class="miniLabel" style="margin:0">
+         REPORT TRACKING REFERENCE
+        </div>
+        <div class="ref" id="confirmId">
+         SWM-2026-001
+        </div>
+        <span class="badge blue" id="confirmStatus">
+         Submitted
+        </span>
+       </div>
+       <div class="notice" style="text-align:left">
+        Next: A coordinator will verify the issue before assigning it to collection personnel. You can return to the tracking screen to review its history.
+       </div>
+       <div class="actions" style="justify-content:center">
+        <button class="btn outline" onclick="copyId()">
+         Copy tracking ID
+        </button>
+        <button class="btn primary" data-screen="S5">
+         Track my report →
+        </button>
+       </div>
+       <p class="footnote">
+        Prototype simulation only · No public report was submitted.
+       </p>
+      </div>
+     </section>
+     <section class="view" id="S5">
+      <span class="eyebrow">
+       REPORT STATUS &amp; HISTORY · S5
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Track your report
+        </h1>
+        <p>
+         View your current status and its recorded activity timeline.
+        </p>
+       </div>
+       <button class="btn outline" data-screen="S1">
+        ← Dashboard
+       </button>
+      </div>
+      <div class="split">
+       <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+         <div>
+          <div class="miniLabel">
+           REPORT REFERENCE
+          </div>
+          <h2 id="trackId" style="font-size:21px;margin:0">
+           SWM-2026-001
+          </h2>
+         </div>
+         <span class="badge blue" id="trackStatus">
+          Submitted
+         </span>
+        </div>
+        <div class="line">
+        </div>
+        <div class="kv">
+         <b>
+          Zone
+         </b>
+         <span id="trackZone">
+          Zone A
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Waste category
+         </b>
+         <span id="trackCategory">
+          Biodegradable / compostable
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Missed collection date
+         </b>
+         <span id="trackDate">
+          Nov 10, 2026
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Location
+         </b>
+         <span id="trackAddress">
+          Near barangay covered court
+         </span>
+        </div>
+        <div class="line">
+        </div>
+        <div class="paneltitle">
+         Status history
+        </div>
+        <div class="timeline" id="trackEvents">
+        </div>
+       </div>
+       <div>
+        <div class="card">
+         <div class="paneltitle">
+          What does my status mean?
+         </div>
+         <div class="listrow">
+          <span class="roundico">
+           ◷
+          </span>
+          <div class="listmain">
+           <b>
+            Under Review
+           </b>
+           <small>
+            Coordinator checks the report.
+           </small>
+          </div>
+         </div>
+         <div class="listrow">
+          <span class="roundico">
+           ↗
+          </span>
+          <div class="listmain">
+           <b>
+            Assigned
+           </b>
+           <small>
+            A collection crew is tasked.
+           </small>
+          </div>
+         </div>
+         <div class="listrow">
+          <span class="roundico">
+           ✓
+          </span>
+          <div class="listmain">
+           <b>
+            Resolved
+           </b>
+           <small>
+            Outcome was recorded.
+           </small>
+          </div>
+         </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+         <div class="paneltitle">
+          Need another report?
+         </div>
+         <p class="muted">
+          If a separate pickup was missed, please submit a new concern instead of changing a completed case.
+         </p>
+         <button class="btn outline" data-screen="S3">
+          ＋ Submit a new report
+         </button>
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="view" id="S6">
+      <span class="eyebrow">
+       COORDINATOR DASHBOARD · S6
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Missed collection queue
+        </h1>
+        <p>
+         Review submissions, verify details and monitor outstanding tasks.
+        </p>
+       </div>
+       <span class="badge">
+        Staff demonstration
+       </span>
+      </div>
+      <div class="cards3">
+       <div class="card">
+        <div class="statlab">
+         For review
+        </div>
+        <div class="statval" id="queueReviewCount">
+         01
+        </div>
+        <div class="statsub">
+         Awaiting verification
+        </div>
+       </div>
+       <div class="card">
+        <div class="statlab">
+         Assigned / In progress
+        </div>
+        <div class="statval" id="queueActiveCount">
+         00
+        </div>
+        <div class="statsub">
+         Open collection tasks
+        </div>
+       </div>
+       <div class="card">
+        <div class="statlab">
+         Resolved
+        </div>
+        <div class="statval" id="queueResolvedCount">
+         00
+        </div>
+        <div class="statsub">
+         Recorded outcomes
+        </div>
+       </div>
+      </div>
+      <div class="card">
+       <div class="filterbar" style="flex-wrap:wrap">
+        <div class="field">
+         <label for="queueFilter">
+          Filter status
+         </label>
+         <select id="queueFilter">
+          <option value="All">
+           All statuses
+          </option>
+          <option value="Under Review">
+           Under Review
+          </option>
+          <option value="Assigned">
+           Assigned
+          </option>
+          <option value="Resolved">
+           Resolved
+          </option>
+          <option value="Rejected">
+           Rejected
+          </option>
+         </select>
+        </div>
+        <div class="field">
+         <label for="queueZone">
+          Zone
+         </label>
+         <select id="queueZone">
+          <option>
+           All zones
+          </option>
+          <option>
+           Zone A
+          </option>
+          <option>
+           Zone B
+          </option>
+          <option>
+           Zone C
+          </option>
+         </select>
+        </div>
+        <div class="field">
+         <label for="queueFrom">
+          From date
+         </label>
+         <input id="queueFrom" type="date"/>
+        </div>
+        <div class="field">
+         <label for="queueTo">
+          To date
+         </label>
+         <input id="queueTo" type="date"/>
+        </div>
+        <button class="btn outline" id="applyFilter" style="align-self:end">
+         Apply filters
+        </button>
+       </div>
+       <div style="overflow:auto">
+        <table class="table">
+         <thead>
+          <tr>
+           <th>
+            REPORT ID
+           </th>
+           <th>
+            ZONE / LOCATION
+           </th>
+           <th>
+            RECEIVED
+           </th>
+           <th>
+            STATUS
+           </th>
+           <th>
+            ACTION
+           </th>
+          </tr>
+         </thead>
+         <tbody id="queueRows">
+         </tbody>
+        </table>
+       </div>
+      </div>
+      <p class="footnote">
+       Demonstration dataset. No access restrictions or database enforcement are implemented.
+      </p>
+     </section>
+     <section class="view" id="S7">
+      <span class="eyebrow">
+       COORDINATOR REVIEW · S7
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Review and assign report
+        </h1>
+        <p>
+         Verify the concern, or reject it with an explanation.
+        </p>
+       </div>
+       <button class="btn outline" data-screen="S6">
+        ← Back to queue
+       </button>
+      </div>
+      <div class="split">
+       <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+         <div>
+          <div class="miniLabel">
+           CASE DETAIL
+          </div>
+          <h2 id="reviewId" style="font-size:22px;margin:0">
+           SWM-2026-001
+          </h2>
+         </div>
+         <span class="badge amber" id="reviewStatus">
+          Under Review
+         </span>
+        </div>
+        <div class="line">
+        </div>
+        <div class="kv">
+         <b>
+          Zone
+         </b>
+         <span id="reviewZone">
+          Zone A
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Location
+         </b>
+         <span id="reviewAddress">
+          Near barangay covered court
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Waste category
+         </b>
+         <span id="reviewCategory">
+          Biodegradable / compostable
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Incident
+         </b>
+         <span id="reviewDate">
+          Nov 10, 2026
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Description
+         </b>
+         <span id="reviewDescription">
+          Collection truck did not arrive at scheduled location.
+         </span>
+        </div>
+        <div class="notice">
+         Check whether the report falls within barangay responsibility and the assigned collection schedule.
+        </div>
+       </div>
+       <div class="card">
+        <div class="paneltitle">
+         Coordinator decision
+        </div>
+        <div class="field">
+         <label for="reviewNote">
+          Verification note / explanation
+          <span class="req">
+           *
+          </span>
+         </label>
+         <textarea id="reviewNote" placeholder="State the reason for verification or rejection...">Collection was scheduled in Zone A. Dispatch follow-up required.</textarea>
+        </div>
+        <div class="line">
+        </div>
+        <div class="field">
+         <label for="crewSelect">
+          Assign to collection crew
+         </label>
+         <select id="crewSelect">
+          <option value="">
+           Select crew member
+          </option>
+          <option selected="" value="Crew Member A">
+           Crew Member A · Zone A
+          </option>
+          <option value="Crew Member B">
+           Crew Member B · Zone B
+          </option>
+         </select>
+        </div>
+        <div class="err" id="reviewError">
+         Add a reason and select a crew member to assign the case.
+        </div>
+        <div class="actions" style="margin-top:20px">
+         <button class="btn primary" id="assignBtn">
+          ✓ Verify &amp; assign
+         </button>
+         <button class="btn danger" id="rejectBtn">
+          ✕ Reject report
+         </button>
+         <button class="btn danger" id="closeBtn" style="display:none" type="button">
+          Close exception with reason
+         </button>
+        </div>
+        <p class="footnote">
+         Every decision must store actor, timestamp, reason and status history in a real implementation.
+        </p>
+       </div>
+      </div>
+     </section>
+     <section class="view" id="S8">
+      <span class="eyebrow">
+       COLLECTION CREW WORKSPACE · S8
+      </span>
+      <div class="heading">
+       <div>
+        <h1>
+         Record collection outcome
+        </h1>
+        <p>
+         Update the result of an assigned collection task.
+        </p>
+       </div>
+       <span class="badge">
+        Field crew demonstration
+       </span>
+      </div>
+      <div class="split">
+       <div class="card">
+        <div class="miniLabel">
+         ASSIGNED TASK
+        </div>
+        <h2 id="crewId" style="font-size:22px;margin:0 0 15px">
+         SWM-2026-001
+        </h2>
+        <div class="kv">
+         <b>
+          Location
+         </b>
+         <span id="crewAddress">
+          Near barangay covered court
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Zone
+         </b>
+         <span id="crewZone">
+          Zone A
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Assigned to
+         </b>
+         <span id="crewName">
+          Crew Member A
+         </span>
+        </div>
+        <div class="kv">
+         <b>
+          Current status
+         </b>
+         <span id="crewStatus">
+          Assigned
+         </span>
+        </div>
+        <div class="line">
+        </div>
+        <button class="btn outline" id="startBtn">
+         ▶ Start work (In Progress)
+        </button>
+       </div>
+       <div class="card">
+        <div class="paneltitle">
+         Outcome form
+        </div>
+        <div class="field">
+         <label for="crewOutcome">
+          Collection outcome
+          <span class="req">
+           *
+          </span>
+         </label>
+         <select id="crewOutcome">
+          <option value="">
+           Select an outcome
+          </option>
+          <option value="Resolved">
+           Waste collected — Resolved
+          </option>
+          <option value="Exception">
+           Could not collect — Exception
+          </option>
+         </select>
+        </div>
+        <div class="field" style="margin-top:17px">
+         <label for="crewNote">
+          Outcome / exception details
+          <span class="req">
+           *
+          </span>
+         </label>
+         <textarea id="crewNote" placeholder="Record the collection outcome or explain why it could not be completed."></textarea>
+        </div>
+        <div class="err" id="crewError">
+         Start the task first, then select an outcome and record details.
+        </div>
+        <button class="btn primary" id="saveOutcome" style="margin-top:16px">
+         Save task outcome →        </button>
+        <p class="footnote">
+         An exception returns the case to the coordinator for reassignment or closure.
+        </p>
+       </div>
+      </div>
+     </section>
+     <p class="footnote" style="text-align:right">
+      MIT 103 · Design-only demonstration · Sample data, not a deployed barangay service
+     </p>
+    </div>
+   </main>
+  </div>
+  <script>
+   const titleNames={
+       S1:'Resident Dashboard',
+       S2:'Collection Schedule',
+       S3:'Submit Missed Collection',
+       S4:'Submission Confirmation',
+       S5:'Report Status',
+       S6:'Coordinator Queue',
+       S7:'Review and Assign',
+       S8:'Collection Outcome',
+       P1:'Local Rules and Collection Guide',
+       P2:'Manage Weekly Schedules',
+       P3:'Local Rules and Exceptions'
+   };
+   function seeded() {
+       return {
+           id:'SWM-2026-001',
+           zone:'Zone A',
+           date:'2026-11-10',
+           address:'Near barangay covered court',
+           category:'Biodegradable / compostable',
+           description:'Collection truck did not arrive at scheduled location.',
+           status:'Under Review',
+           crew:'',
+           history:[{
+               status:'Submitted',
+               note:'Report created; reference generated.',
+               actor:'Resident',
+               time:'Nov 11, 2026 · 8:30 AM'
+           }, {
+               status:'Under Review',
+               note:'Queued for coordinator review.',
+               actor:'System',
+               time:'Nov 11, 2026 · 8:30 AM'
+           }]
+       }
+   }
+   let report=seeded();
+   let demoCounter=2;
+   let inAppNotices=[{
+       kind:'Schedule',
+       text:'Illustrative schedule notice: local staff can publish changes for their own barangay.'
+   }];
+   const qs=new URLSearchParams(location.search);
+   if(qs.get('scenario')==='resolved') {
+       report.crew='Crew Member A';
+       report.status='Resolved';
+       report.history.push({
+           status:'Verified',
+           note:'Verified as within barangay collection responsibility.',
+           actor:'Coordinator',
+           time:'Nov 11, 2026 · 9:05 AM'
+       }, {
+           status:'Assigned',
+           note:'Assigned to Crew Member A.',
+           actor:'Coordinator',
+           time:'Nov 11, 2026 · 9:06 AM'
+       }, {
+           status:'In Progress',
+           note:'Crew began the task.',
+           actor:'Collection Crew',
+           time:'Nov 11, 2026 · 9:15 AM'
+       }, {
+           status:'Resolved',
+           note:'Waste was collected at the reported location.',
+           actor:'Collection Crew',
+           time:'Nov 11, 2026 · 9:30 AM'
+       })
+   }
+   function evt(status, note, actor) {
+       const previous=report.status;
+       report.status=status;
+       report.history.push({
+           status,
+           from_status:previous,
+           to_status:status,
+           note,
+           actor,
+           actor_id:actor==='Coordinator'?'demo-coordinator':actor==='Collection Crew'?'demo-crew':'system',
+           time:new Date().toLocaleString('en-PH')+' · Demo action'
+       });
+       inAppNotices.unshift({
+           kind:'Report',
+           text:report.id+' changed to '+status
+       });
+   }
+   function escapeHTML(v) {
+       return String(v).replace(/[&<>\"]/g, c=>({
+           '&':'&amp;',
+           '<':'&lt;',
+           '>':'&gt;',
+           '\"':'&quot;'
+       }
+       [c]))
+   }
+   // =============================================================
+   // DEMONSTRATION COLLECTION CONFIGURATION
+   // The data below is illustrative and kept in browser memory.
+   // Each barangay deployment would provide its own approved data.
+   // =============================================================
+   const WEEK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+   const METHOD_NAMES = {
+       POINT: 'Designated collection point',
+       TRUCK: 'Meet the passing truck',
+       CURBSIDE: 'Curbside / house-front'
+   };
+   const CATEGORIES = [
+       'Residual / regular',
+       'Reusable / recyclable',
+       'Biodegradable / compostable'
+   ];
+   let configCounter = 30;
+   const config = {
+       collectionPoints: [
+           {id:'PT1', zone:'Zone A', name:'Covered court staging area', detail:'Near the covered court gate'},
+           {id:'PT2', zone:'Zone A', name:'Community hall collection point', detail:'Behind the community hall'},
+           {id:'PT3', zone:'Zone B', name:'Barangay multi-purpose area', detail:'Beside the main road'}
+       ],
+       schedules: [
+           {id:'SC1', zone:'Zone A', day:1, category:CATEGORIES[0], start:'06:30', end:'08:30', method:'POINT', pointId:'PT1', instructions:'Bring properly segregated bags to the designated area during the collection window.', effective:'2026-11-01', state:'Published'},
+           {id:'SC2', zone:'Zone A', day:3, category:CATEGORIES[1], start:'07:00', end:'09:00', method:'POINT', pointId:'PT1', instructions:'Present clean, separated recyclable materials at the designated collection point.', effective:'2026-11-01', state:'Published'},
+           {id:'SC3', zone:'Zone A', day:6, category:CATEGORIES[2], start:'06:00', end:'08:00', method:'POINT', pointId:'PT2', instructions:'Prepare biodegradable / compostable waste separately before bringing it to the approved point.', effective:'2026-11-01', state:'Published'},
+           {id:'SC4', zone:'Zone B', day:2, category:CATEGORIES[0], start:'08:00', end:'10:00', method:'TRUCK', pointId:'', instructions:'Wait within the scheduled collection window and hand waste directly to the collection crew.', effective:'2026-11-01', state:'Published'},
+           {id:'SC5', zone:'Zone B', day:5, category:CATEGORIES[2], start:'09:00', end:'11:00', method:'TRUCK', pointId:'', instructions:'Bring segregated biodegradable waste to the truck when it reaches the designated roadside meeting area.', effective:'2026-11-01', state:'Published'},
+           {id:'SC6', zone:'Zone C', day:1, category:CATEGORIES[0], start:'07:00', end:'09:00', method:'CURBSIDE', pointId:'', instructions:'Place secured waste at the locally approved house-front pickup location shortly before the schedule.', effective:'2026-11-01', state:'Published'},
+           {id:'SC7', zone:'Zone C', day:4, category:CATEGORIES[1], start:'08:00', end:'09:30', method:'CURBSIDE', pointId:'', instructions:'Separate reusable materials and present them at the approved frontage.', effective:'2026-11-01', state:'Published'}
+       ],
+       rules: [
+           {id:'RL1', zone:'All', category:'All', title:'Segregate waste before collection', body:'Use the waste category shown on the published schedule. Follow locally approved preparation and container rules.', effective:'2026-11-01', version:1, state:'Published'},
+           {id:'RL2', zone:'Zone A', category:'All', title:'Designated collection points', body:'Bring waste only to the approved collection point shown for your scheduled category and time window. Do not leave waste outside the approved collection period.', effective:'2026-11-01', version:1, state:'Published'},
+           {id:'RL3', zone:'Zone B', category:'All', title:'Direct truck handover', body:'Keep segregated waste secured while waiting. Hand it directly to the collection crew when the truck reaches your area.', effective:'2026-11-01', version:1, state:'Published'},
+           {id:'RL4', zone:'Zone C', category:'All', title:'Curbside or house-front pickup', body:'Prepare waste at the approved frontage near collection time and keep walkways unobstructed.', effective:'2026-11-01', version:1, state:'Published'}
+       ],
+       exceptions: []
+   };
+
+   const ui = id => document.getElementById(id);
+   const h = value => escapeHTML(value == null ? '' : String(value));
+   const prettyTime = time => {
+       const [hour, minute] = String(time || '00:00').split(':').map(Number);
+       return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+   };
+   const timeWindow = schedule => `${prettyTime(schedule.start)} – ${prettyTime(schedule.end)}`;
+   const pointFor = pointId => config.collectionPoints.find(point => point.id === pointId);
+   const scheduleFor = scheduleId => config.schedules.find(schedule => schedule.id === scheduleId);
+   const isPublished = record => record.state === 'Published';
+   const todayISO = () => new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Manila'});
+
+   function effectiveNow(record) {
+       return !record.effective || record.effective <= todayISO();
+   }
+
+   function addConfigNotice(message, kind = 'Schedule') {
+       inAppNotices.unshift({kind, text:message});
+       inAppNotices = inAppNotices.slice(0, 8);
+   }
+
+   function describeMethod(schedule) {
+       const point = pointFor(schedule.pointId);
+       if (schedule.method === 'POINT') {
+           return point ? `${point.name} — ${point.detail}` : 'A designated point must be configured.';
+       }
+       if (schedule.method === 'TRUCK') {
+           return 'Meet the passing truck and hand waste directly to the crew.';
+       }
+       return 'Prepare waste at the approved curbside or house-front location.';
+   }
+
+   function upcomingISO(weekday) {
+       const date = new Date();
+       date.setHours(12, 0, 0, 0);
+       const shift = (weekday - date.getDay() + 7) % 7;
+       date.setDate(date.getDate() + shift);
+       const year = date.getFullYear();
+       return `${year}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+   }
+
+   function renderScheduleCard(schedule) {
+       const next = upcomingISO(schedule.day);
+       const exceptions = config.exceptions.filter(item => item.scheduleId === schedule.id && item.affectedDate >= todayISO());
+       const method = METHOD_NAMES[schedule.method] || 'Locally configured';
+       const exceptionMarkup = exceptions.map(item => `
+         <div class="notice" style="margin:5px 0 0">
+           <b>${h(fmtDate(item.affectedDate))}: ${h(item.action)}</b><br>
+           ${h(item.reason)}
+           ${item.start ? `<div>Updated time: ${h(prettyTime(item.start))} – ${h(prettyTime(item.end))}</div>` : ''}
+           ${item.replacementDate ? `<div>Replacement date: ${h(fmtDate(item.replacementDate))}</div>` : ''}
+         </div>`).join('');
+       return `<article class="daycard" data-schedule="${h(schedule.id)}">
+         <span class="badge">PUBLISHED WEEKLY SLOT</span>
+         <h3>Every ${h(WEEK_DAYS[schedule.day])}</h3>
+         <div class="date">Next occurrence: ${h(fmtDate(next))}</div>
+         <p><b>${h(schedule.category)}</b></p>
+         <div class="time">◷ ${h(timeWindow(schedule))}</div>
+         <div class="schedule-meta"><span class="hint-chip">${h(method)}</span><span class="hint-chip">${h(schedule.zone)}</span></div>
+         <div class="schedule-note"><b>Where / how:</b> ${h(describeMethod(schedule))}<br><b>Instructions:</b> ${h(schedule.instructions || 'Follow the approved barangay instructions.')}</div>
+         ${exceptionMarkup}
+       </article>`;
+   }
+
+   function applyScheduleFilters() {
+       const zone = ui('scheduleZone').value.split(' ·')[0];
+       const category = ui('scheduleCat').value;
+       const published = config.schedules.filter(schedule =>
+           isPublished(schedule) && effectiveNow(schedule) && schedule.zone === zone &&
+           (category === 'All' || category === schedule.category)
+       ).sort((a,b) => ((a.day+6)%7)-((b.day+6)%7) || a.start.localeCompare(b.start));
+       ui('dynamicScheduleCards').innerHTML = published.map(renderScheduleCard).join('');
+       ui('scheduleEmpty').style.display = published.length ? 'none' : 'block';
+       ui('scheduleContext').textContent = `${zone} · ${published.length} published weekly slot(s). All times and locations are illustrative, editable barangay configurations; not official collection instructions.`;
+       const matchingExceptions = config.exceptions.filter(item => {
+           const schedule = scheduleFor(item.scheduleId);
+           return schedule && schedule.zone === zone && (category === 'All' || schedule.category === category);
+       });
+       const notice = ui('residentScheduleExceptionNotice');
+       notice.style.display = matchingExceptions.length ? 'block' : 'none';
+       notice.innerHTML = matchingExceptions.length ? '<h2 class="paneltitle">Published schedule changes</h2>' +
+           matchingExceptions.map(item => {
+               const slot = scheduleFor(item.scheduleId);
+               return `<p class="muted"><b>${h(fmtDate(item.affectedDate))} · ${h(slot.category)}</b>: ${h(item.action)}. ${h(item.reason)}</p>`;
+           }).join('') : '';
+   }
+
+   function renderGuide() {
+       const zone = ui('guideZone').value;
+       const category = ui('guideCategory').value;
+       const rules = config.rules.filter(rule => isPublished(rule) && effectiveNow(rule) &&
+           (rule.zone === 'All' || rule.zone === zone) &&
+           (rule.category === 'All' || category === 'All' || rule.category === category));
+       ui('publishedRuleList').innerHTML = rules.length ? rules.map(rule => `
+           <article class="config-row">
+             <div class="config-header"><h3>${h(rule.title)}</h3><span class="status-tag">Published · v${rule.version}</span></div>
+             <p>${h(rule.body)}</p>
+             <small class="muted">Applies to ${h(rule.zone === 'All' ? 'all zones' : rule.zone)} · ${h(rule.category === 'All' ? 'all categories' : rule.category)}</small>
+           </article>`).join('') : '<div class="empty-state">No current published rules match this selection.</div>';
+       const methods = config.schedules.filter(schedule => isPublished(schedule) && effectiveNow(schedule) && schedule.zone === zone &&
+           (category === 'All' || schedule.category === category));
+       ui('zoneMethodGuide').innerHTML = methods.length ? methods.map(schedule => `
+           <article class="config-row">
+             <div class="config-header"><h3>${h(WEEK_DAYS[schedule.day])} · ${h(schedule.category)}</h3><span class="status-tag">${h(timeWindow(schedule))}</span></div>
+             <p><b>${h(METHOD_NAMES[schedule.method])}</b> — ${h(describeMethod(schedule))}</p>
+             <p>${h(schedule.instructions)}</p>
+           </article>`).join('') : '<div class="empty-state">No published collection slots match this category and zone.</div>';
+   }
+
+   function updateResidentDashboard() {
+       const slots = config.schedules.filter(item => isPublished(item) && effectiveNow(item) && item.zone === 'Zone A');
+       const today = new Date();
+       slots.sort((a,b) => ((a.day - today.getDay() + 7) % 7)-((b.day - today.getDay() + 7) % 7) || a.start.localeCompare(b.start));
+       if (slots.length) {
+           const next = slots[0];
+           ui('dashNextDate').textContent = fmtDate(upcomingISO(next.day)).replace(', '+new Date().getFullYear(), '');
+           ui('dashNextTime').textContent = `${WEEK_DAYS[next.day]} · ${prettyTime(next.start)}`;
+           ui('dashNextCollection').textContent = `Every ${WEEK_DAYS[next.day]} · ${next.category}`;
+           ui('dashNextSummary').textContent = `${next.zone} · ${timeWindow(next)} · ${METHOD_NAMES[next.method]}`;
+       }
+       let panel = ui('residentUpdatePanel');
+       if (!panel) {
+           panel = document.createElement('div');
+           panel.id = 'residentUpdatePanel';
+           const heading = document.querySelector('#S1 .heading');
+           heading.parentNode.insertBefore(panel, heading.nextSibling);
+       }
+       const updates = inAppNotices.filter(item => item.kind === 'Schedule' || item.kind === 'Rule').slice(0,2);
+       panel.innerHTML = updates.map(item => `<div class="callout-quiet" style="margin-bottom:13px"><b>Demo ${h(item.kind)} notice:</b> ${h(item.text)}</div>`).join('');
+   }
+
+   function methodFields() {
+       const needsPoint = ui('settingMethod').value === 'POINT';
+       ui('pointField').style.display = needsPoint ? 'flex' : 'none';
+       if (!needsPoint) ui('settingPoint').value = '';
+   }
+
+   function updatePointOptions(preserve = '') {
+       const zone = ui('settingZone').value;
+       ui('settingPoint').innerHTML = '<option value="">Choose a pickup point</option>' +
+           config.collectionPoints.filter(point => point.zone === zone).map(point =>
+               `<option value="${h(point.id)}">${h(point.name)}</option>`).join('');
+       if (preserve && config.collectionPoints.some(point => point.id === preserve && point.zone === zone)) ui('settingPoint').value = preserve;
+   }
+
+   function resetScheduleEditor() {
+       ui('scheduleEditor').reset();
+       ui('settingScheduleId').value = '';
+       ui('settingEffective').value = '2026-11-01';
+       ui('scheduleEditorTitle').textContent = 'Add weekly collection slot';
+       ui('saveScheduleButton').textContent = 'Save collection slot';
+       ui('scheduleEditorError').classList.remove('on');
+       updatePointOptions();
+       methodFields();
+   }
+
+   function renderScheduleManager() {
+       updatePointOptions(ui('settingPoint').value);
+       methodFields();
+       ui('pointList').innerHTML = config.collectionPoints.map(point =>
+           `<div style="padding:7px 0"><b>${h(point.zone)}:</b> ${h(point.name)}<br><span>${h(point.detail)}</span></div>`).join('');
+       const schedules = config.schedules.slice().sort((a,b)=>a.zone.localeCompare(b.zone) || ((a.day+6)%7)-((b.day+6)%7));
+       ui('scheduleConfigList').innerHTML = schedules.map(schedule => `
+           <article class="config-row">
+             <div class="config-header"><div><h3>${h(schedule.zone)} · ${h(WEEK_DAYS[schedule.day])} · ${h(schedule.category)}</h3>
+               <div class="muted">${h(timeWindow(schedule))} · ${h(METHOD_NAMES[schedule.method])}</div></div>
+               <span class="status-tag ${schedule.state === 'Published' ? '' : schedule.state.toLowerCase()}">${h(schedule.state)}</span></div>
+             <p><b>Handover:</b> ${h(describeMethod(schedule))}<br><b>Instructions:</b> ${h(schedule.instructions)}</p>
+             <div class="actions">
+               <button type="button" class="btn small outline" data-edit-schedule="${h(schedule.id)}">Edit</button>
+               ${schedule.state !== 'Archived' ? `<button class="btn small outline" type="button" data-toggle-schedule="${h(schedule.id)}">${schedule.state === 'Published' ? 'Move to draft' : 'Publish sample'}</button>` : ''}
+               ${schedule.state !== 'Archived' ? `<button class="btn small danger" type="button" data-archive-schedule="${h(schedule.id)}">Archive</button>` : ''}
+             </div>
+           </article>`).join('');
+   }
+
+   function editSchedule(id) {
+       const item = scheduleFor(id);
+       if (!item) return;
+       ui('settingScheduleId').value = item.id;
+       ui('settingZone').value = item.zone;
+       ui('settingCategory').value = item.category;
+       ui('settingDay').value = item.day;
+       ui('settingMethod').value = item.method;
+       ui('settingStart').value = item.start;
+       ui('settingEnd').value = item.end;
+       ui('settingInstructions').value = item.instructions;
+       ui('settingEffective').value = item.effective;
+       ui('settingState').value = item.state === 'Archived' ? 'Draft' : item.state;
+       updatePointOptions(item.pointId);
+       methodFields();
+       ui('scheduleEditorTitle').textContent = `Edit schedule ${item.id}`;
+       ui('saveScheduleButton').textContent = 'Save schedule changes';
+       ui('scheduleEditor').scrollIntoView({behavior:'smooth',block:'start'});
+   }
+
+   function saveSchedule(event) {
+       event.preventDefault();
+       const oldId = ui('settingScheduleId').value;
+       const candidate = {
+           id: oldId || `SC${++configCounter}`,
+           zone: ui('settingZone').value,
+           category: ui('settingCategory').value,
+           day: Number(ui('settingDay').value),
+           method: ui('settingMethod').value,
+           start: ui('settingStart').value,
+           end: ui('settingEnd').value,
+           pointId: ui('settingMethod').value === 'POINT' ? ui('settingPoint').value : '',
+           instructions: ui('settingInstructions').value.trim(),
+           effective: ui('settingEffective').value,
+           state: ui('settingState').value
+       };
+       const valid = candidate.start && candidate.end && candidate.start < candidate.end && candidate.effective &&
+           (candidate.method !== 'POINT' || (pointFor(candidate.pointId) && pointFor(candidate.pointId).zone === candidate.zone));
+       ui('scheduleEditorError').classList.toggle('on', !valid);
+       if (!valid) return;
+       const idx = config.schedules.findIndex(item => item.id === oldId);
+       if (idx >= 0) config.schedules[idx] = candidate;
+       else config.schedules.push(candidate);
+       if (candidate.state === 'Published') addConfigNotice(`${candidate.zone}: ${WEEK_DAYS[candidate.day]} ${candidate.category} collection information updated.`);
+       resetScheduleEditor();
+       renderScheduleManager();
+   }
+
+   function resetRuleEditor() {
+       ui('ruleEditor').reset();
+       ui('settingRuleId').value = '';
+       ui('ruleEffective').value = '2026-11-01';
+       ui('ruleEditorTitle').textContent = 'Create or revise local rule';
+       ui('ruleEditorError').classList.remove('on');
+   }
+
+   function editRule(id) {
+       const item = config.rules.find(rule => rule.id === id);
+       if (!item) return;
+       ui('settingRuleId').value = item.id;
+       ui('ruleZone').value = item.zone;
+       ui('ruleCategory').value = item.category;
+       ui('ruleTitle').value = item.title;
+       ui('ruleText').value = item.body;
+       ui('ruleEffective').value = item.effective;
+       ui('ruleState').value = item.state;
+       ui('ruleEditorTitle').textContent = `Revise rule ${item.id} (current version ${item.version})`;
+       ui('ruleEditor').scrollIntoView({behavior:'smooth',block:'start'});
+   }
+
+   function saveRule(event) {
+       event.preventDefault();
+       const id = ui('settingRuleId').value;
+       const prior = config.rules.find(rule => rule.id === id);
+       const item = {
+           id: id || `RL${++configCounter}`,
+           zone: ui('ruleZone').value,
+           category: ui('ruleCategory').value,
+           title: ui('ruleTitle').value.trim(),
+           body: ui('ruleText').value.trim(),
+           effective: ui('ruleEffective').value,
+           version: prior ? prior.version + 1 : 1,
+           state: ui('ruleState').value
+       };
+       const valid = item.title && item.body && item.effective;
+       ui('ruleEditorError').classList.toggle('on', !valid);
+       if (!valid) return;
+       if (prior) Object.assign(prior, item);
+       else config.rules.push(item);
+       if (item.state === 'Published') addConfigNotice(`Local guidance revised: ${item.title}.`, 'Rule');
+       resetRuleEditor();
+       renderRulesAndExceptions();
+   }
+
+   function exceptionFields() {
+       const action = ui('exceptionAction').value;
+       ui('replacementDateField').style.display = action === 'Replacement pickup' ? 'flex' : 'none';
+       ui('replacementStartField').style.display = action !== 'Cancelled' ? 'flex' : 'none';
+       ui('replacementEndField').style.display = action !== 'Cancelled' ? 'flex' : 'none';
+   }
+
+   function renderRulesAndExceptions() {
+       ui('exceptionSchedule').innerHTML = config.schedules.filter(isPublished).map(schedule =>
+           `<option value="${h(schedule.id)}">${h(schedule.zone)} · ${h(WEEK_DAYS[schedule.day])} · ${h(schedule.category)}</option>`).join('');
+       exceptionFields();
+       ui('ruleConfigList').innerHTML = config.rules.map(rule => `
+           <article class="config-row">
+             <div class="config-header"><div><h3>${h(rule.title)}</h3><small class="muted">${h(rule.zone)} · ${h(rule.category)} · effective ${h(fmtDate(rule.effective))}</small></div>
+               <span class="status-tag ${rule.state === 'Draft' ? 'draft' : ''}">${h(rule.state)} · v${rule.version}</span></div>
+             <p>${h(rule.body)}</p>
+             <div class="actions"><button class="btn small outline" data-edit-rule="${h(rule.id)}" type="button">Edit / revise</button>
+             ${rule.state === 'Draft' ? `<button class="btn small primary" data-publish-rule="${h(rule.id)}" type="button">Publish sample</button>` : ''}</div>
+           </article>`).join('');
+       ui('exceptionConfigList').innerHTML = config.exceptions.length ? config.exceptions.map(item => {
+           const schedule = scheduleFor(item.scheduleId);
+           return `<article class="config-row">
+             <div class="config-header"><div><h3>${h(fmtDate(item.affectedDate))} · ${h(schedule ? schedule.category : 'Schedule')}</h3>
+                 <small class="muted">${h(schedule ? schedule.zone : '')} · ${h(item.action)}</small></div><span class="status-tag">Approved demo notice</span></div>
+             <p>${h(item.reason)}</p>
+             ${item.start ? `<p><b>New window:</b> ${h(prettyTime(item.start))} – ${h(prettyTime(item.end))}</p>` : ''}
+             ${item.replacementDate ? `<p><b>Replacement:</b> ${h(fmtDate(item.replacementDate))}</p>` : ''}
+           </article>`;
+       }).join('') : '<div class="empty-state">No one-date changes have been added in this demo.</div>';
+   }
+
+   function saveException(event) {
+       event.preventDefault();
+       const schedule = scheduleFor(ui('exceptionSchedule').value);
+       const date = ui('exceptionDate').value;
+       const action = ui('exceptionAction').value;
+       const reason = ui('exceptionReason').value.trim();
+       const start = action === 'Cancelled' ? '' : ui('exceptionStart').value;
+       const end = action === 'Cancelled' ? '' : ui('exceptionEnd').value;
+       const replacementDate = action === 'Replacement pickup' ? ui('exceptionReplacementDate').value : '';
+       const dateMatches = !!date && new Date(`${date}T12:00:00`).getDay() === schedule?.day;
+       const valid = schedule && isPublished(schedule) && dateMatches && reason &&
+           (action === 'Cancelled' || (start && end && start < end)) &&
+           (action !== 'Replacement pickup' || (replacementDate && replacementDate !== date));
+       ui('exceptionEditorError').classList.toggle('on', !valid);
+       if (!valid) {
+           ui('exceptionEditorError').textContent = 'Choose a date matching the recurring collection day and supply the required reason, time and replacement details.';
+           return;
+       }
+       const item = {id:`EX${++configCounter}`, scheduleId:schedule.id, affectedDate:date, action, reason, start, end, replacementDate};
+       config.exceptions = config.exceptions.filter(existing => !(existing.scheduleId === schedule.id && existing.affectedDate === date));
+       config.exceptions.push(item);
+       addConfigNotice(`${schedule.zone}: ${action.toLowerCase()} for ${schedule.category} on ${fmtDate(date)}. ${reason}`);
+       ui('exceptionEditor').reset();
+       renderRulesAndExceptions();
+   }
+
+   function updateReportAdvisory() {
+       const zone = ui('fzone').value;
+       const category = ui('fcategory').value;
+       const date = ui('fdate').value;
+       const advisory = ui('reportScheduleAdvisory');
+       if (!zone || !category || !date) {
+           advisory.textContent = 'Choose your zone, waste category and missed-pickup date to review the configured collection arrangement.';
+           return;
+       }
+       const weekday = new Date(date+'T12:00:00').getDay();
+       const matched = config.schedules.find(item => item.zone === zone && item.category === category && item.day === weekday && isPublished(item));
+       if (!matched) {
+           advisory.innerHTML = '<b>Schedule check:</b> No published sample slot matches the selected zone, category and weekday. Confirm local instructions before reporting.';
+           return;
+       }
+       const exception = config.exceptions.find(item => item.scheduleId === matched.id && item.affectedDate === date);
+       advisory.innerHTML = `<b>Scheduled arrangement:</b> ${h(WEEK_DAYS[matched.day])}, ${h(timeWindow(matched))}. ${h(METHOD_NAMES[matched.method])}: ${h(describeMethod(matched))}.` +
+           (exception ? ` <b>Important change:</b> ${h(exception.action)} — ${h(exception.reason)}` : '');
+   }
+
+   function initializeDynamicUI() {
+       ui('guideZone').addEventListener('change', renderGuide);
+       ui('guideCategory').addEventListener('change', renderGuide);
+       ui('settingZone').addEventListener('change', () => updatePointOptions());
+       ui('settingMethod').addEventListener('change', methodFields);
+       ui('resetScheduleButton').addEventListener('click', resetScheduleEditor);
+       ui('scheduleEditor').addEventListener('submit', saveSchedule);
+       ui('resetRuleButton').addEventListener('click', resetRuleEditor);
+       ui('ruleEditor').addEventListener('submit', saveRule);
+       ui('exceptionAction').addEventListener('change', exceptionFields);
+       ui('exceptionEditor').addEventListener('submit', saveException);
+       ui('addPointButton').addEventListener('click', () => {
+           const zone = ui('newPointZone').value;
+           const name = ui('newPointName').value.trim();
+           const detail = ui('newPointDirections').value.trim();
+           if (!name || !detail) {
+               alert('Enter a collection point name and directions.');
+               return;
+           }
+           config.collectionPoints.push({id:`PT${++configCounter}`, zone, name, detail});
+           ui('newPointName').value = '';
+           ui('newPointDirections').value = '';
+           renderScheduleManager();
+       });
+       document.addEventListener('click', event => {
+           const button = event.target.closest('button');
+           if (!button) return;
+           if (button.dataset.editSchedule) editSchedule(button.dataset.editSchedule);
+           if (button.dataset.archiveSchedule) {
+               const item = scheduleFor(button.dataset.archiveSchedule);
+               if (item) {item.state='Archived'; addConfigNotice(`${item.zone}: ${item.category} weekly slot archived.`); renderScheduleManager();}
+           }
+           if (button.dataset.toggleSchedule) {
+               const item = scheduleFor(button.dataset.toggleSchedule);
+               if (item) {item.state = item.state === 'Published' ? 'Draft' : 'Published'; addConfigNotice(`${item.zone}: ${item.category} slot status changed to ${item.state}.`); renderScheduleManager();}
+           }
+           if (button.dataset.editRule) editRule(button.dataset.editRule);
+           if (button.dataset.publishRule) {
+               const item = config.rules.find(rule => rule.id === button.dataset.publishRule);
+               if (item) {item.state='Published'; addConfigNotice(`Guidance published: ${item.title}`, 'Rule');renderRulesAndExceptions();}
+           }
+       });
+       ['fzone', 'fdate', 'fcategory'].forEach(id => ui(id).addEventListener('change', updateReportAdvisory));
+       ui('scheduleCat').value = 'All';
+       ui('settingEffective').value = '2026-11-01';
+       ui('ruleEffective').value = '2026-11-01';
+       ['Exception', 'Closed', 'Verified', 'In Progress'].forEach(status => {
+           const option = new Option(status, status);
+           ui('queueFilter').add(option);
+       });
+       updatePointOptions();
+       methodFields();
+       exceptionFields();
+       updateReportAdvisory();
+   }
+
+   function statusHtml(status) {
+       let cl=['Rejected', 'Closed'].includes(status)?'red':['Resolved'].includes(status)?'':['Assigned', 'In Progress'].includes(status)?'blue':['Under Review', 'Verified', 'Exception'].includes(status)?'amber':'grey';
+       return `<span class="badge ${cl}">${status}</span>`
+   }
+   function fmtDate(s) {
+       try{
+           return new Date(s+'T12:00:00').toLocaleDateString('en-US', {
+               month:'short',
+               day:'numeric',
+               year:'numeric'
+           })
+       }
+       catch{
+           return s
+       }
+   }
+   function draw() {
+       document.getElementById('confirmId').textContent=report.id;
+       document.getElementById('confirmStatus').outerHTML=`<span class="badge blue" id="confirmStatus">${report.status}</span>`;
+       document.getElementById('trackId').textContent=report.id;
+       document.getElementById('trackStatus').outerHTML=`<span class="badge ${['Resolved'].includes(report.status)?'':report.status==='Rejected'?'red':report.status==='Under Review'?'amber':'blue'}" id="trackStatus">${report.status}</span>`;
+       for(const[el, val] of[['trackZone', report.zone], ['trackCategory', report.category], ['trackDate', fmtDate(report.date)], ['trackAddress', report.address], ['reviewId', report.id], ['reviewZone', report.zone], ['reviewAddress', report.address], ['reviewCategory', report.category], ['reviewDate', fmtDate(report.date)], ['reviewDescription', report.description], ['crewId', report.id], ['crewAddress', report.address], ['crewZone', report.zone], ['crewName', report.crew||'Not assigned'], ['crewStatus', report.status]])document.getElementById(el).textContent=val;
+       document.getElementById('reviewStatus').outerHTML=`<span class="badge amber" id="reviewStatus">${report.status}</span>`;
+       document.getElementById('trackEvents').innerHTML=report.history.slice().reverse().map(e=>`<div class="event"><strong>${escapeHTML(e.status)}</strong><time>${escapeHTML(e.time)} · ${escapeHTML(e.actor)}</time><p>${escapeHTML(e.note)}</p></div>`).join('');
+       document.getElementById('dashReportLine').textContent=`${report.id} · ${report.zone} · ${report.status}`;
+       document.getElementById('queueReviewCount').textContent=['Submitted', 'Under Review', 'Verified'].includes(report.status)?'01':'00';
+       document.getElementById('queueActiveCount').textContent=['Assigned', 'In Progress', 'Exception'].includes(report.status)?'01':'00';
+       document.getElementById('queueResolvedCount').textContent=report.status==='Resolved'?'01':'00';
+       document.getElementById('closeBtn').style.display=report.status==='Exception'?'inline-flex':'none';
+       document.getElementById('assignBtn').textContent=report.status==='Exception'?'↻ Reassign crew':'✓ Verify & assign';
+       document.getElementById('rejectBtn').style.display=report.status==='Under Review'?'inline-flex':'none';
+       let filter=document.getElementById('queueFilter').value;
+       let zone=document.getElementById('queueZone').value;
+       let from=document.getElementById('queueFrom').value,
+       to=document.getElementById('queueTo').value;
+       let inDates=(!from||report.date>=from)&&(!to||report.date<=to);
+       document.getElementById('queueRows').innerHTML=(filter==='All'||filter===report.status)&&(zone==='All zones'||zone===report.zone)&&inDates?`<tr><td><b>${escapeHTML(report.id)}</b><small>Missed collection</small></td><td><b>${escapeHTML(report.zone)}</b><small>${escapeHTML(report.address)}</small></td><td>${escapeHTML(fmtDate(report.date))}</td><td>${statusHtml(report.status)}</td><td><button class="btn small outline" data-screen="S7">Review →</button></td></tr>`:`<tr><td colspan="5" class="muted" style="text-align:center;padding:24px">No reports match these filters.</td></tr>`;
+       bindNav()
+   }
+   function go(s) {
+       if(s==='S2')applyScheduleFilters();
+       if(s==='P1')renderGuide();
+       if(s==='P2')renderScheduleManager();
+       if(s==='P3')renderRulesAndExceptions();
+       if(s==='S1')updateResidentDashboard();
+       document.querySelectorAll('.view').forEach(el=>el.classList.remove('show'));
+       document.getElementById(s).classList.add('show');
+       document.querySelectorAll('.navitem').forEach(el=>el.classList.toggle('active', el.dataset.screen===s));
+       document.getElementById('crumbName').textContent=titleNames[s];
+       document.getElementById('sidebar').classList.remove('open');
+       draw();
+       window.scrollTo(0, 0)
+   }
+   function bindNav() {
+       document.querySelectorAll('[data-screen]').forEach(el=>el.onclick=()=>go(el.dataset.screen))
+   }
+   function copyId() {
+       if(navigator.clipboard?.writeText) {
+           navigator.clipboard.writeText(report.id).then(()=>alert('Tracking ID copied: '+report.id))
+       }
+       else alert('Tracking ID: '+report.id)
+   }
+   document.getElementById('reportForm').addEventListener('submit', e=> {
+       e.preventDefault();
+       const id=v=>document.getElementById(v);
+       let valid=['fzone', 'fdate', 'faddress', 'fcategory', 'fdescription'].every(k=>String(id(k).value).trim())&&id('fprivacy').checked;
+       if(!valid) {
+           id('validationError').classList.add('on');
+           id('validationError').scrollIntoView({
+               behavior:'smooth',
+               block:'center'
+           });
+           return
+       }
+       id('validationError').classList.remove('on');
+       report={
+           id:'SWM-2026-'+String(demoCounter++).padStart(3, '0'),
+           zone:id('fzone').value,
+           date:id('fdate').value,
+           address:id('faddress').value,
+           category:id('fcategory').value,
+           description:id('fdescription').value,
+           status:'Submitted',
+           crew:'',
+           history:[{
+               status:'Submitted',
+               note:'Report submitted and tracking reference issued.',
+               actor:'Resident',
+               time:new Date().toLocaleString('en-PH')+' · Demo action'
+           }]
+       };
+       evt('Under Review', 'Automatically queued for coordinator review.', 'System');
+       go('S4')
+   });
+   document.getElementById('assignBtn').onclick=()=> {
+       let note=document.getElementById('reviewNote').value.trim(),
+       crew=document.getElementById('crewSelect').value;
+       if(!note||!crew||!['Under Review', 'Verified', 'Exception'].includes(report.status)) {
+           document.getElementById('reviewError').classList.add('on');
+           return
+       }
+       document.getElementById('reviewError').classList.remove('on');
+       if(report.status!=='Verified'&&report.status!=='Exception')evt('Verified', note, 'Coordinator');
+       report.crew=crew;
+       evt('Assigned', `Assigned to ${crew}. ${note}`, 'Coordinator');
+       go('S8')
+   };
+   document.getElementById('closeBtn').onclick=()=> {
+       const note=document.getElementById('reviewNote').value.trim();
+       if(report.status!=='Exception'||!note) {
+           document.getElementById('reviewError').classList.add('on');
+           return
+       }
+       document.getElementById('reviewError').classList.remove('on');
+       evt('Closed', note, 'Coordinator');
+       go('S5')
+   };
+   document.getElementById('rejectBtn').onclick=()=> {
+       let note=document.getElementById('reviewNote').value.trim();
+       if(!note||!['Under Review'].includes(report.status)) {
+           document.getElementById('reviewError').classList.add('on');
+           return
+       }
+       evt('Rejected', note, 'Coordinator');
+       go('S5')
+   };
+   document.getElementById('startBtn').onclick=()=> {
+       if(report.status==='Assigned') {
+           evt('In Progress', 'Collection crew started the assigned task.', 'Collection Crew');
+           go('S8')
+       }
+       else alert('This action requires an Assigned task.')
+   };
+   document.getElementById('saveOutcome').onclick=()=> {
+       let outcome=document.getElementById('crewOutcome').value,
+       note=document.getElementById('crewNote').value.trim();
+       if(report.status!=='In Progress'||!note||!outcome) {
+           document.getElementById('crewError').classList.add('on');
+           return
+       }
+       document.getElementById('crewError').classList.remove('on');
+       evt(outcome, note, 'Collection Crew');
+       go('S5')
+   };
+   document.getElementById('applyFilter').onclick=()=>draw();
+   document.getElementById('scheduleZone').onchange=applyScheduleFilters;
+   document.getElementById('scheduleCat').onchange=applyScheduleFilters;
+   initializeDynamicUI();
+   go(qs.get('screen')&&titleNames[qs.get('screen')]?qs.get('screen'):'S1');
+   
+  </script>
+ </body>
+</html>
