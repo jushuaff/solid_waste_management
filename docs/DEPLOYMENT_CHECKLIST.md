@@ -1,0 +1,21 @@
+# Production acceptance checklist
+
+- [ ] Clone to a non-production environment and run `composer install` (record lockfile).
+- [ ] Confirm PHP 8.3+, MongoDB extension, driver and Laravel package versions.
+- [ ] Back up any existing `solid_waste_management.users` data before migration.
+- [ ] Inspect legacy user documents, roles, password hashes, and duplicate emails.
+- [ ] Run `php artisan migrate`, `php artisan db:seed`, `php artisan route:list`.
+- [ ] Verify account registration, login throttling, logout/session rotation, inactive-account denial.
+- [ ] Test reset token expiry, one-time use, mail delivery and anti-enumeration responses.
+- [ ] Verify each CRUD form and forbidden cross-role operations.
+- [ ] Test publication of two or more schedules in one zone with different times/categories.
+- [ ] Test designated point / meet-the-truck / curbside, and one-date schedule exceptions.
+- [ ] Verify report ownership and crew assignment protections with two test users.
+- [ ] Verify each report transition and history record, including rejected and closed cases.
+- [ ] Print schedule, case details and filtered aggregate summary.
+- [ ] Test private evidence access: non-owner must not be able to download.
+- [ ] Migrate MongoDB to a replica set/Atlas; enable transaction mode.
+- [ ] Conduct permission, CSRF, upload and IDOR review; run accessibility tests.
+- [ ] Configure HTTPS, verified SMTP, PHP-FPM permissions, backup, and monitoring.
+- [ ] Review collection policy and Data Privacy Act compliance with the adopting barangay.
+- [ ] Run performance/load tests, recovery drill, and obtain signoff before actual resident data.

@@ -1,0 +1,46 @@
+<?php
+use App\Http\Controllers\{AuthController,PasswordResetController,ProfileController,DashboardController,
+    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController};
+use Illuminate\Support\Facades\Route;
+Route::get('/',fn()=>redirect()->route(auth()->check()?'dashboard':'login'));
+Route::middleware('guest')->group(function(){
+    Route::get('/login',[AuthController::class,'showLogin'])->name('login');
+    Route::post('/login',[AuthController::class,'login'])->middleware('throttle:5,1')->name('login.attempt');
+    Route::get('/register',[AuthController::class,'showRegister'])->name('register');
+    Route::post('/register',[AuthController::class,'register'])->middleware('throttle:4,1')->name('register.store');
+    Route::get('/forgot-password',[PasswordResetController::class,'requestForm'])->name('password.request');
+    Route::post('/forgot-password',[PasswordResetController::class,'requestLink'])->middleware('throttle:3,1')->name('password.email');
+    Route::get('/reset-password/{token}',[PasswordResetController::class,'resetForm'])->name('password.reset');
+    Route::post('/reset-password',[PasswordResetController::class,'reset'])->middleware('throttle:5,1')->name('password.update');
+});
+Route::post('/logout',[AuthController::class,'logout'])->middleware('auth')->name('logout');
+Route::middleware(['auth','active'])->group(function(){
+    Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
+    Route::get('/schedule',[ResidentGuideController::class,'schedules'])->name('schedules.index');
+    Route::get('/schedule/print',[ResidentGuideController::class,'printSchedules'])->name('schedules.print');
+    Route::get('/local-rules',[ResidentGuideController::class,'rules'])->name('rules.index');
+    Route::get('/profile',[ProfileController::class,'edit'])->name('profile.edit');
+    Route::put('/profile',[ProfileController::class,'update'])->name('profile.update');
+    Route::put('/profile/password',[ProfileController::class,'password'])->name('profile.password');
+    Route::get('/notifications',[NotificationController::class,'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read',[NotificationController::class,'read'])->name('notifications.read');
+    Route::get('/reports',[ReportController::class,'index'])->name('reports.index');
+    Route::get('/reports/create',[ReportController::class,'create'])->middleware('role:resident')->name('reports.create');
+    Route::post('/reports',[ReportController::class,'store'])->middleware(['role:resident','throttle:10,1'])->name('reports.store');
+    Route::get('/reports/print-summary',[ReportController::class,'printableSummary'])->middleware('role:superadmin,admin,coordinator')->name('reports.print-summary');
+    Route::get('/reports/{report}',[ReportController::class,'show'])->name('reports.show');
+    Route::get('/reports/{report}/edit',[ReportController::class,'edit'])->middleware('role:resident')->name('reports.edit');
+    Route::put('/reports/{report}',[ReportController::class,'update'])->middleware('role:resident')->name('reports.update');
+    Route::delete('/reports/{report}',[ReportController::class,'archive'])->middleware('role:superadmin,admin')->name('reports.archive');
+    Route::get('/reports/{report}/print',[ReportController::class,'print'])->name('reports.print');
+    Route::get('/reports/{report}/evidence',[ReportController::class,'evidence'])->name('reports.evidence');
+    Route::post('/reports/{report}/workflow',[ReportWorkflowController::class,'change'])->middleware('role:superadmin,admin,coordinator,crew')->name('reports.workflow');
+    Route::middleware('role:superadmin,admin,coordinator')->prefix('manage')->name('management.')->group(function(){
+        Route::get('/{resource}',[ManagementController::class,'index'])->name('index');
+        Route::get('/{resource}/create',[ManagementController::class,'create'])->name('create');
+        Route::post('/{resource}',[ManagementController::class,'store'])->name('store');
+        Route::get('/{resource}/{id}/edit',[ManagementController::class,'edit'])->name('edit');
+        Route::put('/{resource}/{id}',[ManagementController::class,'update'])->name('update');
+        Route::delete('/{resource}/{id}',[ManagementController::class,'destroy'])->name('destroy');
+    });
+});
