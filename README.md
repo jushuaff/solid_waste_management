@@ -27,6 +27,25 @@ The same Laravel and MongoDB deployment now includes both MIT 103 collection sch
 
 The implementation is source-complete at the module level but not a certified, deployed system. Back up the MongoDB database and run integration and authorization tests before live use.
 
+## Development-only demo seeders for MIT 103/104
+
+The original seeders (roles, initial strong-password administrator and reference categories) remain in source control. An additional **opt-in** `DemoDataSeeder` creates **17 fictional role accounts**, three zones, nine schedules, local rules, households, inspection records, MRF weigh-ins and sample incident histories. Every newly created demo account initially has password **`1234`**, as requested for **local testing only**.
+
+See [database/seeders/README.md](database/seeders/README.md) for the complete test-account list and safeguard instructions. No existing user is overwritten or password-reset by repeated runs.
+
+```dotenv
+APP_ENV=local
+SWM_DEMO_SEED=true
+```
+
+```powershell
+php artisan config:clear
+php artisan migrate
+php artisan db:seed --class=DemoDataSeeder
+```
+
+The demo seeder refuses to run outside the `local`/`testing` environment or without the explicit flag. It does not delete any collections. The existing `InitialAdminSeeder` still requires a strong, independently configured password. Never use these demonstration accounts on a public deployment.
+
 ## Application modules
 
 | Module | What works in the source |
