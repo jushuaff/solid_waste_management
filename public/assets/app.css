@@ -878,3 +878,39 @@ textarea.form-control{min-height:110px}
 .printlink{display:inline-flex}
 .mobile-link{display:none}
 @media(max-width:690px){.grid2{grid-template-columns:1fr}.info-list{grid-template-columns:1fr;gap:4px}.info-list dd{margin-bottom:9px}.topbar{gap:6px}.mobile-link{display:inline-flex}.content-table{min-width:540px}}
+
+
+/* Shared password visibility control: all Blade password inputs, no build step. */
+.password-input-wrap {
+    position: relative;
+    width: 100%;
+}
+.password-input-wrap > input {
+    display: block;
+    width: 100%;
+    padding-right: 78px !important;
+}
+.password-visibility-toggle {
+    position: absolute;
+    top: 50%;
+    right: 7px;
+    transform: translateY(-50%);
+    min-width: 58px;
+    min-height: 34px;
+    padding: 6px 9px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #176a57;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+}
+.password-visibility-toggle:hover {
+    background: #e7f5ee;
+}
+.password-visibility-toggle:focus-visible {
+    outline: 2px solid #b77815;
+    outline-offset: 1px;
+}
