@@ -805,7 +805,7 @@
    }
 
    /* Additional collection-configuration interfaces */
-   .side { overflow-y: auto; }
+   .side { overflow: hidden; }
    .sidefoot { flex: none; }
    .scheduleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
    .daycard { display: flex; flex-direction: column; gap: 9px; }
@@ -832,7 +832,7 @@
    .stack { display:grid; gap:15px; }
    .divider-light { border:0; border-top:1px solid #e2eee7; margin:20px 0; }
    @media(max-width:950px) { .scheduleGrid {grid-template-columns:1fr;} }
-   @media(max-width:690px) { .side.open { max-height:85vh; overflow-y:auto; } .sectionhead, .config-header { align-items:stretch; flex-direction:column; } }
+   @media(max-width:690px) { .side.open { max-height:85vh; overflow:hidden; } .sectionhead, .config-header { align-items:stretch; flex-direction:column; } }
 
 
 /* Laravel production screens: preserve the original teal-and-white prototype identity */
@@ -913,4 +913,46 @@ textarea.form-control{min-height:110px}
 .password-visibility-toggle:focus-visible {
     outline: 2px solid #b77815;
     outline-offset: 1px;
+}
+
+
+/* Sidebar: one scrollable menu area, unobtrusive overlay-like scrollbar.
+   Brand stays at the top; signed-in account and logout stay at the bottom. */
+.side {
+    overflow: hidden;
+}
+.site-nav {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;               /* no scrollbar when the menu fits */
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;          /* Firefox */
+    scrollbar-color: transparent transparent;
+}
+.site-nav:hover,
+.site-nav:focus-within,
+.site-nav.is-scrolling {
+    scrollbar-color: rgba(142, 192, 177, .56) transparent;
+}
+.site-nav::-webkit-scrollbar {
+    width: 5px;                     /* Chrome / Edge / Safari */
+}
+.site-nav::-webkit-scrollbar-track {
+    background: transparent;        /* removes the wide white track */
+}
+.site-nav::-webkit-scrollbar-thumb {
+    border-radius: 99px;
+    background: transparent;        /* hidden until use */
+}
+.site-nav:hover::-webkit-scrollbar-thumb,
+.site-nav:focus-within::-webkit-scrollbar-thumb,
+.site-nav.is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(142, 192, 177, .56);
+}
+.site-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(183, 225, 209, .85);
+}
+.sidefoot {
+    flex: 0 0 auto;
 }
