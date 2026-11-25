@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Repeatable fictional data for combined MIT 103 / MIT 104 online demonstrations.
- * No truncates, drops, password resets, or deletes. Never use on real resident data.
+ * No truncates, drops or deletes. Known old demo passwords (1234) are upgraded. Never use on real resident data.
  */
 class DemoDataSeeder extends Seeder
 {
@@ -23,6 +23,6 @@ class DemoDataSeeder extends Seeder
             DemoOperationsSeeder::class,
         ]);
 
-        $this->command?->warn('Demo seed complete. Test logins use password 1234 ONLY in a protected local environment.');
+        $this->command?->warn('Demo seed complete. Test logins use password password1234 ONLY in a protected local environment.');
     }
 }
