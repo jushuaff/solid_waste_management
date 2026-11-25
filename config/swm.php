@@ -1,5 +1,6 @@
 <?php
 return [
+ 'demo_seed_enabled'=>filter_var(env('SWM_DEMO_SEED',false),FILTER_VALIDATE_BOOL),
  'max_report_age_days'=>(int)env('REPORT_MAX_AGE_DAYS',30),
  'mongo_transactions'=>(bool)env('MONGODB_TRANSACTIONS',false),
  'roles'=>['superadmin','admin','coordinator','crew','eco_aide','resident'],
