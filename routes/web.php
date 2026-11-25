@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\{AuthController,PasswordResetController,ProfileController,DashboardController,
-    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController};
+    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController};
 use Illuminate\Support\Facades\Route;
 Route::get('/',fn()=>redirect()->route(auth()->check()?'dashboard':'login'));
 Route::middleware('guest')->group(function(){
@@ -16,6 +16,18 @@ Route::middleware('guest')->group(function(){
 Route::post('/logout',[AuthController::class,'logout'])->middleware('auth')->name('logout');
 Route::middleware(['auth','active'])->group(function(){
     Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
+
+    // MIT 104 LINIS — online-first inspection, household and MRF monitoring.
+    Route::get('/linis/dashboard',[LinisController::class,'dashboard'])->name('linis.dashboard');
+    Route::get('/linis/monthly-report',[LinisController::class,'monthlyReport'])->name('linis.print-monthly');
+    Route::get('/linis/inspections/{id}/evidence',[LinisController::class,'evidence'])->name('linis.evidence');
+    Route::get('/linis/{module}',[LinisController::class,'index'])->whereIn('module',['households','inspections','weigh-ins'])->name('linis.index');
+    Route::get('/linis/{module}/create',[LinisController::class,'create'])->whereIn('module',['households','inspections','weigh-ins'])->name('linis.create');
+    Route::post('/linis/{module}',[LinisController::class,'store'])->whereIn('module',['households','inspections','weigh-ins'])->name('linis.store');
+    Route::get('/linis/{module}/{id}/edit',[LinisController::class,'edit'])->whereIn('module',['households','inspections','weigh-ins'])->name('linis.edit');
+    Route::put('/linis/{module}/{id}',[LinisController::class,'update'])->whereIn('module',['households','inspections','weigh-ins'])->name('linis.update');
+    Route::delete('/linis/{module}/{id}',[LinisController::class,'destroy'])->whereIn('module',['households','inspections','weigh-ins'])->name('linis.destroy');
+
     Route::get('/schedule',[ResidentGuideController::class,'schedules'])->name('schedules.index');
     Route::get('/schedule/print',[ResidentGuideController::class,'printSchedules'])->name('schedules.print');
     Route::get('/local-rules',[ResidentGuideController::class,'rules'])->name('rules.index');
