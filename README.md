@@ -29,9 +29,9 @@ The implementation is source-complete at the module level but not a certified, d
 
 ## Development-only demo seeders for MIT 103/104
 
-The original seeders (roles, initial strong-password administrator and reference categories) remain in source control. An additional **opt-in** `DemoDataSeeder` creates **17 fictional role accounts**, three zones, nine schedules, local rules, households, inspection records, MRF weigh-ins and sample incident histories. Every newly created demo account initially has password **`1234`**, as requested for **local testing only**.
+The original seeders (roles, initial strong-password administrator and reference categories) remain in source control. An additional **opt-in** `DemoDataSeeder` creates **17 fictional role accounts**, three zones, nine schedules, local rules, households, inspection records, MRF weigh-ins and sample incident histories. Every newly created demo account initially has password **`password1234`**, as requested for **local testing only**.
 
-See [database/seeders/README.md](database/seeders/README.md) for the complete test-account list and safeguard instructions. No existing user is overwritten or password-reset by repeated runs.
+See [database/seeders/README.md](database/seeders/README.md) for the complete test-account list and safeguard instructions. Existing data remain intact; known old demo passwords `1234` upgrade to `password1234` while independently changed passwords stay untouched.
 
 ```dotenv
 APP_ENV=local
