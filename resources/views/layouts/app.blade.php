@@ -66,5 +66,19 @@
     </main>
 </div>
 <script>document.addEventListener('click',function(e){const aside=document.getElementById('sidebar');if(window.innerWidth<690&&aside.classList.contains('open')&&!aside.contains(e.target)&&!e.target.closest('.mobilemenu'))aside.classList.remove('open')});</script>
+<script>
+(function () {
+    const menu = document.querySelector('#sidebar .site-nav');
+    if (!menu) return;
+    let idleTimer;
+    menu.addEventListener('scroll', function () {
+        menu.classList.add('is-scrolling');
+        window.clearTimeout(idleTimer);
+        idleTimer = window.setTimeout(function () {
+            menu.classList.remove('is-scrolling');
+        }, 900);
+    }, { passive: true });
+}());
+</script>
 @yield('scripts')
 </body></html>
