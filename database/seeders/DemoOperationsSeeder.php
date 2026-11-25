@@ -34,7 +34,11 @@ class DemoOperationsSeeder extends Seeder
                 'eco' => User::where('email','ecoaide.'.$key.'@linis.test')->firstOrFail(),
             ];
         }
-        $coord = User::where('email','coordinator.pine@linis.test')->firstOrFail();
+        $coordinators = [
+            'pine' => User::where('email','coordinator.pine@linis.test')->firstOrFail(),
+            'ridge' => User::where('email','coordinator.ridge@linis.test')->firstOrFail(),
+            'creek' => User::where('email','admin@linis.test')->firstOrFail(),
+        ];
 
         // 45 observations across the two completed weeks and current week.
         // Ridge deliberately scores 40% to demonstrate two-week red-purok alerts.
@@ -164,7 +168,7 @@ class DemoOperationsSeeder extends Seeder
                     [
                         'report_id'=>(string)$report->id,
                         'crew_user_id'=>(string)$crew->id,
-                        'assigned_by'=>(string)$coord->id,
+                        'assigned_by'=>(string)$coordinators[$zoneKey]->id,
                         'assigned_at'=>$submittedAt->copy()->addMinutes(45),
                         'outcome'=>in_array($status,['Resolved','Exception','Closed'],true)?$status:null,
                         'outcome_note'=>'Fictional crew action.',
@@ -179,7 +183,7 @@ class DemoOperationsSeeder extends Seeder
                     ['demo_key'=>'LINIS-DEMO-HISTORY-'.$key.'-'.$order],
                     [
                         'report_id'=>(string)$report->id,
-                        'changed_by'=>$order===0?null:(string)$coord->id,
+                        'changed_by'=>$order===0?null:(string)$coordinators[$zoneKey]->id,
                         'actor_type'=>$order===0?'system':'user',
                         'from_status'=>$prior,
                         'to_status'=>$next,
