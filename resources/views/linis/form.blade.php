@@ -29,8 +29,8 @@
 </select></div>
 <div class="field"><label for="segregated">Segregation observed *</label>
 <select id="segregated" name="segregated" required>
-<option value="1" @selected((string)old('segregated',$record?->segregated===null?'1':(int)$record?->segregated)==='1')>Properly segregated</option>
-<option value="0" @selected((string)old('segregated',(int)$record?->segregated)==='0')>Not segregated</option>
+<option value="1" @selected((string)old('segregated',$record ? (int)$record->segregated : 1)==='1')>Properly segregated</option>
+<option value="0" @selected((string)old('segregated',$record ? (int)$record->segregated : 1)==='0')>Not segregated</option>
 </select></div>
 <div class="field"><label for="photo">Optional violation evidence</label>
 <input id="photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp"><span class="hint">JPG/PNG/WebP up to 4 MB; staff-only download.</span></div>
