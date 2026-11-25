@@ -16,6 +16,17 @@
             <a class="navitem {{ request()->routeIs('schedules.*') ? 'active' : '' }}" href="{{ route('schedules.index') }}"><span class="ico">▣</span> Collection Schedules</a>
             <a class="navitem {{ request()->routeIs('rules.*') ? 'active' : '' }}" href="{{ route('rules.index') }}"><span class="ico">☷</span> Rules &amp; Guidelines</a>
             <a class="navitem {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}"><span class="ico">◎</span> Reports &amp; Tracking</a>
+            @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','eco_aide','crew'],true))
+                <div class="navHead">LINIS · ECOLOGICAL MONITORING</div>
+                @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','eco_aide'],true))
+                <a class="navitem {{ request()->routeIs('linis.dashboard')?'active':'' }}" href="{{ route('linis.dashboard') }}"><span class="ico">◉</span> Compliance Dashboard</a>
+                @endif
+                <a class="navitem {{ request()->is('linis/inspections*')?'active':'' }}" href="{{ route('linis.index','inspections') }}"><span class="ico">✓</span> Pickup Inspections</a>
+                @if(auth()->user()->role_code!=='crew')
+                <a class="navitem {{ request()->is('linis/weigh-ins*')?'active':'' }}" href="{{ route('linis.index','weigh-ins') }}"><span class="ico">▤</span> MRF Weigh-ins</a>
+                @endif
+                <a class="navitem {{ request()->is('linis/households*')?'active':'' }}" href="{{ route('linis.index','households') }}"><span class="ico">▦</span> Household Registry</a>
+            @endif
             @if(auth()->user()->role_code === 'resident')
                 <a class="navitem" href="{{ route('reports.create') }}"><span class="ico">＋</span> Report Missed Pickup</a>
             @endif
