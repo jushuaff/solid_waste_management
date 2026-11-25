@@ -5,6 +5,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') | {{ config('app.name') }}</title>
     <link rel="stylesheet" href="{{ asset('assets/app.css') }}">
+    <script src="{{ asset('assets/password-toggle.js') }}" defer></script>
 </head>
 <body>
 <div class="app">
