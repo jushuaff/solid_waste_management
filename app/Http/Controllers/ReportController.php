@@ -45,7 +45,10 @@ class ReportController extends Controller
         $data=$request->validate(['zone_id'=>'required|string','category_id'=>'required|string','schedule_id'=>'nullable|string',
           'incident_date'=>'required|date|before_or_equal:today',
           'location'=>'required|string|max:250','description'=>'required|string|max:4000',
-          'photo'=>'nullable|image|mimes:jpeg,png,webp|max:4096','privacy'=>'accepted']);
+          'photo'=>'nullable|image|mimes:jpeg,png,webp|max:4096','privacy'=>'accepted',
+          'incident_type'=>'required|in:missed_collection,illegal_dumping',
+          'latitude'=>'nullable|required_if:incident_type,illegal_dumping|numeric|between:-90,90',
+          'longitude'=>'nullable|required_if:incident_type,illegal_dumping|numeric|between:-180,180']);
         if((string)$request->user()->zone_id!==$data['zone_id'])throw ValidationException::withMessages(['zone_id'=>'Reports must use the zone assigned to your account.']);
         if(!Zone::find($data['zone_id'])||!WasteCategory::find($data['category_id']))throw ValidationException::withMessages(['category_id'=>'Select a valid zone and waste category.']);
         if(!empty($data['schedule_id'])){
@@ -62,6 +65,7 @@ class ReportController extends Controller
                   'resident_id'=>(string)$request->user()->id,'zone_id'=>$data['zone_id'],'category_id'=>$data['category_id'],
                   'schedule_id'=>$data['schedule_id']??null,'incident_date'=>$data['incident_date'],
                   'location'=>$data['location'],'description'=>$data['description'],'photo_path'=>$path,
+                  'incident_type'=>$data['incident_type'],'latitude'=>$data['latitude']??null,'longitude'=>$data['longitude']??null,
                   'current_status'=>'Submitted','submitted_at'=>now(),
                 ]);
                 StatusHistory::create(['report_id'=>(string)$report->id,'changed_by'=>(string)$request->user()->id,
@@ -92,14 +96,17 @@ class ReportController extends Controller
         $report=Report::findOrFail($report);$this->authorizeReport($request,$report);
         abort_unless($request->user()->role_code==='resident' && $report->current_status==='Under Review',403,'This report is already under staff action.');
         $data=$request->validate(['location'=>'required|string|max:250','description'=>'required|string|max:4000',
-           'incident_date'=>'required|date|before_or_equal:today','category_id'=>'required|string','schedule_id'=>'nullable|string']);
+           'incident_date'=>'required|date|before_or_equal:today','category_id'=>'required|string','schedule_id'=>'nullable|string',
+           'incident_type'=>'required|in:missed_collection,illegal_dumping',
+           'latitude'=>'nullable|required_if:incident_type,illegal_dumping|numeric|between:-90,90',
+           'longitude'=>'nullable|required_if:incident_type,illegal_dumping|numeric|between:-180,180']);
         if(!WasteCategory::find($data['category_id']))throw ValidationException::withMessages(['category_id'=>'Please select a valid category.']);
         if(!empty($data['schedule_id'])){
             $schedule=Schedule::find($data['schedule_id']);
             if(!$schedule || (string)$schedule->zone_id!==(string)$report->zone_id || (string)$schedule->category_id!==(string)$data['category_id'] || $schedule->publication_status!=='published')throw ValidationException::withMessages(['schedule_id'=>'Choose a matching published schedule.']);
         }
         if(\Illuminate\Support\Carbon::parse($data['incident_date'])->lt(now()->subDays(config('swm.max_report_age_days'))->startOfDay()))throw ValidationException::withMessages(['incident_date'=>'This date is outside the allowed reporting window.']);
-        $fields=['location','description','incident_date','category_id','schedule_id'];
+        $fields=['location','description','incident_date','category_id','schedule_id','incident_type','latitude','longitude'];
         $before=[];foreach($fields as $field)$before[$field]=$report->$field;
         $next=[];foreach($fields as $field)$next[$field]=$data[$field]??null;
         if($before===$next)return back()->with('status','No changes to save.');
