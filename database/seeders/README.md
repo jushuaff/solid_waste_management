@@ -4,7 +4,7 @@ These files remain under `database/seeders/` in source control; **none are delet
 
 ## Security boundary
 
-**All 17 fictional demo users are initially created with the requested password `1234`.** That password is deliberately insecure. The demo seeders refuse to run unless BOTH conditions are true:
+**All 17 fictional demo users are initially created with the requested password `password1234`.** That password is deliberately insecure. The demo seeders refuse to run unless BOTH conditions are true:
 
 1. `APP_ENV=local` or `APP_ENV=testing`
 2. `SWM_DEMO_SEED=true`
@@ -40,7 +40,7 @@ You can also run `php artisan db:seed` if your normal `INITIAL_ADMIN_PASSWORD` i
 
 When demo data are no longer wanted, set `SWM_DEMO_SEED=false` and run `php artisan config:clear`. This **disables future demo seeding but does not delete existing records**. Review and remove demo records manually in a safe, verified environment before any live deployment.
 
-## Seeded test accounts (all password: `1234`)
+## Seeded test accounts (all default password: `password1234`)
 
 | Role | Name / email | Purok |
 |---|---|---|
@@ -97,7 +97,7 @@ For actual notices, the scheduler must be configured and running (see the root R
 ## Repeatability and protection
 
 - Seeders use `firstOrCreate` with deterministic `demo_key` markers or fictional email addresses.
-- Rerunning them **does not reset changed account passwords, overwrite edited demo records or delete anything**.
+- Rerunning them **does not reset user-changed passwords, overwrite edited demo records or delete anything**. Verified demo users still using the previous `1234` are automatically upgraded to `password1234`.
 - New weekly inspection/monthly weigh-in periods may add new date-scoped examples when run at a later date; existing sample records stay untouched.
 - Do **not** run `db:wipe`, `migrate:fresh`, or manual collection drops to reseed.
 - These are development-only fixtures; regulatory reporting metrics and user permission boundaries still require integration testing.
