@@ -42,25 +42,42 @@ class DemoUsersSeeder extends Seeder
         ];
 
         $roles = Role::all()->keyBy('code');
+        $newCount = 0;
+        $upgradedCount = 0;
         foreach ($users as [$name, $email, $role, $zone]) {
             if (! $roles->has($role)) {
                 throw new \RuntimeException('Missing role: '.$role.'. Run RoleSeeder first.');
             }
 
-            // firstOrCreate means reruns NEVER reset passwords/roles of existing users.
-            // This includes any existing account that happens to use a demo email.
-            User::firstOrCreate(
+            // Preserve existing passwords and roles on repeat runs. Only previously
+            // created fictional demo users STILL using the old 1234 are upgraded.
+            $account = User::firstOrCreate(
                 ['email' => $email],
                 [
                     'name' => $name,
-                    'password' => Hash::make('1234'),
+                    'password' => Hash::make('password1234'),
                     'role_id' => (string) $roles[$role]->id,
                     'zone_id' => $zone ? (string) $zones[$zone]->id : null,
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ]
             );
+            if ($account->wasRecentlyCreated) {
+                $newCount++;
+                continue;
+            }
+
+            // Old fixture migration: do NOT change a real account sharing the email,
+            // or a demo account whose password was deliberately changed by the user.
+            $isExpectedDemo = (string) $account->name === $name
+                && (string) $account->role_id === (string) $roles[$role]->id
+                && (string) ($account->zone_id ?? '') === ($zone ? (string) $zones[$zone]->id : '');
+            if ($isExpectedDemo && Hash::check('1234', (string) $account->password)) {
+                $account->password = Hash::make('password1234');
+                $account->save();
+                $upgradedCount++;
+            }
         }
-        $this->command?->warn('DEMO ONLY: '.count($users).' sample user identities; new accounts use password 1234. Existing accounts were not changed.');
+        $this->command?->warn('DEMO ONLY: '.count($users).' fictional identities, '.$newCount.' newly created and '.$upgradedCount.' upgraded from the old 1234 password to password1234. Other existing accounts were untouched.');
     }
 }
