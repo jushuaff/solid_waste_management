@@ -14,6 +14,19 @@ A configurable Philippine barangay waste-management application based on the MIT
 - Session-based Laravel authentication, CSRF protection, `throttle` on authentication and reporting, password hashing, authorization by role and report ownership, in-app notifications, and email password reset.
 - No WebSockets; server-refresh notifications and database-driven activity history.
 
+## MIT 103 + MIT 104 (online-first LINIS)
+
+The same Laravel and MongoDB deployment now includes both MIT 103 collection scheduling/report tracking and MIT 104 online eco-aide inspections, household registry, MRF weigh-ins, data-derived segregation and diversion metrics, scheduled alerts, and browser-printable monthly monitoring summaries. Official RA 9003 compliance reporting, end-to-end tests, and live deployment are **not verified**. Offline PWA, offline synchronization, and WebSockets are explicitly deferred.
+
+- **Implementation checklist:** [MIT103-104.MD](MIT103-104.MD)
+- **Windows PHP 8.4 / XAMPP setup:** [docs/PHP84_WINDOWS_SETUP.md](docs/PHP84_WINDOWS_SETUP.md)
+- **Staff views:** `/linis/dashboard`, `/linis/households`, `/linis/inspections`, `/linis/weigh-ins`
+- **Monthly summary:** `/linis/monthly-report?month=2026-11` (browser Print / Save as PDF)
+- **Online alert command:** `php artisan linis:check-alerts --dry-run`; then configure `php artisan schedule:run` every minute to run the hourly command.
+- **Eco-aide role:** rerun `php artisan db:seed --class=RoleSeeder` after migration and assign active eco-aide accounts and zones from the administrator UI.
+
+The implementation is source-complete at the module level but not a certified, deployed system. Back up the MongoDB database and run integration and authorization tests before live use.
+
 ## Application modules
 
 | Module | What works in the source |
