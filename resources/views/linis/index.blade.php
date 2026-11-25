@@ -2,9 +2,10 @@
 @section('title', ['households'=>'Household Registry','inspections'=>'Pickup Inspections','weigh-ins'=>'MRF Weigh-ins'][$module] ?? 'LINIS')
 @section('content')
 @php($titles=['households'=>'Household Registry','inspections'=>'Eco-Aide Pickup Inspections','weigh-ins'=>'MRF Waste Weigh-ins'])
+@php($mayWrite=($module!=='households' || in_array(auth()->user()->role_code,['superadmin','admin','coordinator'],true)))
 <div class="heading"><div><span class="eyebrow">LINIS · ONLINE OPERATIONS</span><h1>{{ $titles[$module] }}</h1>
 <p>Data are stored in MongoDB. Updates are audited and deletion archives operational records.</p></div>
-<a class="btn primary" href="{{ route('linis.create',$module) }}">＋ New record</a></div>
+@if($mayWrite)<a class="btn primary" href="{{ route('linis.create',$module) }}">＋ New record</a>@endif</div>
 <div class="card">
 <form class="filterbar" method="GET">
 <label class="field">Zone <select class="form-control" name="zone_id"><option value="">All allowed zones</option>
@@ -36,9 +37,9 @@
 <td>{{ $row->measured_at?->format('M j, Y H:i') }}</td>
 <td>{{ $row->category?->local_label??'—' }}</td><td>{{ number_format((float)$row->weight_kg,3) }}</td><td>{{ number_format((float)$row->diverted_kg,3) }}</td>
 @endif
-<td><div class="actions"><a class="btn small outline" href="{{ route('linis.edit',[$module,$row->id]) }}">Edit</a>
+<td><div class="actions">@if($mayWrite)<a class="btn small outline" href="{{ route('linis.edit',[$module,$row->id]) }}">Edit</a>
 <form method="POST" action="{{ route('linis.destroy',[$module,$row->id]) }}" onsubmit="return confirm('Archive this record? It will no longer contribute to current metrics.')">
-@csrf @method('DELETE')<button class="btn small danger">Archive</button></form></div></td></tr>
+@csrf @method('DELETE')<button class="btn small danger">Archive</button></form>@else <span class="muted">Read-only</span> @endif</div></td></tr>
 @empty<tr><td colspan="6" class="muted">No records found.</td></tr>@endforelse
 </tbody></table></div>
 <div class="pager">{{ $records->links('components.pagination') }}</div>
