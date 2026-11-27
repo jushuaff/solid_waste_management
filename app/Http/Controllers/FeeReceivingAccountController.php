@@ -64,8 +64,9 @@ class FeeReceivingAccountController extends Controller
         FeeCity::findOrFail($data['city_id']);
         $accountNumber=trim($data['account_number']);
         $provider=trim($data['provider']);
+        $types=$data['method']==='wallet'?['wallet','gcash']:['bank'];
         if(FeeReceivingAccount::where('city_id',$data['city_id'])
-            ->where('method',$data['method'])->where('provider',$provider)
+            ->whereIn('method',$types)->where('provider',$provider)
             ->where('account_number',$accountNumber)->exists()){
             throw ValidationException::withMessages(['account_number'=>'This receiving account is already registered for the selected city.']);
         }
@@ -108,8 +109,9 @@ class FeeReceivingAccountController extends Controller
         FeeCity::findOrFail($data['city_id']);
         $number=trim($data['account_number']);
         $provider=trim($data['provider']);
+        $types=$data['method']==='wallet'?['wallet','gcash']:['bank'];
         $duplicate=FeeReceivingAccount::where('city_id',$data['city_id'])
-            ->where('method',$data['method'])->where('provider',$provider)
+            ->whereIn('method',$types)->where('provider',$provider)
             ->where('account_number',$number)->first();
         if($duplicate && (string)$duplicate->id!==(string)$entry->id){
             throw ValidationException::withMessages(['account_number'=>'This receiving account is already registered for the selected city.']);
