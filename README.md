@@ -91,6 +91,14 @@ The in-app notification system now sends relevant notices for **new and edited i
 
 See the [role-by-role notification routing and verification guide](docs/NOTIFICATION_EVENTS.md) and [the shared development checklist](MIT103-104.MD). Live notification delivery and MongoDB pagination need acceptance testing.
 
+## Garbage-fee tracking (Phase 2 / CR-01)
+
+A separate monthly **household garbage-fee ledger** is available under **Garbage Fee Payments**. **Superadmins** configure city/municipality household rates, effective months and ordinance references; **barangay admins** can manage approved **GCash/bank receiving accounts and optional private QR images**. Authorized staff may record verified **Cash, GCash, Bank and Card (external terminal)** payments, including partial payments and audited superadmin reversals. Residents can see only their **linked household's** billing and their city's active payment destinations. No live payment processing is provided; the app does **not** collect card details.
+
+To use: pull, run `php artisan migrate`, configure a city/rate and zone assignments, link residents to household references, then generate the billing month. See [Phase 2 garbage-fee setup, roles and required financial verification](docs/GARBAGE_FEES_PHASE2.md).
+
+**Security limit:** This new financial feature is source-implemented but has not passed actual MongoDB/financial concurrency testing, privacy testing, official ordinance review or cash reconciliation UAT. Do not use it to handle real public collections until those tests and approvals are complete.
+
 ## Application modules
 
 | Module | What works in the source |
