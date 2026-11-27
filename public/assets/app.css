@@ -1354,3 +1354,61 @@ a.btn, a.btn:hover, a.btn:focus-visible,
     .notification-open-trigger { padding: 12px; }
     .notification-dashboard-open { gap: 9px; }
 }
+
+
+/* Phase 2 monthly garbage-fee management and authenticated receiving QR previews. */
+.fee-receiving-grid {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+}
+.fee-receiving-card {
+    min-width:0;
+    border:1px solid #dbe7e1;
+    border-radius:13px;
+    background:#fafeff;
+    padding:17px;
+}
+.fee-receiving-card > .row-between { gap:12px; align-items:flex-start; }
+.fee-receiving-card p { overflow-wrap:anywhere; }
+.fee-qr-preview {
+    display:block;
+    width:min(100%,230px);
+    max-height:230px;
+    object-fit:contain;
+    background:#fff;
+    border:1px solid #dbe7e1;
+    border-radius:10px;
+    margin:12px 0;
+    padding:8px;
+}
+.fee-zone-choices {
+    display:grid;
+    gap:11px;
+    max-height:320px;
+    overflow-y:auto;
+    padding:14px;
+    border:1px solid #dbe7e1;
+    border-radius:11px;
+}
+.fee-zone-choices .checkline { width:100%; }
+.fee-details { min-width:110px; }
+.fee-details > summary {
+    cursor:pointer;
+    color:#0d745b;
+    font-weight:700;
+    white-space:nowrap;
+}
+.fee-details-content {
+    min-width:290px;
+    width:min(720px,72vw);
+    padding:14px 6px 8px;
+}
+.fee-details-content .content-table { font-size:12px; }
+.fee-details-content .grid2 { gap:12px; }
+.fee-details-content h4 { margin:12px 0 9px; }
+.fee-highlight { background:#edf9f2; }
+@media(max-width:800px) {
+    .fee-receiving-grid { grid-template-columns:1fr; }
+    .fee-details-content { width:min(92vw,600px); }
+}
