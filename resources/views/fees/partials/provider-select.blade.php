@@ -1,6 +1,5 @@
-@props(['selected' => ''])
 <div class="field">
-    <label for="{{ $attributes->get('id','fee-provider') }}">Bank / e-wallet provider *</label>
+    <label for="{{ $providerInputId }}">Bank / e-wallet provider *</label>
     <select class="form-control" name="provider" id="{{ $attributes->get('id','fee-provider') }}" required>
         <option value="">Select receiving institution</option>
         @foreach(['wallet'=>'E-wallets','bank'=>'Banks and digital banks'] as $type=>$groupName)
