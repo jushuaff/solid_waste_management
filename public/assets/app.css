@@ -1444,3 +1444,300 @@ a.btn, a.btn:hover, a.btn:focus-visible,
 @media(max-width:690px) {
     .fee-provider-tag { width:100%; justify-content:space-between; }
 }
+
+
+/* Receiving accounts: structured payment fields, paired instructions/QR, and compact editing. */
+.fee-account-create,
+.fee-provider-management,
+.fee-account-list {
+    margin-bottom: 20px;
+}
+.fee-account-create,
+.fee-account-list {
+    padding: clamp(20px, 2.4vw, 30px);
+}
+.fee-account-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 23px;
+}
+.fee-account-section-header .eyebrow {
+    display: block;
+    font-size: 10px;
+    margin-bottom: 9px;
+}
+.fee-account-section-header .paneltitle {
+    font-size: 20px;
+    margin: 0 0 7px;
+}
+.fee-account-section-header .muted {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+}
+.fee-account-form {
+    display: grid;
+    gap: 22px;
+}
+.fee-account-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+    align-items: start;
+}
+.fee-account-fields > .field,
+.fee-account-extras > .field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.fee-account-fields .field > label,
+.fee-account-extras .field > label,
+.fee-provider-label-row > label {
+    display: block;
+    font-weight: 750;
+    font-size: 12px;
+    line-height: 1.45;
+    margin: 0;
+    color: #284f46;
+}
+.fee-account-fields .form-control,
+.fee-account-extras .form-control {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    border-radius: 9px;
+}
+.fee-account-fields .hint,
+.fee-account-extras .hint {
+    display: block;
+    margin: 0;
+    color: #697f76;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+.fee-provider-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    min-height: 18px;
+}
+.fee-provider-label-row > label { flex: 1; }
+.fee-provider-label-row .fee-provider-add-link {
+    font-size: 11px;
+    flex: 0 0 auto;
+}
+.fee-account-extras {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+    gap: 24px;
+    align-items: stretch;
+}
+.fee-account-extras .fee-account-instructions {
+    flex: 1;
+    min-height: 138px;
+    resize: vertical;
+    line-height: 1.6;
+}
+.fee-optional {
+    color: #6f857a;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 4px;
+}
+.fee-qr-upload {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+    min-height: 138px;
+    padding: 14px 16px;
+    border: 1.5px dashed #afcfc0;
+    background: #f8fcfa;
+    border-radius: 11px;
+}
+.fee-qr-upload-label {
+    color: #285747;
+    font-size: 13px;
+    font-weight: 750;
+}
+.fee-qr-upload p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #668174;
+}
+.fee-qr-upload input[type=file] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 43px;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    background: white;
+}
+.fee-qr-upload input[type=file]::file-selector-button {
+    padding: 7px 10px;
+    margin-right: 9px;
+    border: 1px solid #ccdfd5;
+    border-radius: 6px;
+    background: #eff8f2;
+    font: inherit;
+    color: #285747;
+    cursor: pointer;
+}
+.fee-qr-selected-preview,
+.fee-qr-existing {
+    display: block;
+    width: 120px;
+    max-width: 100%;
+    max-height: 160px;
+    object-fit: contain;
+    padding: 6px;
+    background: white;
+    border: 1px solid #dbe8de;
+    border-radius: 8px;
+}
+.fee-qr-selected-preview[hidden] { display: none !important; }
+.fee-qr-file-label {
+    min-height: 0;
+    display: block;
+    font-size: 11px;
+    color: #466e5d;
+    overflow-wrap: anywhere;
+}
+.fee-account-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-top: 1px solid #e3ece6;
+    padding-top: 19px;
+}
+.fee-account-actions > .btn {
+    min-height: 43px;
+    margin-left: auto;
+}
+.fee-account-publish {
+    display: flex;
+    align-items: center !important;
+    gap: 12px;
+    max-width: 100%;
+    cursor: pointer;
+}
+.fee-account-publish > span {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    line-height: 1.4;
+}
+.fee-account-publish strong { color: #274d42; font-size: 12px; }
+.fee-account-publish small { color: #72887d; font-size: 11px; }
+.fee-provider-management .fee-provider-admin > summary {
+    color: #0b7658;
+    font-weight: 750;
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.fee-provider-management .fee-provider-admin > summary:hover { color: #074c39; }
+.fee-extra-heading { margin-top: 20px; }
+.fee-account-count {
+    font-size: 11px;
+    font-weight: 750;
+    border-radius: 99px;
+    padding: 7px 10px;
+    color: #196447;
+    background: #e8f5ec;
+    white-space: nowrap;
+}
+.fee-account-list .fee-receiving-grid { align-items: start; }
+.fee-receiving-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+.fee-receiving-card-header .eyebrow { font-size: 10px; }
+.fee-receiving-card-header h3 {
+    margin: 8px 0 4px;
+    color: #133f34;
+    font-size: 17px;
+}
+.fee-receiving-card-header p {
+    margin: 0;
+    font-size: 12px;
+    color: #72897e;
+}
+.fee-receiving-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 15px;
+    padding: 15px 0;
+    margin: 15px 0 0;
+    border-top: 1px solid #e5eee8;
+}
+.fee-receiving-summary div { min-width: 0; }
+.fee-receiving-summary span {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 11px;
+    color: #71867e;
+}
+.fee-receiving-summary strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #244e40;
+    overflow-wrap: anywhere;
+}
+.fee-account-edit-panel {
+    border-top: 1px solid #e5eee8;
+    padding-top: 12px;
+}
+.fee-account-edit-panel > summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 750;
+    color: #096f54;
+    padding: 4px 0;
+}
+.fee-account-edit-panel > summary::-webkit-details-marker { display: none; }
+.fee-account-edit-panel > summary:hover { color: #034d36; }
+.fee-account-edit-panel > summary:focus-visible { outline: 2px solid #168467; outline-offset: 3px; }
+.fee-account-edit-panel[open] > summary {
+    padding-bottom: 13px;
+    margin-bottom: 18px;
+}
+.fee-account-edit-panel[open] > summary span { transform: rotate(180deg); }
+.fee-account-edit-panel .fee-account-fields,
+.fee-account-edit-panel .fee-account-extras { grid-template-columns: 1fr; gap: 15px; }
+.fee-account-edit-panel .fee-account-actions > .btn { margin-left: 0; }
+.fee-account-edit-panel .fee-account-form { gap: 17px; }
+
+@media (max-width: 760px) {
+    .fee-account-fields,
+    .fee-account-extras { grid-template-columns: 1fr; gap: 16px; }
+    .fee-account-section-header { margin-bottom: 18px; }
+}
+@media (max-width: 550px) {
+    .fee-account-create, .fee-account-list { padding: 18px; }
+    .fee-account-actions { align-items: stretch; }
+    .fee-account-actions > .btn { width: 100%; margin-left: 0; }
+    .fee-provider-label-row { align-items: center; }
+    .fee-receiving-summary { grid-template-columns: 1fr; gap: 13px; }
+}
