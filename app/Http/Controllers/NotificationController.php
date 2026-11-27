@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\{Notice,Report,Schedule,ScheduleException};
+use App\Models\{Notice,Report,Schedule,ScheduleException,GarbageFeeCharge,Household};
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -32,6 +32,25 @@ class NotificationController extends Controller
         $this->markRead($notice);
 
         // Only local named routes are used; no untrusted redirect URLs.
+        if($notice->fee_charge_id){
+            $charge=GarbageFeeCharge::find($notice->fee_charge_id);
+            if($charge){
+                $role=$request->user()->role_code;
+                $canOpen=in_array($role,['superadmin','admin'],true)
+                    || ($role==='coordinator' && $request->user()->zone_id
+                        && (string)$request->user()->zone_id===(string)$charge->zone_id)
+                    || ($role==='resident' && (string)(Household::find($charge->household_id)?->resident_user_id??'')
+                        ===(string)$request->user()->id);
+                if($canOpen){
+                    return redirect()->route('fees.index',[
+                        'month'=>$charge->billing_month,
+                        'highlight'=>(string)$charge->id
+                    ]);
+                }
+            }
+            return redirect()->route('notifications.index')
+                ->with('status','This household charge is no longer accessible to your account.');
+        }
         if($notice->report_id){
             $report=Report::find($notice->report_id);
             if($report){
