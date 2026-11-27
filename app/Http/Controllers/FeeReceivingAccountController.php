@@ -139,9 +139,15 @@ class FeeReceivingAccountController extends Controller
             abort_unless($role==='resident' && $entry->is_active,403);
             $zoneIds=\App\Models\Zone::where('fee_city_id',(string)$entry->city_id)
                 ->pluck('id')->map(fn($id)=>(string)$id)->all();
-            $owns=Household::where('resident_user_id',(string)$request->user()->id)
-                ->whereIn('zone_id',$zoneIds)->exists();
-            abort_unless($owns,404);
+            $householdIds=Household::where('resident_user_id',(string)$request->user()->id)
+                ->pluck('id')->map(fn($id)=>(string)$id)->all();
+            $currentlyAssigned=Household::where('resident_user_id',(string)$request->user()->id)
+                ->whereIn('zone_id',$zoneIds)->where('is_active',true)
+                ->whereNull('archived_at')->exists();
+            $hasHistoricCharge=$householdIds
+                && \App\Models\GarbageFeeCharge::whereIn('household_id',$householdIds)
+                    ->where('city_id',(string)$entry->city_id)->exists();
+            abort_unless($currentlyAssigned || $hasHistoricCharge,404);
         }
         abort_unless($entry->qr_path && Storage::disk('local')->exists($entry->qr_path),404);
         return response()->file(Storage::disk('local')->path($entry->qr_path),[
