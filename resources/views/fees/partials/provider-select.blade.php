@@ -1,5 +1,5 @@
-<div class="field">
-    <div class="row-between" style="gap:10px;align-items:center">
+<div class="field fee-provider-field">
+    <div class="fee-provider-label-row">
         <label for="{{ $providerInputId }}">Bank / e-wallet provider *</label>
         @if(auth()->user()->role_code==='superadmin')
         <button type="button" class="fee-provider-add-link"
@@ -21,5 +21,5 @@
         <option value="{{ $selected }}" selected>{{ $selected }} (existing institution)</option>
         @endif
     </select>
-    <small class="hint">Choose the bank or wallet. The system determines the transfer type automatically.</small>
+    <small class="hint">Select the bank or e-wallet that will receive the payment.</small>
 </div>
