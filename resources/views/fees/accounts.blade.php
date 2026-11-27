@@ -115,7 +115,7 @@
 </section>
 @endif
 
-<section class="card fee-account-list" aria-labelledby="fee-accounts-heading">
+<section class="card fee-account-list" aria-labelledby="fee-accounts-heading" data-fee-old-edit="{{ old('_edit_account','') }}">
     <div class="fee-account-section-header fee-account-table-heading">
         <div>
             <h2 class="paneltitle" id="fee-accounts-heading">Configured receiving accounts</h2>
