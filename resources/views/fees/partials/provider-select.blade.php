@@ -8,7 +8,7 @@
         </button>
         @endif
     </div>
-    <select class="form-control" name="provider" id="{{ $attributes->get('id','fee-provider') }}" required>
+    <select class="form-control" name="provider" id="{{ $providerInputId }}" required>
         <option value="">Select receiving institution</option>
         @foreach(['wallet'=>'E-wallets','bank'=>'Banks and digital banks'] as $type=>$groupName)
         <optgroup label="{{ $groupName }}">
