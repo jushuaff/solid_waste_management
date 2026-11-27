@@ -28,7 +28,7 @@ class ReportWorkflowController extends Controller
             if($crew->zone_id && (string)$crew->zone_id!==(string)$report->zone_id)throw ValidationException::withMessages(['crew_user_id'=>'Crew is not assigned to the report zone.']);
             $oldCrewId=(string)($report->assigned_crew_id??'');
             $workflow->execute(function()use($workflow,$report,$action,$data,$actor,$crew){
-                if($report->current_status==='Under Review')$workflow->transition($report,'Verified',$data['reason'],$actor);
+                if($report->current_status==='Under Review')$workflow->transition($report,'Verified',$data['reason'],$actor,false);
                 Assignment::create(['report_id'=>(string)$report->id,'crew_user_id'=>(string)$crew->id,'assigned_by'=>(string)$actor->id,'assigned_at'=>now()]);
                 $report->assigned_crew_id=(string)$crew->id;$report->save();
                 $workflow->transition($report,'Assigned',$data['reason'],$actor);
