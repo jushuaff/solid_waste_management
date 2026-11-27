@@ -18,19 +18,20 @@
 <div class="stack"><div class="card"><h2 class="paneltitle">Quick guide</h2><div class="listrow"><span class="roundico">1</span><div class="listmain"><b>Check schedules</b><small>Day, time, waste type and collection method</small></div></div><div class="listrow"><span class="roundico">2</span><div class="listmain"><b>Read local rules</b><small>Understand what to prepare and where</small></div></div><div class="listrow"><span class="roundico">3</span><div class="listmain"><b>Report and track</b><small>Follow your incident through resolution</small></div></div></div>
 <div class="card"><div class="row-between"><h2 class="paneltitle">Recent notifications</h2><a class="btn small outline" href="{{route('notifications.index')}}">Open inbox</a></div>
 @forelse($notices as $n)
-<div class="listrow">
-    <span class="roundico" aria-hidden="true">◷</span>
-    <div class="listmain">
-        <b>{{ $n->title }}</b>
-        <small>{{ $n->message }}</small>
-    </div>
-    @if(!$n->is_read)
-        <span class="notification-dot" title="Unread" aria-label="Unread notification"></span>
-    @endif
-    <form method="POST" action="{{route('notifications.open',$n->id)}}">
-        @csrf
-        <button class="btn small outline" type="submit">Open</button>
-    </form>
-</div>
+<form method="POST" action="{{route('notifications.open',$n->id)}}" class="listrow notification-dashboard-form {{ !$n->is_read?'unread':'' }}">
+    @csrf
+    <button type="submit" class="notification-dashboard-open"
+            aria-label="Open notification: {{ $n->title }}{{ !$n->is_read?' (unread)':'' }}">
+        <span class="roundico" aria-hidden="true">◷</span>
+        <span class="listmain">
+            <strong>{{ $n->title }}</strong>
+            <small>{{ $n->message }}</small>
+        </span>
+        @if(!$n->is_read)
+            <span class="notification-dot" title="Unread" aria-hidden="true"></span>
+        @endif
+        <span class="notification-view-label" aria-hidden="true">›</span>
+    </button>
+</form>
 @empty<p class="muted">No notifications yet.</p>@endforelse</div></div></div>
 @endsection
