@@ -20,7 +20,44 @@ class FeeReceivingAccountController extends Controller
     {
         $this->manager($request);
         $cities=FeeCity::orderBy('name')->get();
-        $accounts=FeeReceivingAccount::with('city')->orderBy('created_at','desc')->get();
+        // Sort the entire authorized receiving-account set by displayed values.
+        // Only allow listed columns can be requested from the UI.
+        $sorters=[
+            'city'=>static fn($row)=>(string)($row->city?->name??''),
+            'provider'=>static fn($row)=>(string)$row->provider,
+            'type'=>static fn($row)=>in_array($row->method,['gcash','wallet'],true)?'E-wallet':'Bank transfer',
+            'account_name'=>static fn($row)=>(string)$row->account_name,
+            'account_number'=>static fn($row)=>(string)$row->account_number,
+            'qr'=>static fn($row)=>$row->qr_path?1:0,
+            'status'=>static fn($row)=>$row->is_active?1:0,
+        ];
+        $sort=request()->query('sort','city');
+        $sort=is_string($sort)&&array_key_exists($sort,$sorters)?$sort:'city';
+        $direction=request()->query('direction','asc');
+        $direction=is_string($direction)&&$direction==='desc'?'desc':'asc';
+        $search=request()->query('q','');
+        $search=is_string($search)?mb_strtolower(trim(mb_substr($search,0,100))):'';
+        $accounts=FeeReceivingAccount::with('city')->get();
+        if($search!==''){
+            $accounts=$accounts->filter(static function($account)use($search){
+                $haystack=implode(' ',[
+                    (string)($account->city?->name??''),
+                    (string)$account->provider,
+                    (string)$account->account_name,
+                    (string)$account->account_number,
+                ]);
+                return str_contains(mb_strtolower($haystack),$search);
+            });
+        }
+        $accounts=$accounts->sort(function($a,$b)use($sorters,$sort,$direction){
+            $left=$sorters[$sort]($a);
+            $right=$sorters[$sort]($b);
+            $cmp=is_numeric($left)&&is_numeric($right)
+                ?((float)$left<=>(float)$right)
+                :strnatcasecmp((string)$left,(string)$right);
+            if($cmp===0)$cmp=strcmp((string)$a->id,(string)$b->id);
+            return $direction==='desc'?-$cmp:$cmp;
+        })->values();
         $providers=PaymentProviders::all();
         $customProviders=FeeProvider::orderBy('name')->get();
         return view('fees.accounts',compact('cities','accounts','providers','customProviders'));
