@@ -132,7 +132,10 @@ class ManagementController extends Controller
         if($resource==='schedules')$data['revision']=1;
         if($resource==='rules')$data['version']=1;
         $item=$model::create($data);
-        if(in_array($resource,['schedules','exceptions','rules'],true)&&($item->publication_status??null)==='published')$notices->publication($item,$spec['title']);
+        if(in_array($resource,['schedules','exceptions','rules'],true)&&($item->publication_status??null)==='published'){
+            $kind=match($resource){'schedules'=>'Collection schedule','exceptions'=>'Schedule change','rules'=>'Barangay guideline'};
+            $notices->publication($item,$kind);
+        }
         return redirect()->route('management.index',$resource)->with('status','Record created.');
     }
     public function update(Request $request,string $resource,string $id,NoticeService $notices)
@@ -158,7 +161,8 @@ class ManagementController extends Controller
         $item->update($data);
         if($notifiable && $meaningful && ($isPublished || $wasPublished)){
             $action=!$isPublished?'withdrawn':($wasPublished?'updated':'published');
-            $notices->publication($item,$spec['title'],$action,$previousZone);
+            $kind=match($resource){'schedules'=>'Collection schedule','exceptions'=>'Schedule change','rules'=>'Barangay guideline'};
+            $notices->publication($item,$kind,$action,$previousZone);
         }
         return redirect()->route('management.index',$resource)->with('status','Record updated.');
     }
