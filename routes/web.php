@@ -20,6 +20,12 @@ Route::middleware(['auth','active'])->group(function(){
     // Phase 2: role-scoped garbage-fee tracking and externally confirmed payments.
     Route::get('/garbage-fees',[GarbageFeeController::class,'index'])
         ->middleware('role:superadmin,admin,coordinator,resident')->name('fees.index');
+    Route::get('/garbage-fees/household-links',[\App\Http\Controllers\HouseholdLinkController::class,'index'])
+        ->middleware('role:resident,admin,superadmin')->name('fees.household-links.index');
+    Route::post('/garbage-fees/household-links',[\App\Http\Controllers\HouseholdLinkController::class,'store'])
+        ->middleware(['role:resident','throttle:5,1'])->name('fees.household-links.store');
+    Route::post('/garbage-fees/household-links/{link}/review',[\App\Http\Controllers\HouseholdLinkController::class,'review'])
+        ->middleware(['role:admin,superadmin','throttle:15,1'])->name('fees.household-links.review');
     Route::get('/garbage-fees/history',[GarbageFeeHistoryController::class,'index'])
         ->middleware('role:superadmin,admin,coordinator,resident')->name('fees.history.index');
     // Resident-submitted online transfers: evidence remains pending until admin verification.
