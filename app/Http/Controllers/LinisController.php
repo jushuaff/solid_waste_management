@@ -241,6 +241,16 @@ class LinisController extends Controller
         $from=\Carbon\Carbon::createFromFormat('!Y-m',$month)->startOfMonth();
         $to=$from->copy()->endOfMonth();
         $results=$metrics->forPeriod($request->user(),$from,$to);
+        $sortable=[
+            'zone'=>static fn($row)=>$row['zone']->name,
+            'inspections'=>static fn($row)=>$row['inspections'],
+            'segregated'=>static fn($row)=>$row['segregated'],
+            'compliance'=>static fn($row)=>$row['compliance'],
+            'mrf_weight'=>static fn($row)=>$row['mrf_kg'],
+            'diverted'=>static fn($row)=>$row['diverted_kg'],
+            'diversion'=>static fn($row)=>$row['diversion'],
+        ];
+        $results['zones']=TableSorting::rows($results['zones'],$request,$sortable);
         return view('linis.dashboard',compact('results','month','from','to'));
     }
     public function monthlyReport(Request $request,LinisMetrics $metrics,ReportPdf $pdf)
