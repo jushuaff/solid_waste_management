@@ -252,35 +252,31 @@
 @else
 <p class="muted">No payments recorded for this month.</p>
 @endif
-@if($isStaff && $row['balance']>0)
-<h4>Record confirmed payment</h4>
+@if($canRecord && $row['balance']>0)
+<h4>Record cash payment</h4>
+<p class="muted">Use this only for cash received at the authorized collection office. Online transfers are confirmed in the Verify Online Payments queue.</p>
 <form method="POST" action="{{route('fees.payments.store',$bill->id)}}" class="stack">
 @csrf
+<input type="hidden" name="method" value="cash">
 <div class="grid2">
-<div class="field"><label>Payment method *</label>
-<select name="method" class="form-control" required>
-<option value="cash">Cash</option><option value="gcash">GCash transfer</option><option value="bank">Bank transfer / deposit</option><option value="card">Card (external terminal)</option>
-</select></div>
-<div class="field"><label>Amount received (PHP) *</label>
+<div class="field"><label>Cash amount received (PHP) *</label>
 <input class="form-control" name="amount" type="number" step="0.01" min="0.01" max="{{number_format($row['balance']/100,2,'.','')}}" required>
 </div>
 <div class="field"><label>Payment date *</label>
 <input class="form-control" type="date" name="paid_on" value="{{now()->toDateString()}}" max="{{now()->toDateString()}}" required></div>
-<div class="field"><label>External transaction/reference</label>
-<input class="form-control" name="external_reference" maxlength="100" autocomplete="off" placeholder="Required for GCash, Bank and Card"></div>
 <div class="field"><label>Official receipt number (if issued)</label>
 <input class="form-control" name="official_receipt_number" maxlength="100" autocomplete="off"></div>
 <div class="field"><label>Internal note (optional)</label>
 <input class="form-control" name="note" maxlength="500"></div>
 </div>
-<label class="checkline"><input type="checkbox" name="acknowledged" value="1" required> I have verified this payment through the cash collection record or external payment provider.</label>
-<button class="btn primary" type="submit">Record verified payment</button>
+<label class="checkline"><input type="checkbox" name="acknowledged" value="1" required> I have received and verified this cash payment against the office's cash collection record.</label>
+<button class="btn primary" type="submit">Record cash payment</button>
 </form>
 @endif
 </div></details></td>
 </tr>
 @empty
-<tr><td colspan="8" class="muted">No household charges found for this month.</td></tr>
+<tr><td colspan="8" class="muted">No household charges found for this month. {{ $role==='resident'?'Use My Payment Tracker to review other billed months, or contact the barangay if a bill is expected.':'Check your month/filters, or generate monthly charges for the applicable city.' }}</td></tr>
 @endforelse
 </tbody></table>
 </div>
@@ -288,7 +284,7 @@
 </div>
 
 @if(!$isStaff && $receivingAccounts->isNotEmpty())
-<div class="card" style="margin-top:20px">
+<div class="card" id="fee-payment-destinations" style="margin-top:20px">
 <h2 class="paneltitle">Where to pay</h2>
 <p class="muted">Before transferring money, verify the account name and number. Keep your GCash or bank transaction reference. Payment status is updated after staff confirmation.</p>
 <div class="fee-receiving-grid">
@@ -311,5 +307,10 @@
 <h2 class="paneltitle">Payment instructions</h2>
 <p class="muted">Online receiving-account details are not available for your linked household. Contact your barangay office for official payment instructions.</p>
 </div>
+@endif
+@endsection
+@section('scripts')
+@if($role==='resident')
+<script src="{{asset('assets/fee-payment.js')}}" defer></script>
 @endif
 @endsection
