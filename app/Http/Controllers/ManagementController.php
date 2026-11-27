@@ -4,6 +4,8 @@ use App\Models\{User,Role,Zone,CollectionPoint,Schedule,ScheduleException,LocalR
 use App\Services\{ResourceRegistry,NoticeService};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 class ManagementController extends Controller
 {
@@ -46,9 +48,10 @@ class ManagementController extends Controller
     }
     private function validated(Request $request,string $resource,array $spec,?object $item):array
     {
+        if($resource==='users' && $item && $item->role_code==='superadmin' && $request->user()->role_code!=='superadmin')abort(403,'Only a superadministrator can modify superadministrator accounts.');
         $rules=[];foreach($spec['fields'] as $name=>$config){
             $rules[$name]=$config['rules'];
-            if($resource==='users'&&$name==='password')$rules[$name]=$item?'nullable|string|min:12|max:120':'required|string|min:12|max:120';
+            if($resource==='users'&&$name==='password')$rules[$name]=$item?'prohibited':'required|string|min:12|max:120';
         }
         $data=$request->validate($rules);
         foreach($spec['fields'] as $name=>$config){
@@ -110,10 +113,46 @@ class ManagementController extends Controller
         if($publish&&$meaningful)$notices->publication($item,$spec['title']);
         return redirect()->route('management.index',$resource)->with('status','Record updated.');
     }
+
+    /**
+     * Dedicated administrator-only password reset flow; does not change profile fields.
+     * Require the acting administrator's own current password for this sensitive action.
+     */
+    public function passwordForm(Request $request,string $id)
+    {
+        abort_unless($request->user()->role_code==='superadmin',403);
+        $user=User::findOrFail($id);
+        abort_if((string)$user->id===(string)$request->user()->id,403,'Use My Profile to change your own password.');
+        return view('management.password',compact('user'));
+    }
+
+    public function changePassword(Request $request,string $id)
+    {
+        abort_unless($request->user()->role_code==='superadmin',403);
+        $user=User::findOrFail($id);
+        abort_if((string)$user->id===(string)$request->user()->id,403,'Use My Profile to change your own password.');
+        $data=$request->validate([
+            'current_password'=>['required','string'],
+            'password'=>['required','string','min:12','max:120','confirmed'],
+        ]);
+        if(!Hash::check($data['current_password'],(string)$request->user()->password)){
+            throw ValidationException::withMessages(['current_password'=>'Your administrator password is incorrect.']);
+        }
+        $user->password=Hash::make($data['password']);
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+        Log::notice('Administrator updated another user password',[
+            'actor_user_id'=>(string)$request->user()->id,
+            'target_user_id'=>(string)$user->id,
+        ]);
+        return redirect()->route('management.index','users')->with('status','Password updated for '.$user->name.'.');
+    }
+
     public function destroy(Request $request,string $resource,string $id)
     {
         $spec=$this->definition($request,$resource);$model=$spec['model'];$item=$model::findOrFail($id);
         if($resource==='users'&&(string)$item->id===(string)$request->user()->id)abort(403,'You cannot delete your own account.');
+        if($resource==='users' && $item->role_code==='superadmin' && $request->user()->role_code!=='superadmin')abort(403,'Only superadministrators may manage superadministrator accounts.');
         $protected=match($resource){
             'zones'=>Schedule::where('zone_id',$id)->exists()||Report::where('zone_id',$id)->exists()||User::where('zone_id',$id)->exists()||CollectionPoint::where('zone_id',$id)->exists(),
             'categories'=>Schedule::where('category_id',$id)->exists()||Report::where('category_id',$id)->exists(),
