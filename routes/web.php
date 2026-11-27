@@ -25,6 +25,8 @@ Route::middleware(['auth','active'])->group(function(){
     // Resident-submitted online transfers: evidence remains pending until admin verification.
     Route::post('/garbage-fees/submissions',[FeePaymentSubmissionController::class,'store'])
         ->middleware(['role:resident','throttle:5,1'])->name('fees.submissions.store');
+    Route::put('/garbage-fees/submissions/{submission}',[FeePaymentSubmissionController::class,'update'])
+        ->middleware(['role:resident','throttle:5,1'])->name('fees.submissions.update');
     Route::get('/garbage-fees/submissions',[FeePaymentSubmissionController::class,'index'])
         ->middleware('role:superadmin,admin')->name('fees.submissions.index');
     Route::get('/garbage-fees/submissions/{submission}/receipt',[FeePaymentSubmissionController::class,'receipt'])
