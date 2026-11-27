@@ -2,7 +2,7 @@
 @section('title','LINIS Monthly Waste Monitoring Summary')
 @section('content')
 <p><strong>Reporting period:</strong> {{ $from->format('F j, Y') }} – {{ $to->format('F j, Y') }}</p>
-<p><strong>Basis:</strong> Online-recorded eco-aide pickup inspections and MRF weigh-in entries. This is a prototype monitoring summary, not a formally certified statutory report.</p>
+<p><strong>Coverage:</strong> Recorded collection inspections and materials recovery facility weigh-ins. Figures require review and approval before official submission.</p>
 <h2>Monthly totals</h2>
 <table><tbody>
 <tr><th>Recorded inspections</th><td>{{ number_format($results['inspections']) }}</td></tr>
