@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use App\Services\NoticeService;
+use App\Support\PaymentProviders;
+use App\Models\FeeProvider;
 
 class FeeReceivingAccountController extends Controller
 {
@@ -19,15 +21,16 @@ class FeeReceivingAccountController extends Controller
         $this->manager($request);
         $cities=FeeCity::orderBy('name')->get();
         $accounts=FeeReceivingAccount::with('city')->orderBy('created_at','desc')->get();
-        return view('fees.accounts',compact('cities','accounts'));
+        $providers=PaymentProviders::all();
+        $customProviders=FeeProvider::orderBy('name')->get();
+        return view('fees.accounts',compact('cities','accounts','providers','customProviders'));
     }
 
     private function validateAccount(Request $request):array
     {
         return $request->validate([
             'city_id'=>['required','string'],
-            'method'=>['required','in:gcash,bank'],
-            'provider'=>['required','string','max:90'],
+            'provider'=>['required','string','max:100'],
             'account_name'=>['required','string','max:160'],
             'account_number'=>['required','string','max:60'],
             'instructions'=>['nullable','string','max:500'],
@@ -37,10 +40,27 @@ class FeeReceivingAccountController extends Controller
         ]);
     }
 
+    private function resolveProvider(array &$data,?FeeReceivingAccount $existing=null):void
+    {
+        $name=trim($data['provider']);
+        $type=PaymentProviders::typeOf($name);
+        // Preserve compatibility with older receiving accounts created before
+        // the dropdown was introduced, without allowing new arbitrary entries.
+        if(!$type && $existing && strcasecmp($name,(string)$existing->provider)===0){
+            $type=in_array((string)$existing->method,['gcash','wallet'],true)?'wallet':'bank';
+        }
+        if(!$type){
+            throw ValidationException::withMessages(['provider'=>'Choose a listed institution, or ask the superadministrator to add the provider.']);
+        }
+        $data['provider']=$name;
+        $data['method']=$type;
+    }
+
     public function store(Request $request,NoticeService $notices)
     {
         $this->manager($request);
         $data=$this->validateAccount($request);
+        $this->resolveProvider($data);
         FeeCity::findOrFail($data['city_id']);
         $accountNumber=trim($data['account_number']);
         $provider=trim($data['provider']);
@@ -84,6 +104,7 @@ class FeeReceivingAccountController extends Controller
         $this->manager($request);
         $entry=FeeReceivingAccount::findOrFail($account);
         $data=$this->validateAccount($request);
+        $this->resolveProvider($data,$entry);
         FeeCity::findOrFail($data['city_id']);
         $number=trim($data['account_number']);
         $provider=trim($data['provider']);
