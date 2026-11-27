@@ -51,3 +51,47 @@
         window.addEventListener('pagehide', release, { once: true });
     });
 }());
+
+
+/* Receiving-account edit dialogs; preserve selected record after validation errors. */
+(function () {
+    'use strict';
+
+    function openDialog(dialog) {
+        if (!dialog) return;
+        if (typeof dialog.showModal === 'function') {
+            if (!dialog.open) dialog.showModal();
+        } else {
+            dialog.setAttribute('open', '');
+        }
+    }
+
+    function closeDialog(dialog) {
+        if (!dialog) return;
+        if (typeof dialog.close === 'function' && dialog.open) {
+            dialog.close();
+        } else {
+            dialog.removeAttribute('open');
+        }
+    }
+
+    document.querySelectorAll('[data-fee-dialog-open]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            openDialog(document.getElementById('fee-account-dialog-' + button.dataset.feeDialogOpen));
+        });
+    });
+
+    document.querySelectorAll('.fee-account-dialog').forEach(function (dialog) {
+        dialog.querySelectorAll('[data-fee-dialog-close]').forEach(function (button) {
+            button.addEventListener('click', function () { closeDialog(dialog); });
+        });
+        dialog.addEventListener('click', function (event) {
+            if (event.target === dialog) closeDialog(dialog);
+        });
+    });
+
+    const list = document.querySelector('[data-fee-old-edit]');
+    if (list && list.dataset.feeOldEdit) {
+        openDialog(document.getElementById('fee-account-dialog-' + list.dataset.feeOldEdit));
+    }
+}());
