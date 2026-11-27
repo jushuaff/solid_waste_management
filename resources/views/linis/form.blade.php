@@ -19,6 +19,15 @@
 <span class="hint">Use a non-identifying local reference (e.g., PUROK-01-H001).</span></div>
 <div class="field full"><label for="location_description">General location / landmark *</label>
 <input id="location_description" name="location_description" maxlength="250" required value="{{ old('location_description',$record?->location_description) }}"></div>
+<div class="field full"><label for="resident_user_id">Linked resident account (optional)</label>
+<select class="form-control" name="resident_user_id" id="resident_user_id">
+<option value="">No resident account linked</option>
+@foreach($residents as $resident)
+<option value="{{$resident->id}}" @selected((string)old('resident_user_id',$record?->resident_user_id)===(string)$resident->id)>{{$resident->name}} · {{$resident->email}} · {{$resident->zone?->name}}</option>
+@endforeach
+</select>
+<span class="hint">Only the linked resident can view this household's garbage-fee balance and city payment instructions. A resident must belong to the same zone.</span>
+</div>
 <div class="field full"><label class="checkline"><input type="checkbox" name="is_active" value="1" @checked(old('is_active',$record?->is_active??true))> Active household</label></div>
 @elseif($module==='inspections')
 <div class="field"><label for="inspected_at">Inspected at *</label>
