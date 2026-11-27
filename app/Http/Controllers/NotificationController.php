@@ -32,6 +32,11 @@ class NotificationController extends Controller
         $this->markRead($notice);
 
         // Only local named routes are used; no untrusted redirect URLs.
+        if($notice->fee_city_id){
+            // Recipient ownership was verified above; the fee page independently
+            // scopes the signed-in resident to their linked household accounts.
+            return redirect()->route('fees.index');
+        }
         if($notice->fee_charge_id){
             $charge=GarbageFeeCharge::find($notice->fee_charge_id);
             if($charge){
