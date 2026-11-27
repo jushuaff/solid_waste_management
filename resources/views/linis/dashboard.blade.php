@@ -18,7 +18,13 @@
 </div>
 <div class="card"><h2 class="paneltitle">Monitoring by zone / purok</h2>
 <div style="overflow-x:auto"><table class="content-table"><thead><tr>
-<th>Zone</th><th>Inspections</th><th>Properly segregated</th><th>Compliance</th><th>MRF received (kg)</th><th>Diverted (kg)</th><th>Recorded diversion</th></tr></thead><tbody>
+<x-sortable-th key-name="zone" label="Zone" />
+<x-sortable-th key-name="inspections" label="Inspections" />
+<x-sortable-th key-name="segregated" label="Properly segregated" />
+<x-sortable-th key-name="compliance" label="Compliance" />
+<x-sortable-th key-name="mrf_weight" label="MRF received (kg)" />
+<x-sortable-th key-name="diverted" label="Diverted (kg)" />
+<x-sortable-th key-name="diversion" label="Recorded diversion" /></tr></thead><tbody>
 @forelse($results['zones'] as $row)<tr>
 <td>{{ $row['zone']->name }}</td><td>{{ $row['inspections'] }}</td><td>{{ $row['segregated'] }}</td>
 <td><span class="badge {{ $row['color']==='red'?'red':($row['color']==='yellow'?'amber':($row['color']==='grey'?'grey':'')) }}">{{ $row['compliance']===null?'No data':number_format($row['compliance'],2).'%' }}</span></td>
