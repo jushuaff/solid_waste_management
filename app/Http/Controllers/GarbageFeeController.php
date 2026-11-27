@@ -192,7 +192,7 @@ class GarbageFeeController extends Controller
         $this->ensureChargeAccess($request,$bill,true);
 
         $data=$request->validate([
-            'method'=>['required','in:cash,gcash,card'],
+            'method'=>['required','in:cash,gcash,card,bank'],
             'amount'=>['required','regex:/^\d{1,7}(\.\d{1,2})?$/'],
             'paid_on'=>['required','date','before_or_equal:today'],
             'external_reference'=>['nullable','string','max:100'],
@@ -201,7 +201,7 @@ class GarbageFeeController extends Controller
             'acknowledged'=>['accepted'],
         ]);
         if($data['method']!=='cash' && !filled($data['external_reference']??null)){
-            throw ValidationException::withMessages(['external_reference'=>'Enter the GCash transaction reference or the external card terminal approval/reference code.']);
+            throw ValidationException::withMessages(['external_reference'=>'Enter the GCash, bank transfer or card terminal transaction reference.']);
         }
         $amount=FeeLedger::centavos($data['amount']);
         if($amount<1 || $amount>FeeLedger::balance($bill)){
