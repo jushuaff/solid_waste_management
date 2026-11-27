@@ -9,6 +9,9 @@
 <h1>Monthly garbage fees</h1>
 <p>{{ $isStaff ? 'Review household charges, record confirmed payments and monitor collection balances.' : 'Review your household fees, recorded payments and the official receiving accounts for your area.' }}</p>
 </div>
+<div class="actions">
+<a class="btn outline" href="{{route('fees.history.index')}}">{{$isStaff?'All-month history':'My payment tracker'}}</a>
+</div>
 @if($canGenerate)
 <div class="actions">
 @if($role==='superadmin')<a class="btn outline" href="{{route('fees.settings.index')}}">City rates</a>@endif
