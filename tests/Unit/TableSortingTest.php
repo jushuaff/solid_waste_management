@@ -53,6 +53,25 @@ final class TableSortingTest extends TestCase
         ));
     }
 
+    public function test_missing_metrics_are_last_even_when_sorted_descending(): void
+    {
+        $rows=[
+            ['zone'=>(object)['name'=>'Pine'],'compliance'=>80.00],
+            ['zone'=>(object)['name'=>'Ridge'],'compliance'=>40.00],
+            ['zone'=>(object)['name'=>'Creek'],'compliance'=>null],
+        ];
+        $request=Request::create('/linis/dashboard','GET',[
+            'sort'=>'compliance','direction'=>'desc',
+        ]);
+        $sorted=TableSorting::rows($rows,$request,[
+            'zone'=>static fn($row)=>$row['zone']->name,
+            'compliance'=>static fn($row)=>$row['compliance'],
+        ]);
+        $this->assertSame(['Pine','Ridge','Creek'],array_map(
+            static fn($row)=>$row['zone']->name,$sorted
+        ));
+    }
+
     public function test_dashboard_rows_sort_by_zone_descending(): void
     {
         $rows=[
