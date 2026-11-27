@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone,Household,GarbageFeeCharge};
+use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone,Household,GarbageFeeCharge,FeePaymentSubmission};
 
 class NoticeService
 {
@@ -189,6 +189,41 @@ class NoticeService
                 ' ('.$charge->billing_month.'). Current status: '.$status.'.',
                 ['fee_charge_id'=>(string)$charge->id]);
         }
+    }
+
+    /** Only admin and superadmin are authorized to verify submitted transfer evidence. */
+    public function feeSubmissionReceived(FeePaymentSubmission $entry):void
+    {
+        $roleIds=Role::whereIn('code',['superadmin','admin'])->get()
+            ->map(fn($r)=>(string)$r->id)->all();
+        if(!$roleIds)return;
+        foreach(User::where('role_id','!=','')->whereIn('role_id',$roleIds)
+            ->where('is_active',true)->get() as $person){
+            $this->send($person,'Online fee payment awaiting verification',
+                'Household '.($entry->household?->reference??'payment').
+                ' submitted a transfer receipt for '.($entry->charge?->billing_month??'a billing month').
+                '. Review the proof before confirming the payment.',
+                ['fee_submission_id'=>(string)$entry->id]);
+        }
+    }
+
+    public function feeSubmissionReviewed(FeePaymentSubmission $entry,int $balance):void
+    {
+        $resident=User::find($entry->resident_user_id);
+        if(!$resident || !$resident->is_active || $resident->role_code!=='resident')return;
+        if($entry->status==='verified'){
+            $title=$balance===0?'Garbage fee fully paid':'Online payment verified';
+            $message='Your online transfer of '.\App\Services\FeeLedger::money((int)$entry->amount_centavos).
+                ' for '.($entry->charge?->billing_month??'your billing month').
+                ' has been confirmed. Remaining balance: '.\App\Services\FeeLedger::money($balance).
+                '. View the payment tracker for details.';
+        }else{
+            $title='Payment receipt needs correction';
+            $message='Your uploaded transfer receipt for '.($entry->charge?->billing_month??'your billing month').
+                ' was not accepted. Reason: '.($entry->review_note??'Please contact the collection office.').
+                ' You can submit another receipt.';
+        }
+        $this->send($resident,$title,$message,['fee_charge_id'=>(string)$entry->charge_id]);
     }
 
     /** Record material segregation problems so responsible barangay staff can follow up. */
