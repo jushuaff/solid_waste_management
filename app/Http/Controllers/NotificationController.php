@@ -1,9 +1,55 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\Notice;
+
+use App\Models\{Notice,Report};
 use Illuminate\Http\Request;
+
 class NotificationController extends Controller
 {
-    public function index(Request $request){$notices=Notice::where('recipient_user_id',(string)$request->user()->id)->orderBy('created_at','desc')->paginate(20);return view('notifications.index',compact('notices'));}
-    public function read(Request $request,string $id){$n=Notice::findOrFail($id);abort_unless((string)$n->recipient_user_id===(string)$request->user()->id,404);$n->is_read=true;$n->save();return back()->with('status','Marked as read.');}
+    private function owned(Request $request,string $id):Notice
+    {
+        // Restrict read and open actions by recipient, including guessed notice IDs.
+        return Notice::where('recipient_user_id',(string)$request->user()->id)->findOrFail($id);
+    }
+
+    public function index(Request $request)
+    {
+        $notices=Notice::where('recipient_user_id',(string)$request->user()->id)
+            ->orderBy('created_at','desc')->paginate(20);
+        return view('notifications.index',compact('notices'));
+    }
+
+    public function read(Request $request,string $id)
+    {
+        $notice=$this->owned($request,$id);
+        $this->markRead($notice);
+        return back()->with('status','Notification marked as read.');
+    }
+
+    public function open(Request $request,string $id)
+    {
+        $notice=$this->owned($request,$id);
+        $this->markRead($notice);
+
+        // Only local named routes are used; no untrusted redirect URLs.
+        if($notice->report_id){
+            $report=Report::find($notice->report_id);
+            if($report) return redirect()->route('reports.show',$report);
+        }
+        if($notice->rule_id) return redirect()->route('rules.index');
+        if($notice->schedule_id || $notice->exception_id) return redirect()->route('schedules.index');
+        if($notice->zone_id && in_array($request->user()->role_code,['superadmin','admin','coordinator','eco_aide'],true)){
+            return redirect()->route('linis.dashboard');
+        }
+        return redirect()->route('notifications.index');
+    }
+
+    private function markRead(Notice $notice):void
+    {
+        if(!(bool)$notice->is_read){
+            $notice->is_read=true;
+            $notice->read_at=now();
+            $notice->save();
+        }
+    }
 }
