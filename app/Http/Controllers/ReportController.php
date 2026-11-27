@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use App\Models\{Report,Zone,WasteCategory,Schedule,StatusHistory,User,Assignment,IncidentMedia};
 use App\Services\{ReportWorkflow,ReportPdf,IncidentEvidence,IncidentAccess};
+use App\Support\TableSorting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -32,7 +33,13 @@ class ReportController extends Controller
     }
     public function index(Request $request)
     {
-        $reports=$this->scope($request)->orderBy('submitted_at','desc')->paginate(15)->withQueryString();
+        $fields=[
+            'reference'=>'tracking_id',
+            'zone_location'=>static fn($r)=>trim(($r->zone?->name??'').' '.($r->location??'')),
+            'incident_date'=>'incident_date',
+            'status'=>'current_status',
+        ];
+        $reports=TableSorting::paginate($this->scope($request)->with('zone'),$request,$fields,15,'submitted_at');
         $zones=Zone::where('is_active',true)->get();return view('reports.index',compact('reports','zones'));
     }
     public function create(Request $request)
