@@ -19,6 +19,9 @@
 @else{{ \Illuminate\Support\Str::limit((string)$value,80) }}@endif
 </td>@endforeach
 <td><div class="actions"><a class="btn small outline" href="{{route('management.edit',[$resource,$row->id])}}">Edit</a>
+@if($resource==='users' && auth()->user()->role_code==='superadmin' && (string)$row->id!==(string)auth()->id())
+<a class="btn small outline" href="{{route('management.users.password',$row->id)}}">Change password</a>
+@endif
 <form class="inlineform" method="POST" action="{{route('management.destroy',[$resource,$row->id])}}" onsubmit="return confirm('Delete this unused record? Published and referenced records may be protected.')">@csrf @method('DELETE')<button class="btn small red">Delete</button></form></div></td></tr>
 @empty<tr><td colspan="6" class="muted">No records. Use “Add new” to create one.</td></tr>@endforelse
 </tbody></table></div>
