@@ -50,7 +50,7 @@ class GarbageFeeController extends Controller
         $role=$this->role($request);
         $month=$this->month($request);
         $status=$request->query('status','');
-        abort_unless(is_string($status) && in_array($status,['','Unpaid','Partial','Paid'],true),422);
+        abort_unless(is_string($status) && in_array($status,['','Unpaid','Partial','Paid','Pending Verification'],true),422);
 
         $query=GarbageFeeCharge::with(['household','zone','city','payments'])
             ->where('billing_month',$month);
@@ -73,16 +73,24 @@ class GarbageFeeController extends Controller
             }
         }
 
-        // Ledger totals are derived from non-voided entries; never rely on a mutable paid flag.
-        $rows=$query->get()->map(function($charge){
+        // An uploaded receipt is a verification request, NOT a confirmed payment.
+        // Keep the financial status and pending evidence status separate.
+        $chargesForMonth=$query->get();
+        $chargeIds=$chargesForMonth->pluck('id')->map(fn($id)=>(string)$id)->all();
+        $pendingIds=$chargeIds?FeePaymentSubmission::whereIn('charge_id',$chargeIds)
+            ->where('status','pending')->pluck('charge_id')
+            ->map(fn($id)=>(string)$id)->unique()->all():[];
+        $rows=$chargesForMonth->map(function($charge)use($pendingIds){
             $paid=FeeLedger::paid($charge);
             return [
                 'charge'=>$charge,
                 'paid'=>$paid,
                 'balance'=>max(0,(int)$charge->amount_centavos-$paid),
                 'status'=>FeeLedger::status($charge),
+                'pending'=>in_array((string)$charge->id,$pendingIds,true),
             ];
-        })->filter(fn($row)=>!$status || $row['status']===$status)->all();
+        })->filter(fn($row)=>!$status || ($status==='Pending Verification'
+            ?$row['pending']:$row['status']===$status))->all();
 
         // Sorting applies to the entire filtered month before pagination.
         $allowed=['household','city','zone','due','paid','balance','status'];
