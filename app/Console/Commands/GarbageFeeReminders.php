@@ -15,10 +15,19 @@ class GarbageFeeReminders extends Command
 
     public function handle():int
     {
-        $asOf=$this->option('date')
-            ?Carbon::createFromFormat('!Y-m-d',(string)$this->option('date'),'Asia/Manila')
-            :Carbon::now('Asia/Manila');
-        if(!$asOf || !$asOf->isValid()){
+        $dateOption=$this->option('date');
+        if($dateOption && (!is_string($dateOption) ||
+            !preg_match('/^\d{4}-\d{2}-\d{2}$/',$dateOption))){
+            $this->error('Invalid date. Use YYYY-MM-DD.');return self::FAILURE;
+        }
+        try {
+            $asOf=$dateOption
+                ?Carbon::createFromFormat('!Y-m-d',$dateOption,'Asia/Manila')
+                :Carbon::now('Asia/Manila');
+            if(!$asOf || ($dateOption && $asOf->format('Y-m-d')!==$dateOption)){
+                $this->error('Invalid date. Use YYYY-MM-DD.');return self::FAILURE;
+            }
+        }catch(\Throwable $e){
             $this->error('Invalid date. Use YYYY-MM-DD.');return self::FAILURE;
         }
         $month=$asOf->format('Y-m');
