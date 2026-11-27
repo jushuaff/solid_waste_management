@@ -164,9 +164,8 @@ class NoticeService
 
         $residentRole=Role::where('code','resident')->first();
         if(!$residentRole)return;
-        foreach(User::whereIn('id',array_values($ids))
-            ->where('role_id',(string)$residentRole->id)
-            ->where('is_active',true)->get() as $recipient){
+        foreach(User::findMany(array_values($ids)) as $recipient){
+            if((string)$recipient->role_id!==(string)$residentRole->id || !$recipient->is_active)continue;
             $this->send($recipient,'Garbage fee payment instructions updated',
                 'The receiving-account information for your city has changed. Verify the account details before making your next payment.',
                 ['fee_city_id'=>$cityId]);
