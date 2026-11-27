@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use App\Models\{Schedule,ScheduleException,LocalRule,Zone,WasteCategory,CollectionPoint};
 use Illuminate\Http\Request;
+use App\Services\ReportPdf;
 class ResidentGuideController extends Controller
 {
     public function schedules(Request $request)
@@ -29,5 +30,9 @@ class ResidentGuideController extends Controller
         $rules=$q->orderBy('published_at','desc')->get();
         return view('rules.index',compact('rules'));
     }
-    public function printSchedules(Request $request){$data=$this->schedules($request)->getData();return view('print.schedules',(array)$data);}
+    public function printSchedules(Request $request, ReportPdf $pdf)
+    {
+        $data=(array)$this->schedules($request)->getData();
+        return $pdf->respond('print.schedules',$data,'collection-schedules-'.now()->format('Ymd').'.pdf',$request->boolean('download'),'landscape');
+    }
 }
