@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\{Household, PickupInspection, MrfWeighIn, Zone, WasteCategory, User};
 use App\Services\{LinisMetrics,ReportPdf};
+use App\Support\TableSorting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -68,7 +69,34 @@ class LinisController extends Controller
         }
         if($request->filled('from') && $module!=='households')$q->where($module==='inspections'?'inspected_at':'measured_at','>=',\Carbon\Carbon::parse($request->query('from'))->startOfDay());
         if($request->filled('to') && $module!=='households')$q->where($module==='inspections'?'inspected_at':'measured_at','<=',\Carbon\Carbon::parse($request->query('to'))->endOfDay());
-        $records=$q->orderBy('created_at','desc')->paginate(20)->withQueryString();
+        $sortable=match($module){
+            'households'=>[
+                'zone'=>static fn($row)=>$row->zone?->name,
+                'reference'=>'reference',
+                'location'=>'location_description',
+                'active'=>'is_active',
+            ],
+            'inspections'=>[
+                'zone'=>static fn($row)=>$row->zone?->name,
+                'inspection_date'=>'inspected_at',
+                'household'=>static fn($row)=>$row->household?->reference,
+                'segregation'=>'segregated',
+                'evidence'=>static fn($row)=>$row->photo_path?1:0,
+            ],
+            'weigh-ins'=>[
+                'zone'=>static fn($row)=>$row->zone?->name,
+                'measurement_date'=>'measured_at',
+                'category'=>static fn($row)=>$row->category?->local_label,
+                'weight'=>'weight_kg',
+                'diverted'=>'diverted_kg',
+            ],
+        };
+        $relations=match($module){
+            'households'=>['zone'],
+            'inspections'=>['zone','household'],
+            'weigh-ins'=>['zone','category'],
+        };
+        $records=TableSorting::paginate($q->with($relations),$request,$sortable,20);
         $zones=Zone::where('is_active',true)->orderBy('name')->get();
         return view('linis.index',compact('records','zones','module'));
     }
