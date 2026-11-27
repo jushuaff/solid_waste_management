@@ -36,6 +36,7 @@ Route::middleware(['auth','active'])->group(function(){
     Route::put('/profile/password',[ProfileController::class,'password'])->name('profile.password');
     Route::get('/notifications',[NotificationController::class,'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read',[NotificationController::class,'read'])->name('notifications.read');
+    Route::post('/notifications/{id}/open',[NotificationController::class,'open'])->name('notifications.open');
     Route::get('/reports',[ReportController::class,'index'])->name('reports.index');
     Route::get('/reports/create',[ReportController::class,'create'])->middleware('role:resident')->name('reports.create');
     Route::post('/reports',[ReportController::class,'store'])->middleware(['role:resident','throttle:10,1'])->name('reports.store');
