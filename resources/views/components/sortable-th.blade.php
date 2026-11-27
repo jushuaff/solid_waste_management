@@ -1,7 +1,8 @@
 @props(['keyName','label'])
 @php
     $isActive = request()->query('sort') === $keyName;
-    $currentDirection = strtolower((string)request()->query('direction','asc'));
+    $requestedDirection=request()->query('direction','asc');
+    $currentDirection = is_string($requestedDirection) && strtolower($requestedDirection)==='desc' ? 'desc' : 'asc';
     $nextDirection = $isActive && $currentDirection === 'asc' ? 'desc' : 'asc';
     // Reset the page on sort changes; preserve the current search/filter selections.
     $params = array_merge(request()->except(['page','sort','direction']), [
