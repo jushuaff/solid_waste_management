@@ -31,7 +31,7 @@
 </div>
 @if(auth()->user()->role_code==='superadmin')
 <div class="card" style="margin-bottom:20px">
-<details class="fee-provider-admin">
+<details class="fee-provider-admin" id="fee-provider-create">
 <summary class="btn outline">+ Add bank or e-wallet provider</summary>
 <p class="muted">Add institutions not yet listed. This changes the selectable provider list only; it does not create a receiving account.</p>
 <form method="POST" action="{{route('fees.providers.store')}}" class="filterbar">
