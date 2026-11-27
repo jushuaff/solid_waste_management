@@ -9,7 +9,7 @@
     </div>
     <a class="btn outline" href="{{route('fees.index')}}">← Monthly fees</a>
 </div>
-<div class="notice">Only active GCash and bank account instructions are shown to households assigned to the applicable city. Card and cash payments are handled in person and recorded by authorized staff. Always verify the account information before publishing it.</div>
+<div class="notice">Select the receiving bank or e-wallet and enter its account name and number. QR codes are optional. Card and cash payments are handled through authorized collection channels and recorded after verification.</div>
 <div class="card" style="margin-bottom:20px">
 <h2 class="paneltitle">Add receiving account</h2>
 <form method="POST" action="{{route('fees.accounts.store')}}" enctype="multipart/form-data" class="stack">
@@ -19,11 +19,7 @@
 <select name="city_id" required class="form-control"><option value="">Choose city</option>
 @foreach($cities as $city)<option value="{{$city->id}}" @selected(old('city_id')===(string)$city->id)>{{$city->name}} · {{$city->region}}</option>@endforeach
 </select></div>
-<div class="field"><label>Payment method *</label>
-<select name="method" required class="form-control">
-<option value="gcash">GCash</option><option value="bank">Bank transfer / deposit</option>
-</select></div>
-<div class="field"><label>Bank or wallet provider *</label><input required maxlength="90" class="form-control" name="provider" placeholder="GCash, BDO, BPI, etc." value="{{old('provider')}}"></div>
+@include('fees.partials.provider-select',['selected'=>old('provider',''),'attributes'=>new \Illuminate\View\ComponentAttributeBag(['id'=>'new-fee-provider'])])
 <div class="field"><label>Registered account name *</label><input required maxlength="160" class="form-control" name="account_name" value="{{old('account_name')}}"></div>
 <div class="field"><label>Receiving account number *</label><input required maxlength="60" class="form-control" name="account_number" value="{{old('account_number')}}" autocomplete="off"></div>
 <div class="field"><label>Optional QR code (JPG, PNG, WebP · 2 MB max)</label><input type="file" name="qr_code" class="form-control" accept="image/jpeg,image/png,image/webp"></div>
@@ -33,6 +29,37 @@
 <div class="actions"><button class="btn primary" type="submit">Save receiving account</button></div>
 </form>
 </div>
+@if(auth()->user()->role_code==='superadmin')
+<div class="card" style="margin-bottom:20px">
+<details class="fee-provider-admin">
+<summary class="btn outline">+ Add bank or e-wallet provider</summary>
+<p class="muted">Add institutions not yet listed. This changes the selectable provider list only; it does not create a receiving account.</p>
+<form method="POST" action="{{route('fees.providers.store')}}" class="filterbar">
+@csrf
+<label class="field">Institution name
+<input class="form-control" name="name" maxlength="100" required placeholder="Bank or e-wallet name"></label>
+<label class="field">Provider category
+<select class="form-control" name="type" required>
+<option value="bank">Bank / digital bank</option>
+<option value="wallet">E-wallet</option>
+</select></label>
+<button type="submit" class="btn primary">Add provider</button>
+</form>
+@if($customProviders->isNotEmpty())
+<h3 class="paneltitle" style="margin-top:16px">Additional providers</h3>
+<div class="fee-provider-tags">
+@foreach($customProviders as $provider)
+<form method="POST" action="{{route('fees.providers.toggle',$provider->id)}}" class="fee-provider-tag">
+@csrf @method('PATCH')
+<span>{{$provider->name}} · {{ucfirst($provider->type)}} · {{$provider->is_active?'Active':'Inactive'}}</span>
+<button type="submit" class="btn small outline">{{$provider->is_active?'Disable':'Enable'}}</button>
+</form>
+@endforeach
+</div>
+@endif
+</details>
+</div>
+@endif
 
 <div class="card">
 <h2 class="paneltitle">Configured receiving accounts</h2>
@@ -49,11 +76,7 @@
 <div class="field"><label>City *</label><select class="form-control" required name="city_id">
 @foreach($cities as $city)<option value="{{$city->id}}" @selected((string)$city->id===(string)$account->city_id)>{{$city->name}}</option>@endforeach
 </select></div>
-<div class="field"><label>Method *</label><select class="form-control" name="method">
-<option value="gcash" @selected($account->method==='gcash')>GCash</option>
-<option value="bank" @selected($account->method==='bank')>Bank transfer</option>
-</select></div>
-<div class="field"><label>Provider *</label><input class="form-control" name="provider" required maxlength="90" value="{{$account->provider}}"></div>
+@include('fees.partials.provider-select',['selected'=>$account->provider,'attributes'=>new \Illuminate\View\ComponentAttributeBag(['id'=>'fee-provider-'.$account->id])])
 <div class="field"><label>Account holder *</label><input class="form-control" name="account_name" required maxlength="160" value="{{$account->account_name}}"></div>
 <div class="field full"><label>Account number *</label><input class="form-control" name="account_number" required maxlength="60" value="{{$account->account_number}}"></div>
 <div class="field full"><label>Instructions</label><textarea class="form-control" name="instructions" rows="2" maxlength="500">{{$account->instructions}}</textarea></div>
