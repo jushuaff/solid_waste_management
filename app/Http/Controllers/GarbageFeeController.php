@@ -2,7 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{
-    FeeCity, FeeRate, FeeReceivingAccount, Zone, Household, GarbageFeeCharge, GarbageFeePayment, Notice, User
+    FeeCity, FeeRate, FeeReceivingAccount, FeePaymentSubmission, Zone, Household, GarbageFeeCharge, GarbageFeePayment, Notice, User
 };
 use App\Services\{FeeLedger,NoticeService};
 use Carbon\Carbon;
@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Validation\ValidationException;
 
 class GarbageFeeController extends Controller
@@ -121,6 +123,13 @@ class GarbageFeeController extends Controller
             $zones=$zones->filter(fn($z)=>(string)$z->id===(string)$request->user()->zone_id);
         }
         $receivingAccounts=collect();
+        $residentOutstanding=collect();
+        $residentSubmissions=collect();
+        $residentHouseholdCount=0;
+        $pendingVerificationCount=0;
+        if(in_array($role,['superadmin','admin'],true)){
+            $pendingVerificationCount=FeePaymentSubmission::where('status','pending')->count();
+        }
         if($role==='resident'){
             $householdIds=Household::where('resident_user_id',(string)$request->user()->id)
                 ->pluck('id')->map(fn($id)=>(string)$id)->all();
@@ -136,8 +145,27 @@ class GarbageFeeController extends Controller
                     ->where('is_active',true)->whereIn('city_id',$cityIds)
                     ->orderBy('provider')->get();
             }
+            $residentHouseholdCount=Household::where('resident_user_id',(string)$request->user()->id)
+                ->where('is_active',true)->whereNull('archived_at')->count();
+            $residentSubmissions=FeePaymentSubmission::with(['charge','receivingAccount'])
+                ->where('resident_user_id',(string)$request->user()->id)
+                ->orderBy('created_at','desc')->limit(20)->get();
+            $pendingIds=$residentSubmissions->where('status','pending')
+                ->pluck('charge_id')->map(fn($id)=>(string)$id)->all();
+            $activeHouseholds=Household::where('resident_user_id',(string)$request->user()->id)
+                ->where('is_active',true)->whereNull('archived_at')->pluck('id')
+                ->map(fn($id)=>(string)$id)->all();
+            if($activeHouseholds){
+                $residentOutstanding=GarbageFeeCharge::with(['household','payments','city'])
+                    ->whereIn('household_id',$activeHouseholds)->get()
+                    ->filter(fn($bill)=>FeeLedger::balance($bill)>0
+                        && !in_array((string)$bill->id,$pendingIds,true)
+                        && $receivingAccounts->contains(fn($account)=>(string)$account->city_id===(string)$bill->city_id))
+                    ->sortByDesc('billing_month')->values();
+            }
         }
-        return view('fees.index',compact('charges','month','role','cities','zones','status','totalDue','totalPaid','receivingAccounts'));
+        return view('fees.index',compact('charges','month','role','cities','zones','status','totalDue','totalPaid','receivingAccounts',
+            'residentOutstanding','residentSubmissions','residentHouseholdCount','pendingVerificationCount'));
     }
 
     /** Create one immutable charge per active household and month. Re-running skips existing charges. */
