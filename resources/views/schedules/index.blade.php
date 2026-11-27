@@ -10,8 +10,12 @@
 @if(!$isResident)<div class="field"><label for="zone_id">Collection zone</label><select id="zone_id" name="zone_id" class="form-control"><option value="">All zones</option>@foreach($zones as $z)<option value="{{$z->id}}" @selected($zone===$z->id)>{{$z->name}}</option>@endforeach</select></div>@else<div><span class="statlab">My zone</span><div class="statval" style="font-size:18px">{{auth()->user()->zone?->name ?? 'Not assigned'}}</div></div>@endif
 <div class="field"><label for="category_id">Waste category</label><select name="category_id" id="category_id" class="form-control"><option value="">All categories</option>@foreach($categories as $c)<option value="{{$c->id}}" @selected($category===$c->id)>{{$c->local_label}}</option>@endforeach</select></div>
 <button class="btn primary" style="align-self:end">Filter</button></form></div>
-<div class="scheduleGrid">
-@forelse($schedules as $s)<article class="daycard"><span class="badge">{{ucfirst($s->publication_status)}}</span><h3>{{config('swm.days')[$s->weekday]??'Day'}}</h3><div class="date">{{$s->zone?->name}} · {{$s->category?->local_label}}</div><p><strong>{{config('swm.collection_methods')[$s->collection_method]??$s->collection_method}}</strong></p><div class="time">◷ {{$s->start_time}} – {{$s->end_time}}</div>
+<div class="scheduleGrid" data-schedule-grid data-highlight-schedule="{{ $highlightScheduleId ?? '' }}">
+@forelse($schedules as $s)<article class="daycard" id="schedule-{{ $s->id }}"
+    data-schedule-card data-schedule-id="{{ $s->id }}"
+    role="button" tabindex="0" aria-pressed="false"
+    aria-label="Select {{ config('swm.days')[$s->weekday]??'collection' }} schedule for {{ $s->zone?->name??'this zone' }} — {{ $s->category?->local_label??'waste collection' }}">
+<span class="badge">{{ucfirst($s->publication_status)}}</span><h3>{{config('swm.days')[$s->weekday]??'Day'}}</h3><div class="date">{{$s->zone?->name}} · {{$s->category?->local_label}}</div><p><strong>{{config('swm.collection_methods')[$s->collection_method]??$s->collection_method}}</strong></p><div class="time">◷ {{$s->start_time}} – {{$s->end_time}}</div>
 @if($s->point)<p><strong>Collection point:</strong> {{$s->point->name}} — {{$s->point->landmark}}</p>@endif
 @if($s->instructions)<p>{{$s->instructions}}</p>@endif
 <small class="muted">Effective: {{$s->effective_from}} to {{$s->effective_until?:'until revised'}}</small></article>
@@ -19,4 +23,7 @@
 </div>
 @if($exceptions->isNotEmpty())<div class="card" style="margin-top:22px"><h2 class="paneltitle">Special collection changes</h2><div class="stack">@foreach($exceptions as $e)<div class="notice"><strong>{{strtoupper(str_replace('_',' ',$e->action))}} · {{$e->affected_date}}</strong> — {{$e->reason}} @if($e->replacement_date) | New date: {{$e->replacement_date}} @endif @if($e->replacement_start_time) | New time: {{$e->replacement_start_time}}–{{$e->replacement_end_time}} @endif</div>@endforeach</div></div>@endif
 <div class="card" style="margin-top:22px"><h2 class="paneltitle">Know the local rules</h2><p class="muted">Read published guidance on segregation, placement and acceptable waste before preparing your garbage.</p><a href="{{route('rules.index')}}" class="btn primary">Read rules & guidelines →</a></div>
+@endsection
+@section('scripts')
+<script src="{{ asset('assets/schedule-cards.js') }}" defer></script>
 @endsection
