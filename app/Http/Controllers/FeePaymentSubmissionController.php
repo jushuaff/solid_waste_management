@@ -156,6 +156,9 @@ class FeePaymentSubmissionController extends Controller
         if($data['decision']==='reject' && mb_strlen(trim($data['review_note']??''))<10){
             throw ValidationException::withMessages(['review_note'=>'Explain why the receipt was rejected (at least 10 characters).']);
         }
+        if($data['decision']==='verify' && !$request->boolean('funds_confirmed')){
+            throw ValidationException::withMessages(['funds_confirmed'=>'Confirm that the transferred funds reached the authorized receiving account before crediting the household.']);
+        }
         $entry=FeePaymentSubmission::findOrFail($submission);
         try{
             $result=Cache::lock('fee-transaction:'.$entry->charge_id,15)->block(5,function()use($entry,$request,$data){
