@@ -20,6 +20,12 @@ class ManagementController extends Controller
     {
         $spec=$this->definition($request,$resource);
         $model=$spec['model'];$query=$model::query();
+        // Barangay administrators must never receive superadministrator account records.
+        // Apply this before search, count and pagination, not just in the Blade table.
+        if($resource==='users' && $request->user()->role_code==='admin'){
+            $superRole=Role::where('code','superadmin')->first();
+            if($superRole)$query->where('role_id','!=',(string)$superRole->id);
+        }
         if($search=trim((string)$request->query('q',''))){
             $field=match($resource){'rules'=>'title','users'=>'name','categories'=>'local_label','points'=>'name',default=>'name'};
             if(in_array($resource,['schedules','exceptions'],true))$query->where('publication_status',$search);
@@ -30,19 +36,33 @@ class ManagementController extends Controller
     }
     public function create(Request $request,string $resource)
     {
-        $spec=$this->definition($request,$resource);$item=null;$options=$this->options($spec);
+        $spec=$this->definition($request,$resource);$item=null;$options=$this->options($spec,$request,$resource);
         return view('management.form',compact('spec','resource','item','options'));
     }
     public function edit(Request $request,string $resource,string $id)
     {
-        $spec=$this->definition($request,$resource);$model=$spec['model'];$item=$model::findOrFail($id);$options=$this->options($spec);
+        $spec=$this->definition($request,$resource);$model=$spec['model'];$item=$model::findOrFail($id);
+        $this->ensureVisibleAccount($request,$resource,$item);
+        $options=$this->options($spec,$request,$resource);
         return view('management.form',compact('spec','resource','item','options'));
     }
-    private function options(array $spec):array
+    private function ensureVisibleAccount(Request $request,string $resource,object $item):void
+    {
+        if($resource==='users' && $request->user()->role_code!=='superadmin' && $item->role_code==='superadmin'){
+            abort(404);
+        }
+    }
+
+    private function options(array $spec,Request $request,string $resource):array
     {
         $out=[];foreach($spec['fields'] as $key=>$field){
             if(($field['type']??'')==='relation'){
-                $model=$field['model'];$out[$key]=$model::orderBy($field['display']==='id'?'created_at':$field['display'])->get();
+                $model=$field['model'];
+                $query=$model::orderBy($field['display']==='id'?'created_at':$field['display']);
+                if($resource==='users' && $key==='role_id' && $request->user()->role_code==='admin'){
+                    $query->where('code','!=','superadmin');
+                }
+                $out[$key]=$query->get();
             }
         }return $out;
     }
@@ -102,6 +122,7 @@ class ManagementController extends Controller
     public function update(Request $request,string $resource,string $id,NoticeService $notices)
     {
         $spec=$this->definition($request,$resource);$model=$spec['model'];$item=$model::findOrFail($id);
+        $this->ensureVisibleAccount($request,$resource,$item);
         $data=$this->validated($request,$resource,$spec,$item);
         $publish=in_array($resource,['schedules','exceptions','rules'],true) && ($data['publication_status']??null)==='published';
         $changed=$item->getAttributes();
@@ -151,6 +172,7 @@ class ManagementController extends Controller
     public function destroy(Request $request,string $resource,string $id)
     {
         $spec=$this->definition($request,$resource);$model=$spec['model'];$item=$model::findOrFail($id);
+        $this->ensureVisibleAccount($request,$resource,$item);
         if($resource==='users'&&(string)$item->id===(string)$request->user()->id)abort(403,'You cannot delete your own account.');
         if($resource==='users' && $item->role_code==='superadmin' && $request->user()->role_code!=='superadmin')abort(403,'Only superadministrators may manage superadministrator accounts.');
         $protected=match($resource){
