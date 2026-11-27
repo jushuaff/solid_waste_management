@@ -182,7 +182,7 @@ class DemoOperationsSeeder extends Seeder
             if ($report->isDirty()) $report->save();
 
             if ($hasAssignment) {
-                Assignment::firstOrCreate(
+                $assignment=Assignment::firstOrCreate(
                     ['demo_key'=>'LINIS-DEMO-ASSIGNMENT-'.$key],
                     [
                         'report_id'=>(string)$report->id,
@@ -190,15 +190,19 @@ class DemoOperationsSeeder extends Seeder
                         'assigned_by'=>(string)$coordinators[$zoneKey]->id,
                         'assigned_at'=>$submittedAt->copy()->addMinutes(45),
                         'outcome'=>in_array($status,['Resolved','Exception','Closed'],true)?$status:null,
-                        'outcome_note'=>'Fictional crew action.',
+                        'outcome_note'=>'Collection action recorded.',
                         'completed_at'=>in_array($status,['Resolved','Exception','Closed'],true)?$submittedAt->copy()->addHours(3):null,
                     ]
                 );
+                if ($assignment->outcome_note==='Fictional crew action.') {
+                    $assignment->outcome_note='Collection action recorded.';
+                    $assignment->save();
+                }
             }
 
             $prior = null;
             foreach ($historyMap[$status] as $order=>$next) {
-                StatusHistory::firstOrCreate(
+                $event=StatusHistory::firstOrCreate(
                     ['demo_key'=>'LINIS-DEMO-HISTORY-'.$key.'-'.$order],
                     [
                         'report_id'=>(string)$report->id,
@@ -206,10 +210,14 @@ class DemoOperationsSeeder extends Seeder
                         'actor_type'=>$order===0?'system':'user',
                         'from_status'=>$prior,
                         'to_status'=>$next,
-                        'reason'=>'Demonstration: status '.$next.'.',
+                        'reason'=>'Status changed to '.$next.'.',
                         'changed_at'=>$submittedAt->copy()->addMinutes($order*30),
                     ]
                 );
+                if (str_starts_with((string)$event->reason,'Demonstration: ')) {
+                    $event->reason='Status changed to '.$next.'.';
+                    $event->save();
+                }
                 $prior=$next;
             }
 
@@ -218,16 +226,19 @@ class DemoOperationsSeeder extends Seeder
                 [
                     'recipient_user_id'=>(string)$resident->id,
                     'report_id'=>(string)$report->id,
-                    'title'=>'Demo report '.$status,
+                    'title'=>'Report '.$status,
                     'message'=>'Your report '.$report->tracking_id.' is '.$status.'.',
                     'is_read'=>false,
                     'created_at'=>now()->subHours(min($age,12)),
                 ]
             );
+            if (str_starts_with((string)$notice->title,'Demo report ')) {
+                $notice->title='Report '.$status;
+            }
             if (str_contains((string)$notice->message,'fictional report')) {
                 $notice->message='Your report '.$report->tracking_id.' is '.$status.'.';
-                $notice->save();
             }
+            if ($notice->isDirty()) $notice->save();
             $lastStatusPerCase[$key]=$status;
         }
         $this->command?->info('LINIS operations seeded or retained: 45 inspections, 18 weigh-ins and 8 case workflows with history, assignments and notifications.');
