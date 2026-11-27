@@ -1,7 +1,10 @@
 @extends('layouts.app')
 @section('title','Collection Schedules')
 @section('content')
-<div class="heading"><div><span class="eyebrow">YOUR AREA & WASTE TYPE</span><h1>Collection schedules</h1><p>Published days, hours, collection methods and handover instructions.</p></div><a class="btn outline printlink" target="_blank" href="{{route('schedules.print',request()->query())}}">🖨 Print schedule</a></div>
+<div class="heading"><div><span class="eyebrow">YOUR AREA & WASTE TYPE</span><h1>Collection schedules</h1><p>Published days, hours, collection methods and handover instructions.</p></div><div class="actions">
+<a class="btn outline printlink" target="_blank" rel="noopener" href="{{route('schedules.print',request()->query())}}">Preview PDF</a>
+<a class="btn outline printlink" href="{{route('schedules.print',array_merge(request()->query(),['download'=>1]))}}">Download PDF</a>
+</div></div>
 <div class="notice">Each barangay can configure its own days, accepted categories, designated collection points, truck-handover or curbside collection and special schedules.</div>
 <div class="card" style="margin-bottom:20px"><form method="GET" class="filterbar" style="flex-wrap:wrap">
 @if(!$isResident)<div class="field"><label for="zone_id">Collection zone</label><select id="zone_id" name="zone_id" class="form-control"><option value="">All zones</option>@foreach($zones as $z)<option value="{{$z->id}}" @selected($zone===$z->id)>{{$z->name}}</option>@endforeach</select></div>@else<div><span class="statlab">My zone</span><div class="statval" style="font-size:18px">{{auth()->user()->zone?->name ?? 'Not assigned'}}</div></div>@endif
