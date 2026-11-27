@@ -42,7 +42,7 @@
 | Cash | No online receiving account | In-person payment | Verified amount, date and staff entry |
 | GCash | Account holder, mobile number, provider, optional QR | Resident transfers funds outside the app | Staff-verified amount and external reference |
 | Card | No card number captured by the app | Physical/external card terminal | Staff-verified amount and terminal approval reference |
-| Bank transfer/deposit | Bank provider, receiving account name/number, optional QR | Resident pays through banking outside the app | For the present implementation, record using the matching offline verification process; a **Bank** payment-ledger method has not yet been implemented |
+| Bank transfer/deposit | Bank provider, receiving account name/number, optional QR | Resident pays through banking outside the app | Staff-verified amount and external bank transaction reference |
 
 **Important:** No live PSP/gateway integration, automatic wallet confirmation, card tokenization, webhook, or official government receipt issuance is implemented. **Do not** enter PIN, CVV, OTP, card number, password, or wallet credentials. QR images are treated as payment *instructions*, not proof of payment.
 
