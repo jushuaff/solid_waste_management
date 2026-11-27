@@ -3,7 +3,10 @@
 @section('content')
 <div class="heading"><div><span class="eyebrow">LINIS · MIT 104</span><h1>Segregation & MRF monitoring</h1>
 <p>Period: {{ $from->format('F j') }}–{{ $to->format('F j, Y') }} · Metrics derived from stored pickup inspections and weigh-ins.</p></div>
-@if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator']))<a class="btn primary" href="{{ route('linis.print-monthly',['month'=>$month]) }}">Print monthly report</a>@endif</div>
+@if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator']))<div class="actions">
+<a class="btn outline" target="_blank" rel="noopener" href="{{route('linis.print-monthly',['month'=>$month])}}">Preview monthly PDF</a>
+<a class="btn primary" href="{{route('linis.print-monthly',['month'=>$month,'download'=>1])}}">Download monthly PDF</a>
+</div>@endif</div>
 <div class="notice">Academic monitoring indicators only. These figures are based on logged observations and must not be presented as certified RA 9003 compliance or official waste diversion figures without LGU validation.</div>
 <form class="filterbar" method="GET"><label class="field">Reporting month
 <input type="month" class="form-control" name="month" value="{{ $month }}"></label>
