@@ -1085,3 +1085,143 @@ textarea.form-control{min-height:110px}
     .filterbar > .btn, .filterbar > button.btn { flex: 1 1 auto; }
     .formgrid .formfoot { align-items: stretch; }
 }
+
+
+/* Desktop management and incident filters — compact single-row layout. */
+.management-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+}
+.management-filters > input.form-control {
+    width: 100%;
+    min-width: 0;
+    min-height: 43px;
+}
+.management-filters > .btn {
+    min-height: 43px;
+    align-self: center;
+}
+.report-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 8px;
+}
+.report-filters > .field {
+    flex: 1 1 130px;
+    min-width: 0;
+    width: auto;
+    gap: 6px;
+}
+.report-filters .field > select,
+.report-filters .field > input {
+    width: 100%;
+    min-width: 0;
+    min-height: 43px;
+    padding: 9px 10px;
+    font-size: 12px;
+}
+.report-filters .field > label { font-size: 11px; white-space: nowrap; }
+.report-filters > .filter-archived {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: auto;
+    min-height: 43px;
+    align-self: flex-end;
+    margin: 0;
+    gap: 6px;
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 0 2px;
+}
+.report-filters > .btn {
+    flex: 0 0 auto;
+    min-height: 43px;
+    align-self: flex-end;
+    padding: 10px 12px;
+    font-size: 12px;
+}
+@media (max-width: 1179px) {
+    .report-filters { flex-wrap: wrap; gap: 11px; }
+    .report-filters > .field { flex: 1 1 185px; }
+    .report-filters > .filter-archived { flex: 1 1 auto; }
+}
+@media (max-width: 690px) {
+    .management-filters { grid-template-columns: 1fr 1fr; }
+    .management-filters > input.form-control { grid-column: 1 / -1; }
+    .management-filters > .btn { width: 100%; }
+    .report-filters > .field { flex-basis: 100%; width: 100%; }
+    .report-filters > .filter-archived { flex: 1 0 100%; min-height: 27px; }
+    .report-filters > .btn { flex: 1 1 0; }
+}
+
+/* Unread notifications — subtle alert dots rather than distracting number boxes. */
+.header-notification {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    color: #176851;
+    border: 1px solid transparent;
+}
+.header-notification:hover,
+.header-notification:focus-visible {
+    background: #ecf5f0;
+}
+.header-notification svg { width: 20px; height: 20px; }
+.notification-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    border-radius: 50%;
+    background: #e38e39;
+    box-shadow: 0 0 0 2px #fff;
+}
+.notification-dot[hidden] { display: none !important; }
+.header-notification > .notification-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+}
+.sidebar-unread-dot { margin-left: auto; box-shadow: none; }
+.notifications-list { display: grid; gap: 10px; }
+.notification-item {
+    border: 1px solid #e0e9e4;
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px 16px;
+}
+.notification-item.unread {
+    background: #eff8f3;
+    border-color: #a8d8c4;
+}
+.notification-item-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    min-width: 0;
+}
+.notification-item-content .listmain { min-width: 0; flex: 1; }
+.notification-item-content .listmain b { font-size: 13px; }
+.notification-item-content .listmain small {
+    display: block;
+    margin-top: 5px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+.notification-item-content .roundico { flex: 0 0 38px; width: 38px; height: 38px; }
+.notification-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.notification-item .notification-indicator { margin-left: auto; }
+@media (max-width: 690px) {
+    .notification-item-content { flex-wrap: wrap; }
+    .notification-actions { width: 100%; }
+    .notification-actions .btn { flex: 1 1 auto; }
+    .header-notification { width: 34px; height: 34px; }
+}
