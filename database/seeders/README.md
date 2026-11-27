@@ -40,27 +40,27 @@ You can also run `php artisan db:seed` if your normal `INITIAL_ADMIN_PASSWORD` i
 
 When demo data are no longer wanted, set `SWM_DEMO_SEED=false` and run `php artisan config:clear`. This **disables future demo seeding but does not delete existing records**. Review and remove demo records manually in a safe, verified environment before any live deployment.
 
-## Seeded test accounts (all default password: `password1234`)
+## Sample accounts (all default password: `password1234`)
 
 | Role | Name / email | Purok |
 |---|---|---|
-| Superadministrator | Demo Superadministrator — `superadmin@linis.test` | All |
-| Barangay admin | Demo Barangay Administrator — `admin@linis.test` | All |
-| Barangay admin | Demo Assistant Administrator — `admin2@linis.test` | All |
-| Coordinator | Demo Coordinator Pine — `coordinator.pine@linis.test` | Pine |
-| Coordinator | Demo Coordinator Ridge — `coordinator.ridge@linis.test` | Ridge |
-| Crew | Demo Collection Crew Pine — `crew.pine@linis.test` | Pine |
-| Crew | Demo Collection Crew Ridge — `crew.ridge@linis.test` | Ridge |
-| Crew | Demo Collection Crew Creek — `crew.creek@linis.test` | Creek |
-| Eco-aide / MRF | Demo Eco-Aide Pine — `ecoaide.pine@linis.test` | Pine |
-| Eco-aide / MRF | Demo Eco-Aide Ridge — `ecoaide.ridge@linis.test` | Ridge |
-| Eco-aide / MRF | Demo Eco-Aide Creek — `ecoaide.creek@linis.test` | Creek |
-| Resident | Demo Resident Pine 1 — `resident.pine1@linis.test` | Pine |
-| Resident | Demo Resident Pine 2 — `resident.pine2@linis.test` | Pine |
-| Resident | Demo Resident Ridge 1 — `resident.ridge1@linis.test` | Ridge |
-| Resident | Demo Resident Ridge 2 — `resident.ridge2@linis.test` | Ridge |
-| Resident | Demo Resident Creek 1 — `resident.creek1@linis.test` | Creek |
-| Resident | Demo Resident Creek 2 — `resident.creek2@linis.test` | Creek |
+| Superadministrator | Superadministrator — `superadmin@linis.test` | All |
+| Barangay admin | Barangay Administrator — `admin@linis.test` | All |
+| Barangay admin | Assistant Administrator — `admin2@linis.test` | All |
+| Coordinator | Coordinator Pine — `coordinator.pine@linis.test` | Pine |
+| Coordinator | Coordinator Ridge — `coordinator.ridge@linis.test` | Ridge |
+| Crew | Collection Crew Pine — `crew.pine@linis.test` | Pine |
+| Crew | Collection Crew Ridge — `crew.ridge@linis.test` | Ridge |
+| Crew | Collection Crew Creek — `crew.creek@linis.test` | Creek |
+| Eco-aide / MRF | Eco-Aide Pine — `ecoaide.pine@linis.test` | Pine |
+| Eco-aide / MRF | Eco-Aide Ridge — `ecoaide.ridge@linis.test` | Ridge |
+| Eco-aide / MRF | Eco-Aide Creek — `ecoaide.creek@linis.test` | Creek |
+| Resident | Resident Pine 1 — `resident.pine1@linis.test` | Pine |
+| Resident | Resident Pine 2 — `resident.pine2@linis.test` | Pine |
+| Resident | Resident Ridge 1 — `resident.ridge1@linis.test` | Ridge |
+| Resident | Resident Ridge 2 — `resident.ridge2@linis.test` | Ridge |
+| Resident | Resident Creek 1 — `resident.creek1@linis.test` | Creek |
+| Resident | Resident Creek 2 — `resident.creek2@linis.test` | Creek |
 
 These emails use the reserved `.test` domain; they do not receive real email. Forgot-password SMTP delivery should be tested separately using an address/mailbox you control.
 
@@ -84,7 +84,7 @@ These emails use the reserved `.test` domain; they do not receive real email. Fo
 | Crew assignments | Matching records for cases that reached Assigned |
 | Notifications | At least 8 resident demo notices |
 
-Sample schedules are **not official Baguio or other Philippine collection arrangements**.
+Sample schedules are **not official Baguio or other Philippine collection arrangements**. Re-running the local seeders updates known old sample display labels to neutral interface wording while preserving their internal identifiers and database relationships.
 
 The sample Ridge inspection rate is intentionally below 60% for the last two *completed* weeks, allowing the alert command to be tested:
 
