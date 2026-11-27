@@ -15,12 +15,16 @@
 @if($canGenerate)
 @if($role==='superadmin')<a class="btn outline" href="{{route('fees.settings.index')}}">City rates</a>@endif
 <a class="btn outline" href="{{route('fees.accounts.index')}}">Receiving accounts</a>
+<a class="btn outline" href="{{route('fees.household-links.index')}}">Household link requests</a>
 <a class="btn primary" href="{{route('fees.submissions.index')}}">Verify online payments{{ $pendingVerificationCount > 0 ? ' · '.number_format($pendingVerificationCount).' pending' : '' }}</a>
 @endif
 </div>
 </div>
 <div class="notice">Garbage-fee balances change only after an authorized collector verifies an online transfer or records a cash payment. Uploaded payment receipts remain pending until independently confirmed.</div>
 @if($role==='resident')
+<div class="actions" style="margin:12px 0">
+    <a class="btn outline" href="{{route('fees.household-links.index')}}">My household link</a>
+</div>
 <section class="card fee-online-submit" id="submit-online-payment">
     <div class="fee-online-heading">
         <div>
@@ -33,7 +37,8 @@
     @if($residentHouseholdCount===0)
         <div class="fee-billing-help">
             <strong>Your resident account isn't linked to an active household yet.</strong>
-            <p>You can view your area's payment instructions below. Ask the barangay administrator to link your account in Household Registry and issue a bill before transferring funds.</p>
+            <p>Request a household link and wait for admin or superadmin approval. Only transfer funds after your household is linked and a bill has been issued.</p>
+            <a class="btn primary" href="{{route('fees.household-links.index')}}">Request household linking</a><p class="muted">You can track the request and its review status there.</p>
         </div>
     @elseif($receivingAccounts->isEmpty())
         <div class="fee-billing-help">
