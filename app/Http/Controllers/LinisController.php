@@ -2,7 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Household, PickupInspection, MrfWeighIn, Zone, WasteCategory, User};
-use App\Services\{LinisMetrics,ReportPdf};
+use App\Services\{LinisMetrics,ReportPdf,NoticeService};
 use App\Support\TableSorting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -173,7 +173,7 @@ class LinisController extends Controller
         return $data;
     }
 
-    public function store(Request $request,string $module)
+    public function store(Request $request,string $module,NoticeService $notices)
     {
         $this->authorizeModule($request,$module,true);
         $model=$this->model($module);
@@ -191,10 +191,13 @@ class LinisController extends Controller
         $data['change_history']=[];
         try {$record=$model::create($data);}
         catch(\Throwable $e){if(!empty($data['photo_path']))Storage::disk('local')->delete($data['photo_path']);throw $e;}
+        if($module==='inspections' && !$record->segregated){
+            $notices->segregationAlert((string)$record->zone_id,(string)$record->id);
+        }
         return redirect()->route('linis.index',$module)->with('status','Record saved.');
     }
 
-    public function update(Request $request,string $module,string $id)
+    public function update(Request $request,string $module,string $id,NoticeService $notices)
     {
         $record=$this->find($request,$module,$id,true);
         abort_if($record->archived_at,403);
@@ -207,21 +210,32 @@ class LinisController extends Controller
             if($request->hasFile('photo'))$data['photo_path']=$request->file('photo')->store('linis/violations','local');
             unset($data['photo']);
         }
+        $wasSegregated=(bool)($record->segregated??false);
+        $previousZone=(string)$record->zone_id;
         $before=[];foreach(array_keys($data) as $key){if($key==='photo_path')continue;$before[$key]=$record->$key;}
         $changes=(array)($record->change_history??[]);
         $changes[]=['by'=>(string)$request->user()->id,'at'=>now()->toIso8601String(),'before'=>$before];
         $record->fill($data);$record->change_history=$changes;
+        $businessChanged=$record->isDirty(array_keys($data));
         try{$record->save();}catch(\Throwable $e){if(isset($data['photo_path']))Storage::disk('local')->delete($data['photo_path']);throw $e;}
+        if($businessChanged && $module==='inspections' && $wasSegregated && !$record->segregated){
+            $notices->segregationAlert((string)$record->zone_id,(string)$record->id);
+        }
+        if($businessChanged && $module==='weigh-ins'){
+            $notices->mrfAdjustment((string)$record->zone_id);
+            if($previousZone!==(string)$record->zone_id)$notices->mrfAdjustment($previousZone);
+        }
         return redirect()->route('linis.index',$module)->with('status','Updated with revision history.');
     }
 
-    public function destroy(Request $request,string $module,string $id)
+    public function destroy(Request $request,string $module,string $id,NoticeService $notices)
     {
         $record=$this->find($request,$module,$id,true);
         if(!$record->archived_at){
             $record->archived_at=now();
             $record->archived_by=(string)$request->user()->id;
             $record->save();
+            if($module==='weigh-ins')$notices->mrfAdjustment((string)$record->zone_id);
         }
         return redirect()->route('linis.index',$module)->with('status','Record archived; historical data retained.');
     }
