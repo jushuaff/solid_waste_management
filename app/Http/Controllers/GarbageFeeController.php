@@ -150,8 +150,9 @@ class GarbageFeeController extends Controller
             $residentSubmissions=FeePaymentSubmission::with(['charge','receivingAccount'])
                 ->where('resident_user_id',(string)$request->user()->id)
                 ->orderBy('created_at','desc')->limit(20)->get();
-            $pendingIds=$residentSubmissions->where('status','pending')
-                ->pluck('charge_id')->map(fn($id)=>(string)$id)->all();
+            $pendingIds=FeePaymentSubmission::where('resident_user_id',(string)$request->user()->id)
+                ->where('status','pending')->pluck('charge_id')
+                ->map(fn($id)=>(string)$id)->all();
             $activeHouseholds=Household::where('resident_user_id',(string)$request->user()->id)
                 ->where('is_active',true)->whereNull('archived_at')->pluck('id')
                 ->map(fn($id)=>(string)$id)->all();
