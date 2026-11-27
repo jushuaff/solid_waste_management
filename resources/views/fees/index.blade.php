@@ -15,7 +15,7 @@
 @if($canGenerate)
 @if($role==='superadmin')<a class="btn outline" href="{{route('fees.settings.index')}}">City rates</a>@endif
 <a class="btn outline" href="{{route('fees.accounts.index')}}">Receiving accounts</a>
-<a class="btn primary" href="{{route('fees.submissions.index')}}">Verify online payments @if($pendingVerificationCount>0)· {{$pendingVerificationCount}} pending@endif</a>
+<a class="btn primary" href="{{route('fees.submissions.index')}}">Verify online payments{{ $pendingVerificationCount > 0 ? ' · '.number_format($pendingVerificationCount).' pending' : '' }}</a>
 @endif
 </div>
 </div>
