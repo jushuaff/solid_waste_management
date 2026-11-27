@@ -18,9 +18,9 @@ class DemoOperationsSeeder extends Seeder
         $this->assertDemoSeedingAllowed();
 
         $zones = [
-            'pine' => Zone::where('name','Demo Purok Pine')->firstOrFail(),
-            'ridge' => Zone::where('name','Demo Purok Ridge')->firstOrFail(),
-            'creek' => Zone::where('name','Demo Purok Creek')->firstOrFail(),
+            'pine' => Zone::where('demo_key','LINIS-DEMO-ZONE-pine')->firstOrFail(),
+            'ridge' => Zone::where('demo_key','LINIS-DEMO-ZONE-ridge')->firstOrFail(),
+            'creek' => Zone::where('demo_key','LINIS-DEMO-ZONE-creek')->firstOrFail(),
         ];
         $categories = [
             'residual' => WasteCategory::where('national_type','residual')->firstOrFail(),
@@ -48,7 +48,7 @@ class DemoOperationsSeeder extends Seeder
 
         foreach (['pine','ridge','creek'] as $key) {
             $households = Household::where('zone_id',(string)$zones[$key]->id)
-                ->where('reference','regex',new \MongoDB\BSON\Regex('^DEMO-', 'i'))
+                ->where('demo_key','regex',new \MongoDB\BSON\Regex('^LINIS-DEMO-HOUSEHOLD-', 'i'))
                 ->orderBy('reference')->get();
             if ($households->count() < 5) {
                 throw new \RuntimeException('Run DemoConfigurationSeeder first: expected 5+ demo household references in '.$key);
@@ -62,7 +62,7 @@ class DemoOperationsSeeder extends Seeder
                     $at = $start->copy()->addDays($day)->setTime(8 + $i, 10);
                     if ($at->isFuture()) $at = now()->subMinutes($i + 1);
                     $segregated = $i < $passes[$key];
-                    PickupInspection::firstOrCreate(
+                    $inspection=PickupInspection::firstOrCreate(
                         ['demo_key'=>'LINIS-DEMO-INSPECTION-'.$key.'-'.$start->format('Ymd').'-'.$i],
                         [
                             'zone_id'=>(string)$zones[$key]->id,
@@ -71,12 +71,16 @@ class DemoOperationsSeeder extends Seeder
                             'inspected_at'=>$at,
                             'segregated'=>$segregated,
                             'note'=>$segregated
-                                ? 'Demo observation: waste was properly sorted.'
-                                : 'Demo observation: mixed waste. No real resident or property involved.',
+                                ? 'Waste was properly sorted.'
+                                : 'Mixed waste observed during collection.',
                             'photo_path'=>null,
                             'change_history'=>[],
                         ]
                     );
+                    if (str_starts_with((string)$inspection->note,'Demo observation:')) {
+                        $inspection->note=$segregated?'Waste was properly sorted.':'Mixed waste observed during collection.';
+                        $inspection->save();
+                    }
                 }
             }
         }
@@ -94,7 +98,7 @@ class DemoOperationsSeeder extends Seeder
                 foreach ($weightRows as $categoryKey => [$weight,$diverted]) {
                     $at = $month->copy()->addDays($monthsAgo===0?min(5 + $zoneIndex,Carbon::today()->day - 1):5+$zoneIndex)->setTime(10,20);
                     if ($at->isFuture()) $at=now()->subMinutes(10);
-                    MrfWeighIn::firstOrCreate(
+                    $weighIn=MrfWeighIn::firstOrCreate(
                         ['demo_key'=>'LINIS-DEMO-MRF-'.$month->format('Ym').'-'.$key.'-'.$categoryKey],
                         [
                             'zone_id'=>(string)$zones[$key]->id,
@@ -103,10 +107,14 @@ class DemoOperationsSeeder extends Seeder
                             'weight_kg'=>$weight + $zoneIndex,
                             'diverted_kg'=>$diverted + ($categoryKey==='residual'?0:($zoneIndex*.5)),
                             'recorded_by'=>(string)$staff[$key]['eco']->id,
-                            'note'=>'Fictional MRF weigh-in data for MIT 103/104 demonstration only.',
+                            'note'=>'MRF waste category weigh-in.',
                             'change_history'=>[],
                         ]
                     );
+                    if ($weighIn->note==='Fictional MRF weigh-in data for MIT 103/104 demonstration only.') {
+                        $weighIn->note='MRF waste category weigh-in.';
+                        $weighIn->save();
+                    }
                 }
             }
         }
@@ -151,16 +159,24 @@ class DemoOperationsSeeder extends Seeder
                     'schedule_id'=>$type==='missed_collection' && $schedule?(string)$schedule->id:null,
                     'incident_type'=>$type,
                     'incident_date'=>$submittedAt->toDateString(),
-                    'location'=>'FICTIONAL '.$zones[$zoneKey]->name.' demonstration landmark',
+                    'location'=>$zones[$zoneKey]->name.' collection area',
                     'latitude'=>$type==='illegal_dumping'?16.4001:null,
                     'longitude'=>$type==='illegal_dumping'?120.6001:null,
-                    'description'=>'Fictional MIT 103/104 demonstration record; this is not an actual allegation or pickup report.',
+                    'description'=>'Collection concern reported for review by the barangay office.',
                     'current_status'=>$status,
                     'submitted_at'=>$submittedAt,
                     'assigned_crew_id'=>$hasAssignment?(string)$crew->id:null,
                     'photo_path'=>null,
                 ]
             );
+
+            if (str_starts_with((string)$report->location,'FICTIONAL ')) {
+                $report->location=$zones[$zoneKey]->name.' collection area';
+            }
+            if ($report->description==='Fictional MIT 103/104 demonstration record; this is not an actual allegation or pickup report.') {
+                $report->description='Collection concern reported for review by the barangay office.';
+            }
+            if ($report->isDirty()) $report->save();
 
             if ($hasAssignment) {
                 Assignment::firstOrCreate(
@@ -194,17 +210,21 @@ class DemoOperationsSeeder extends Seeder
                 $prior=$next;
             }
 
-            Notice::firstOrCreate(
+            $notice=Notice::firstOrCreate(
                 ['demo_key'=>'LINIS-DEMO-NOTICE-'.$key],
                 [
                     'recipient_user_id'=>(string)$resident->id,
                     'report_id'=>(string)$report->id,
                     'title'=>'Demo report '.$status,
-                    'message'=>'Your fictional report '.$report->tracking_id.' is '.$status.'.',
+                    'message'=>'Your report '.$report->tracking_id.' is '.$status.'.',
                     'is_read'=>false,
                     'created_at'=>now()->subHours(min($age,12)),
                 ]
             );
+            if (str_contains((string)$notice->message,'fictional report')) {
+                $notice->message='Your report '.$report->tracking_id.' is '.$status.'.';
+                $notice->save();
+            }
             $lastStatusPerCase[$key]=$status;
         }
         $this->command?->info('LINIS operations seeded or retained: 45 inspections, 18 weigh-ins and 8 case workflows with history, assignments and notifications.');
