@@ -3,6 +3,7 @@
 @section('content')
 @php($isStaff=in_array($role,['superadmin','admin','coordinator'],true))
 @php($canGenerate=in_array($role,['superadmin','admin'],true))
+@php($canRecord=$canGenerate)
 <div class="heading">
 <div>
 <span class="eyebrow">HOUSEHOLD SERVICES · BILLING</span>
@@ -14,10 +15,142 @@
 @if($canGenerate)
 @if($role==='superadmin')<a class="btn outline" href="{{route('fees.settings.index')}}">City rates</a>@endif
 <a class="btn outline" href="{{route('fees.accounts.index')}}">Receiving accounts</a>
+<a class="btn primary" href="{{route('fees.submissions.index')}}">Verify online payments @if($pendingVerificationCount>0)· {{$pendingVerificationCount}} pending@endif</a>
 @endif
 </div>
 </div>
-<div class="notice">This section records monthly charges and payments. Online transfers and card transactions are processed outside the application. A payment is reflected as paid only after an authorized staff member verifies and records it.</div>
+<div class="notice">Garbage-fee balances change only after an authorized collector verifies an online transfer or records a cash payment. Uploaded payment receipts remain pending until independently confirmed.</div>
+@if($role==='resident')
+<section class="card fee-online-submit" id="submit-online-payment">
+    <div class="fee-online-heading">
+        <div>
+            <span class="eyebrow">ONLINE TRANSFER</span>
+            <h2 class="paneltitle">Submit online payment</h2>
+            <p class="muted">Transfer through your GCash, bank or e-wallet app, then send your receipt for verification.</p>
+        </div>
+        <span class="badge grey">Staff verification required</span>
+    </div>
+    @if($residentHouseholdCount===0)
+        <div class="fee-billing-help">
+            <strong>Your resident account isn't linked to an active household yet.</strong>
+            <p>Ask the barangay administrator to link your account in Household Registry before submitting a garbage-fee payment.</p>
+        </div>
+    @elseif($receivingAccounts->isEmpty())
+        <div class="fee-billing-help">
+            <strong>No approved online receiving account is available for your household.</strong>
+            <p>Please ask the barangay administrator to publish a verified bank or e-wallet account for your city. Do not transfer funds to an unverified destination.</p>
+        </div>
+    @elseif($residentOutstanding->isEmpty())
+        <div class="fee-billing-help">
+            <strong>No eligible unpaid billing month is available for receipt submission.</strong>
+            <p>This may mean your bills are already paid, a transfer receipt is waiting for verification, or your barangay has not generated a charge for the selected household. See <a href="{{route('fees.history.index')}}">My Payment Tracker</a> for all billed months.</p>
+        </div>
+    @else
+        <div class="fee-payment-steps">
+            <span><strong>1</strong> Choose a billed month</span>
+            <span><strong>2</strong> Transfer to the approved account</span>
+            <span><strong>3</strong> Upload proof</span>
+        </div>
+        <form method="POST" action="{{route('fees.submissions.store')}}" enctype="multipart/form-data"
+            class="fee-online-form" data-fee-online-form>
+            @csrf
+            <div class="fee-online-fields">
+                <div class="field">
+                    <label for="fee-submit-charge">Household and billing month *</label>
+                    <select class="form-control" id="fee-submit-charge" name="charge_id" required>
+                        <option value="">Choose unpaid month</option>
+                        @foreach($residentOutstanding as $billOption)
+                            <option value="{{$billOption->id}}" data-fee-city="{{$billOption->city_id}}"
+                                data-fee-balance="{{\App\Services\FeeLedger::balance($billOption)}}"
+                                @selected(old('charge_id')===(string)$billOption->id)>
+                                {{$billOption->household?->reference??'Household'}} · {{\Carbon\Carbon::parse($billOption->billing_month.'-01')->format('F Y')}}
+                                · Balance {{\App\Services\FeeLedger::money(\App\Services\FeeLedger::balance($billOption))}}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="hint">Only months with an issued, outstanding charge can be submitted.</small>
+                </div>
+                <div class="field">
+                    <label for="fee-submit-account">Receiving bank / e-wallet *</label>
+                    <select class="form-control" id="fee-submit-account" name="receiving_account_id" required>
+                        <option value="">Select your approved payment destination</option>
+                        @foreach($receivingAccounts as $account)
+                            <option value="{{$account->id}}" data-fee-city="{{$account->city_id}}"
+                                @selected(old('receiving_account_id')===(string)$account->id)>
+                                {{$account->provider}} · {{$account->account_name}}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="hint">Check the account number and optional QR code in <a href="#fee-payment-destinations">Where to pay</a> before transferring.</small>
+                </div>
+                <div class="field">
+                    <label for="fee-submit-amount">Amount transferred (PHP) *</label>
+                    <input class="form-control" id="fee-submit-amount" type="number" step="0.01" min="0.01"
+                        name="amount" placeholder="0.00" value="{{old('amount')}}" required>
+                    <small class="hint" data-fee-balance-hint>Choose a billing month to see the outstanding amount.</small>
+                </div>
+                <div class="field">
+                    <label for="fee-submit-date">Transfer date *</label>
+                    <input class="form-control" id="fee-submit-date" type="date" name="paid_on"
+                        value="{{old('paid_on',now()->toDateString())}}" max="{{now()->toDateString()}}" required>
+                </div>
+                <div class="field">
+                    <label for="fee-submit-reference">GCash / bank transaction reference *</label>
+                    <input class="form-control" id="fee-submit-reference" name="transaction_reference"
+                        minlength="5" maxlength="100" value="{{old('transaction_reference')}}"
+                        placeholder="Reference from your completed transfer" autocomplete="off" required>
+                </div>
+                <div class="field">
+                    <label for="fee-submit-proof">Transfer receipt / screenshot *</label>
+                    <input class="form-control" id="fee-submit-proof" name="receipt" type="file"
+                        accept="image/jpeg,image/png,image/webp,application/pdf" required>
+                    <small class="hint" data-fee-proof-hint>JPG, PNG, WebP or PDF · 5 MB maximum.</small>
+                </div>
+            </div>
+            <div class="field">
+                <label for="fee-submit-note">Additional details <span class="fee-optional">Optional</span></label>
+                <textarea class="form-control" id="fee-submit-note" name="note" rows="2" maxlength="400"
+                    placeholder="Any helpful details for verifying your transfer">{{old('note')}}</textarea>
+            </div>
+            <div class="fee-online-action">
+                <p class="muted">Submitting a receipt does not mark a bill as paid. Staff must confirm the money was received.</p>
+                <button class="btn primary" type="submit">Submit receipt for verification</button>
+            </div>
+        </form>
+    @endif
+
+    @if($residentSubmissions->isNotEmpty())
+        <div class="fee-online-submissions">
+            <h3>My submitted online payments</h3>
+            <div class="fee-review-scroll">
+                <table class="content-table fee-resident-proof-table">
+                    <thead><tr><th>Billing month</th><th>Transferred</th><th>Reference</th><th>Status</th><th>Proof</th></tr></thead>
+                    <tbody>
+                    @foreach($residentSubmissions as $proof)
+                        <tr>
+                            <td>{{$proof->charge?->billing_month??'—'}}</td>
+                            <td>{{\App\Services\FeeLedger::money((int)$proof->amount_centavos)}}</td>
+                            <td>{{$proof->submission_code}}</td>
+                            <td>
+                                <span class="badge {{$proof->status==='pending'?'amber':($proof->status==='rejected'?'grey':'')}}">
+                                    {{match($proof->status){'pending'=>'Pending verification','verified'=>'Verified','rejected'=>'Rejected',default=>'Under review'}}}
+                                </span>
+                                @if($proof->status==='rejected' && $proof->review_note)
+                                    <small class="fee-review-small">Reason: {{$proof->review_note}}</small>
+                                @endif
+                            </td>
+                            <td><a href="{{route('fees.submissions.receipt',$proof->id)}}" target="_blank"
+                                rel="noopener noreferrer">View receipt</a></td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+</section>
+@endif
+
 @if($canGenerate)
 <div class="card" style="margin-bottom:18px">
 <h2 class="paneltitle">Generate monthly household charges</h2>
