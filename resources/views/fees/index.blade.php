@@ -161,7 +161,7 @@
 <div class="fee-receiving-grid">
 @foreach($receivingAccounts as $account)
 <div class="fee-receiving-card">
-<span class="badge">{{strtoupper($account->method)}}</span>
+<span class="badge">{{in_array($account->method,['gcash','wallet'],true)?'E-wallet':'Bank transfer'}}</span>
 <h3 style="margin:10px 0 5px">{{$account->provider}}</h3>
 <p><strong>{{$account->account_name}}</strong></p>
 <p>Account number: <strong>{{$account->account_number}}</strong></p>
