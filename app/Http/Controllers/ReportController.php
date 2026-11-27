@@ -152,8 +152,9 @@ class ReportController extends Controller
     {
         $report=Report::findOrFail($report);$this->authorizeReport($request,$report);
         $history=StatusHistory::where('report_id',(string)$report->id)->orderBy('changed_at')->get();
+        $media=IncidentMedia::where('report_id',(string)$report->id)->whereNull('removed_at')->orderBy('created_at')->get();
         $filename='case-'.preg_replace('/[^A-Za-z0-9_-]/','-',(string)$report->tracking_id).'.pdf';
-        return $pdf->respond('print.report',compact('report','history'),$filename,$request->boolean('download'));
+        return $pdf->respond('print.report',compact('report','history','media'),$filename,$request->boolean('download'));
     }
     public function evidence(Request $request,string $report)
     {
