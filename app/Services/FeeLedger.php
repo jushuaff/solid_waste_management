@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Models\{GarbageFeeCharge,GarbageFeePayment};
+use App\Models\{GarbageFeeCharge,GarbageFeePayment,FeePaymentSubmission};
 
 class FeeLedger
 {
@@ -27,6 +27,17 @@ class FeeLedger
     public static function balance(GarbageFeeCharge $charge):int
     {
         return max(0,(int)$charge->amount_centavos-self::paid($charge));
+    }
+
+    /** Amount still available for additional online proofs; pending proofs are not payments. */
+    public static function availableForSubmission(GarbageFeeCharge $charge, ?string $except = null):int
+    {
+        $query=FeePaymentSubmission::where('charge_id',(string)$charge->id)->where('status','pending');
+        $credited=GarbageFeePayment::where('charge_id',(string)$charge->id)->where('status','recorded')
+            ->pluck('source_submission_id')->filter()->map(fn($id)=>(string)$id)->all();
+        $reserved=$query->get()->filter(fn($proof)=>(string)$proof->id!==$except
+            && !in_array((string)$proof->id,$credited,true))->sum('amount_centavos');
+        return max(0,self::balance($charge)-(int)$reserved);
     }
 
     public static function status(GarbageFeeCharge $charge):string
