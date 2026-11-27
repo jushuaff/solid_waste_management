@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\{
     FeeCity, FeeRate, FeeReceivingAccount, Zone, Household, GarbageFeeCharge, GarbageFeePayment, Notice, User
 };
-use App\Services\FeeLedger;
+use App\Services\{FeeLedger,NoticeService};
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -186,7 +186,7 @@ class GarbageFeeController extends Controller
     }
 
     /** Record funds confirmed outside this application. No wallet/card gateway is used. */
-    public function recordPayment(Request $request,string $charge)
+    public function recordPayment(Request $request,string $charge,NoticeService $notices)
     {
         $bill=GarbageFeeCharge::with(['household','payments'])->findOrFail($charge);
         $this->ensureChargeAccess($request,$bill,true);
@@ -236,9 +236,17 @@ class GarbageFeeController extends Controller
             'charge_id'=>(string)$bill->id,
             'actor_user_id'=>(string)$request->user()->id,
         ]);
-        $this->notifyResident($bill,'Garbage fee payment recorded',
-            'A '.strtoupper($data['method']).' payment was recorded for '.$bill->billing_month.
-            '. Review your updated balance.');
+        // Reload the payments relation after writing, or the cached relation would
+        // show the old balance in the confirmation notification.
+        $bill->unsetRelation('payments');
+        $remaining=FeeLedger::balance($bill);
+        $status=FeeLedger::status($bill);
+        $this->notifyResident($bill,$remaining===0?'Garbage fee fully paid':'Garbage fee payment confirmed',
+            'An authorized collector has verified a '.strtoupper($data['method']).
+            ' payment of '.FeeLedger::money($amount).' for '.$bill->billing_month.
+            '. Status: '.$status.'. Remaining balance: '.FeeLedger::money($remaining).
+            '. View your payment tracker for the recorded transaction.');
+        $notices->feePaymentRecorded($bill,$amount,$data['method'],$status,(string)$request->user()->id);
         return redirect()->route('fees.index',['month'=>$bill->billing_month,'highlight'=>(string)$bill->id])
             ->with('status','Payment recorded. Internal reference: '.$payment->receipt_code.'. This is not an official government receipt.');
     }
