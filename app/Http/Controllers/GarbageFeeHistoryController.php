@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\{FeeCity,Zone,Household,GarbageFeeCharge};
+use App\Models\{FeeCity,Zone,Household,GarbageFeeCharge,FeePaymentSubmission};
 use App\Services\FeeLedger;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,7 +14,7 @@ class GarbageFeeHistoryController extends Controller
         abort_unless(in_array($role,['superadmin','admin','coordinator','resident'],true),403);
 
         $data=$request->validate([
-            'status'=>['nullable','in:Unpaid,Partial,Paid'],
+            'status'=>['nullable','in:Unpaid,Partial,Paid,Pending Verification'],
             'city_id'=>['nullable','string','max:80'],
             'zone_id'=>['nullable','string','max:80'],
             'household_id'=>['nullable','string','max:80'],
@@ -41,16 +41,23 @@ class GarbageFeeHistoryController extends Controller
 
         $filterStatus=$data['status']??'';
         $search=mb_strtolower(trim($data['q']??''));
-        $rows=$query->get()->map(function($charge){
+        $allCharges=$query->get();
+        $ids=$allCharges->pluck('id')->map(fn($id)=>(string)$id)->all();
+        $pendingIds=$ids?FeePaymentSubmission::whereIn('charge_id',$ids)
+            ->where('status','pending')->pluck('charge_id')
+            ->map(fn($id)=>(string)$id)->unique()->all():[];
+        $rows=$allCharges->map(function($charge)use($pendingIds){
             $paid=FeeLedger::paid($charge);
             return [
                 'charge'=>$charge,
                 'paid'=>$paid,
                 'balance'=>max(0,(int)$charge->amount_centavos-$paid),
                 'status'=>FeeLedger::status($charge),
+                'pending'=>in_array((string)$charge->id,$pendingIds,true),
             ];
         })->filter(function($row)use($filterStatus,$search){
-            if($filterStatus && $row['status']!==$filterStatus)return false;
+            if($filterStatus && ($filterStatus==='Pending Verification'
+                ?!$row['pending']:$row['status']!==$filterStatus))return false;
             return $search==='' || str_contains(
                 mb_strtolower((string)($row['charge']->household?->reference??'')),$search
             );
@@ -72,11 +79,12 @@ class GarbageFeeHistoryController extends Controller
                     'household'=>$charge->household,
                     'city'=>$charge->city,
                     'zone'=>$charge->zone,
-                    'paid_months'=>0,'unpaid_months'=>0,'partial_months'=>0,
+                    'paid_months'=>0,'unpaid_months'=>0,'partial_months'=>0,'pending_months'=>0,
                     'outstanding'=>0,'total_paid'=>0,'months'=>[],
                 ];
             }
             $summary[$householdId][strtolower($row['status']).'_months']++;
+            if($row['pending'])$summary[$householdId]['pending_months']++;
             $summary[$householdId]['outstanding']+=$row['balance'];
             $summary[$householdId]['total_paid']+=$row['paid'];
             $summary[$householdId]['months'][]=$charge->billing_month;
@@ -88,6 +96,7 @@ class GarbageFeeHistoryController extends Controller
         $paidCount=count(array_filter($rows,fn($row)=>$row['status']==='Paid'));
         $unpaidCount=count(array_filter($rows,fn($row)=>$row['status']==='Unpaid'));
         $partialCount=count(array_filter($rows,fn($row)=>$row['status']==='Partial'));
+        $pendingCount=count(array_filter($rows,fn($row)=>$row['pending']));
         $page=max(1,(int)LengthAwarePaginator::resolveCurrentPage());
         $months=new LengthAwarePaginator(
             array_slice($rows,($page-1)*20,20),count($rows),20,$page,
@@ -97,6 +106,6 @@ class GarbageFeeHistoryController extends Controller
         $cities=in_array($role,['superadmin','admin'],true)?FeeCity::orderBy('name')->get():collect();
         $zones=in_array($role,['superadmin','admin'],true)?Zone::orderBy('name')->get():collect();
         return view('fees.history',compact('months','summary','role','cities','zones',
-            'totalBalance','paidCount','unpaidCount','partialCount','filterStatus'));
+            'totalBalance','paidCount','unpaidCount','partialCount','pendingCount','filterStatus'));
     }
 }
