@@ -170,29 +170,35 @@ class FeePaymentSubmissionController extends Controller
                 $record=null;
                 if($data['decision']==='verify'){
                     $amount=(int)$current->amount_centavos;
-                    if($amount<1 || $amount>FeeLedger::balance($bill)){
-                        throw ValidationException::withMessages(['decision'=>'This month’s balance changed. The receipt cannot be confirmed at the submitted amount. Reconcile the payment before continuing.']);
-                    }
-                    if(GarbageFeePayment::where('source_submission_id',(string)$current->id)->exists()
-                        ||GarbageFeePayment::where('city_id',(string)$bill->city_id)
+                    // A saved payment can outlive a failed status-write. Resume the
+                    // original confirmation rather than crediting a second payment.
+                    $record=GarbageFeePayment::where('source_submission_id',(string)$current->id)->first();
+                    if(!$record){
+                        if($amount<1 || $amount>FeeLedger::balance($bill)){
+                            throw ValidationException::withMessages(['decision'=>'This month’s balance changed. The receipt cannot be confirmed at the submitted amount. Reconcile the payment before continuing.']);
+                        }
+                        if(GarbageFeePayment::where('city_id',(string)$bill->city_id)
                             ->where('external_reference',(string)$current->transaction_reference)
                             ->where('status','recorded')->exists()){
-                        throw ValidationException::withMessages(['decision'=>'This transfer has already been recorded. Review the payment ledger.']);
+                            throw ValidationException::withMessages(['decision'=>'This transfer has already been recorded. Review the payment ledger.']);
+                        }
+                        $record=GarbageFeePayment::create([
+                            'charge_id'=>(string)$bill->id,
+                            'city_id'=>(string)$bill->city_id,
+                            'amount_centavos'=>$amount,
+                            'method'=>(string)$current->method,
+                            'paid_on'=>$current->paid_on?->format('Y-m-d')??$current->getRawOriginal('paid_on'),
+                            'external_reference'=>(string)$current->transaction_reference,
+                            'source_submission_id'=>(string)$current->id,
+                            'note'=>'Resident-submitted transfer verified by authorized staff',
+                            'status'=>'recorded',
+                            'receipt_code'=>'FEE-'.Str::upper(Str::random(14)),
+                            'recorded_by'=>(string)$request->user()->id,
+                            'recorded_at'=>now(),
+                        ]);
+                    }elseif($record->status!=='recorded'){
+                        throw ValidationException::withMessages(['decision'=>'The linked payment was reversed. Reconcile the entry before changing this submission.']);
                     }
-                    $record=GarbageFeePayment::create([
-                        'charge_id'=>(string)$bill->id,
-                        'city_id'=>(string)$bill->city_id,
-                        'amount_centavos'=>$amount,
-                        'method'=>(string)$current->method,
-                        'paid_on'=>$current->paid_on?->format('Y-m-d')??$current->getRawOriginal('paid_on'),
-                        'external_reference'=>(string)$current->transaction_reference,
-                        'source_submission_id'=>(string)$current->id,
-                        'note'=>'Resident-submitted transfer verified by authorized staff',
-                        'status'=>'recorded',
-                        'receipt_code'=>'FEE-'.Str::upper(Str::random(14)),
-                        'recorded_by'=>(string)$request->user()->id,
-                        'recorded_at'=>now(),
-                    ]);
                 }
 
                 $current->status=$data['decision']==='verify'?'verified':'rejected';
