@@ -46,6 +46,33 @@ php artisan db:seed --class=DemoDataSeeder
 
 The demo seeder refuses to run outside the `local`/`testing` environment or without the explicit flag. It does not delete any collections. The existing `InitialAdminSeeder` still requires a strong, independently configured password. Never use these demonstration accounts on a public deployment.
 
+## Real PDF previews and downloads (MIT 103 / MIT 104)
+
+Reports now use server-rendered PDFs with [barryvdh/laravel-dompdf](https://packagist.org/packages/barryvdh/laravel-dompdf) `^3.1.2` (Laravel 13 compatible). No npm or browser-only Print-to-PDF step is required.
+
+* **Preview PDF** streams a genuine PDF with `Content-Disposition: inline` and opens the browser's native PDF viewer in a new tab.
+* **Download PDF** returns `Content-Disposition: attachment` for a saved `.pdf` file.
+* PDF links are available on the individual report detail, filtered case summary, published collection schedules and LINIS monthly monitoring dashboard.
+* The `download=1` query parameter chooses attachment; existing authenticated routes and filters are preserved. PDF responses have private no-store cache headers. The report route enforces ownership and coordinator-zone restrictions and denies eco-aide access to resident reports.
+* PDF rendering uses local files and disabled remote loading; a purpose-built DomPDF layout replaces the earlier HTML/JavaScript print toolbar.
+* Monthly monitoring PDFs are still **academic prototype summaries**, not verified government-approved RA 9003 submission forms.
+
+After pulling the new code, install the added Composer dependency:
+
+```powershell
+git pull origin main
+# If a composer.lock already exists locally:
+composer update barryvdh/laravel-dompdf --with-all-dependencies
+# Otherwise (no composer.lock), use: composer install
+php artisan optimize:clear
+```
+
+The Composer lockfile should be committed once resolved on the development machine, for reproducible deployments. If Composer reports missing PHP `ext-gd` or `ext-mbstring`, enable the proper PHP 8.4 modules in `php.ini` (do not disable TLS or ignore platform requirements).
+
+**Superadministrator account password management:** User Accounts now has a separate **Change password** action (except your own account, which uses My Profile). Only the superadministrator may reset another user's password. It requires confirmation of the acting superadministrator's current password and a 12-character minimum for the new one; ordinary user-edit forms no longer change passwords.
+
+**Unverified:** Run browser and authorization tests with local MongoDB before sharing case PDFs or administrator tools outside the development environment.
+
 ## Application modules
 
 | Module | What works in the source |
