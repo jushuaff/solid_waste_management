@@ -43,7 +43,10 @@ final class TableSorting
         // Relation/display sorting is global across the filtered result set.
         $rows = $query->get()->all();
         usort($rows, static function ($a, $b) use ($sorter, $direction): int {
-            $cmp = self::compare($sorter($a), $sorter($b));
+            $left=$sorter($a);$right=$sorter($b);
+            $nullOrder=self::nullOrder($left,$right);
+            if($nullOrder!==null && $nullOrder!==0)return $nullOrder;
+            $cmp = self::compare($left, $right);
             if ($cmp === 0) $cmp = strcmp((string)$a->getKey(), (string)$b->getKey());
             return $direction === 'desc' ? -$cmp : $cmp;
         });
@@ -63,17 +66,25 @@ final class TableSorting
         [$sort, $direction] = self::resolve($request, $fields, 'zone', 'asc');
         $getter = $fields[$sort];
         usort($rows, static function ($a, $b) use ($getter, $direction): int {
-            $cmp = self::compare($getter($a), $getter($b));
+            $left=$getter($a);$right=$getter($b);
+            $nullOrder=self::nullOrder($left,$right);
+            if($nullOrder!==null && $nullOrder!==0)return $nullOrder;
+            $cmp = self::compare($left, $right);
             if ($cmp === 0) $cmp = self::compare((string)$a['zone']->name, (string)$b['zone']->name);
             return $direction === 'desc' ? -$cmp : $cmp;
         });
         return $rows;
     }
 
+    private static function nullOrder($left,$right):?int
+    {
+        $a=$left===null || $left==='';
+        $b=$right===null || $right==='';
+        return $a || $b ? ($a===$b?0:($a?1:-1)) : null;
+    }
+
     private static function compare($left, $right): int
     {
-        if ($left === null || $left === '') return ($right === null || $right === '') ? 0 : 1;
-        if ($right === null || $right === '') return -1;
         if (is_numeric($left) && is_numeric($right)) return (float)$left <=> (float)$right;
         return strnatcasecmp((string)$left, (string)$right);
     }
