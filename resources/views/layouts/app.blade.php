@@ -45,6 +45,11 @@
             </a>
             @endif
             @if(in_array(auth()->user()->role_code,['superadmin','admin'],true))
+            <a class="navitem {{ request()->routeIs('fees.submissions.*')?'active':'' }}" href="{{route('fees.submissions.index')}}">
+                <span class="ico">▣</span> Verify Online Payments
+            </a>
+            @endif
+            @if(in_array(auth()->user()->role_code,['superadmin','admin'],true))
             <a class="navitem {{ request()->routeIs('fees.accounts.*')?'active':'' }}" href="{{route('fees.accounts.index')}}">
                 <span class="ico">▣</span> Receiving Accounts
             </a>
