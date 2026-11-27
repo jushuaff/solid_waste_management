@@ -1,11 +1,11 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\{FeeCity,FeeReceivingAccount,GarbageFeeCharge,Household};
+use App\Models\{FeeCity,FeeReceivingAccount};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use App\Services\NoticeService;
+use App\Services\{NoticeService,ResidentFeeCities};
 use App\Support\PaymentProviders;
 use App\Models\FeeProvider;
 
@@ -209,17 +209,7 @@ class FeeReceivingAccountController extends Controller
         $role=$request->user()->role_code;
         if(!in_array($role,['superadmin','admin'],true)){
             abort_unless($role==='resident' && $entry->is_active,403);
-            $zoneIds=\App\Models\Zone::where('fee_city_id',(string)$entry->city_id)
-                ->pluck('id')->map(fn($id)=>(string)$id)->all();
-            $householdIds=Household::where('resident_user_id',(string)$request->user()->id)
-                ->pluck('id')->map(fn($id)=>(string)$id)->all();
-            $currentlyAssigned=Household::where('resident_user_id',(string)$request->user()->id)
-                ->whereIn('zone_id',$zoneIds)->where('is_active',true)
-                ->whereNull('archived_at')->exists();
-            $hasHistoricCharge=$householdIds
-                && \App\Models\GarbageFeeCharge::whereIn('household_id',$householdIds)
-                    ->where('city_id',(string)$entry->city_id)->exists();
-            abort_unless($currentlyAssigned || $hasHistoricCharge,404);
+            abort_unless(in_array((string)$entry->city_id,ResidentFeeCities::ids($request->user()),true),404);
         }
         abort_unless($entry->qr_path && Storage::disk('local')->exists($entry->qr_path),404);
         return response()->file(Storage::disk('local')->path($entry->qr_path),[
