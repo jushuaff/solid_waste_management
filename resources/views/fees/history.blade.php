@@ -11,7 +11,7 @@
 <a class="btn outline" href="{{route('fees.index')}}">← Current month</a>
 </div>
 <div class="notice">
-Only months with an issued household charge appear here. A month without an issued charge is <strong>not automatically an unpaid balance</strong>. Payments reflect authorized staff verification, not an automatic wallet or card checkout.
+Only months with an issued household charge appear here. A month without an issued charge is <strong>not automatically an unpaid balance</strong>. Uploading proof displays Pending Verification; it never reduces the balance until an authorized administrator confirms actual receipt of funds.
 </div>
 <div class="card" style="margin-bottom:18px">
 <form class="filterbar" method="GET">
@@ -36,7 +36,7 @@ Only months with an issued household charge appear here. A month without an issu
 <label class="field">Payment status
 <select name="status" class="form-control">
 <option value="">All months</option>
-@foreach(['Unpaid','Partial','Paid'] as $choice)
+@foreach(['Unpaid','Partial','Paid','Pending Verification'] as $choice)
 <option value="{{$choice}}" @selected($filterStatus===$choice)>{{$choice}}</option>
 @endforeach
 </select></label>
@@ -46,7 +46,7 @@ Only months with an issued household charge appear here. A month without an issu
 </div>
 <div class="cards3">
 <div class="card"><div class="statlab">Unpaid months</div><div class="statval">{{number_format($unpaidCount)}}</div><div class="statsub">Months with no confirmed payment</div></div>
-<div class="card"><div class="statlab">Partially paid months</div><div class="statval">{{number_format($partialCount)}}</div><div class="statsub">{{number_format($paidCount)}} fully paid month(s)</div></div>
+<div class="card"><div class="statlab">Partially paid months</div><div class="statval">{{number_format($partialCount)}}</div><div class="statsub">{{number_format($paidCount)}} fully paid month(s) · {{number_format($pendingCount)}} pending verification</div></div>
 <div class="card"><div class="statlab">Outstanding balance</div><div class="statval">{{\App\Services\FeeLedger::money($totalBalance)}}</div><div class="statsub">Balance across displayed filters</div></div>
 </div>
 
@@ -56,7 +56,7 @@ Only months with an issued household charge appear here. A month without an issu
 <p class="muted">The list is ordered by unpaid balance. Select a household to review its billed months.</p>
 <div style="overflow-x:auto">
 <table class="content-table">
-<thead><tr><th>Household</th><th>City / Zone</th><th>Unpaid</th><th>Partial</th><th>Paid</th><th>Outstanding</th><th>View</th></tr></thead>
+<thead><tr><th>Household</th><th>City / Zone</th><th>Unpaid</th><th>Partial</th><th>Paid</th><th>Pending receipts</th><th>Outstanding</th><th>View</th></tr></thead>
 <tbody>
 @forelse($summary as $item)
 <tr>
@@ -65,10 +65,11 @@ Only months with an issued household charge appear here. A month without an issu
 <td>{{$item['unpaid_months']}}</td>
 <td>{{$item['partial_months']}}</td>
 <td>{{$item['paid_months']}}</td>
+<td>{{$item['pending_months']}}</td>
 <td>{{\App\Services\FeeLedger::money($item['outstanding'])}}</td>
 <td><a class="btn small outline" href="{{route('fees.history.index',['household_id'=>$item['household']?->id])}}">View months</a></td>
 </tr>
-@empty<tr><td colspan="7" class="muted">No household billing history matches these filters.</td></tr>@endforelse
+@empty<tr><td colspan="8" class="muted">No household billing history matches these filters.</td></tr>@endforelse
 </tbody></table></div>
 </div>
 @endif
@@ -87,7 +88,10 @@ Only months with an issued household charge appear here. A month without an issu
 <td>{{\App\Services\FeeLedger::money((int)$bill->amount_centavos)}}</td>
 <td>{{\App\Services\FeeLedger::money($row['paid'])}}</td>
 <td><strong>{{\App\Services\FeeLedger::money($row['balance'])}}</strong></td>
-<td><span class="badge {{$row['status']==='Unpaid'?'amber':($row['status']==='Partial'?'grey':'')}}">{{$row['status']}}</span></td>
+<td>
+<span class="badge {{$row['status']==='Unpaid'?'amber':($row['status']==='Partial'?'grey':'')}}">{{$row['status']}}</span>
+@if($row['pending'])<span class="badge amber fee-pending-badge" title="Transfer receipt awaiting administrator confirmation">Pending Verification</span>@endif
+</td>
 <td><a class="btn small outline" href="{{route('fees.index',['month'=>$bill->billing_month,'highlight'=>(string)$bill->id])}}">View ledger</a></td>
 </tr>
 @empty
