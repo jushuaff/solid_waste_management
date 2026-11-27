@@ -1,10 +1,11 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\{Report,Zone,WasteCategory,Schedule,StatusHistory,User,Assignment};
-use App\Services\{ReportWorkflow,ReportPdf};
+use App\Models\{Report,Zone,WasteCategory,Schedule,StatusHistory,User,Assignment,IncidentMedia};
+use App\Services\{ReportWorkflow,ReportPdf,IncidentEvidence,IncidentAccess};
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 class ReportController extends Controller
 {
@@ -25,13 +26,9 @@ class ReportController extends Controller
         if($request->filled('to'))$q->where('incident_date','<=',$request->query('to'));
         return $q;
     }
-    private function authorizeReport(Request $request, Report $report): void
+    private function authorizeReport(Request $request,Report $report): void
     {
-        $role=$request->user()->role_code;$id=(string)$request->user()->id;
-        if($role==='eco_aide')abort(403,'Eco-aides cannot access resident case records.');
-        if($role==='coordinator')abort_unless($request->user()->zone_id && (string)$report->zone_id===(string)$request->user()->zone_id,404);
-        if($role==='resident')abort_unless((string)$report->resident_id===$id,404);
-        if($role==='crew')abort_unless((string)$report->assigned_crew_id===$id,404);
+        app(IncidentAccess::class)->authorize($request,$report);
     }
     public function index(Request $request)
     {
@@ -46,13 +43,13 @@ class ReportController extends Controller
         $schedules=Schedule::where('publication_status','published')->where('zone_id',(string)$user->zone_id)->get();
         return view('reports.create',compact('zones','categories','schedules'));
     }
-    public function store(Request $request,ReportWorkflow $workflow)
+    public function store(Request $request,ReportWorkflow $workflow,IncidentEvidence $evidence)
     {
         abort_unless($request->user()->role_code==='resident',403);
         $data=$request->validate(['zone_id'=>'required|string','category_id'=>'required|string','schedule_id'=>'nullable|string',
           'incident_date'=>'required|date|before_or_equal:today',
           'location'=>'required|string|max:250','description'=>'required|string|max:4000',
-          'photo'=>'nullable|image|mimes:jpeg,png,webp|max:4096','privacy'=>'accepted',
+          'privacy'=>'accepted',
           'incident_type'=>'required|in:missed_collection,illegal_dumping',
           'latitude'=>'nullable|required_if:incident_type,illegal_dumping|numeric|between:-90,90',
           'longitude'=>'nullable|required_if:incident_type,illegal_dumping|numeric|between:-180,180']);
@@ -63,15 +60,13 @@ class ReportController extends Controller
             if(!$schedule || $schedule->zone_id!==$data['zone_id'] || $schedule->category_id!==$data['category_id'] || $schedule->publication_status!=='published')throw ValidationException::withMessages(['schedule_id'=>'Please choose a matching published schedule.']);
         }
         if(\Illuminate\Support\Carbon::parse($data['incident_date'])->lt(now()->subDays(config('swm.max_report_age_days'))->startOfDay()))throw ValidationException::withMessages(['incident_date'=>'This date is outside the permitted reporting period.']);
-        $path=null;
-        if($request->hasFile('photo'))$path=$request->file('photo')->store('report-evidence','local');
-        try {
-            $report=$workflow->execute(function() use($request,$data,$workflow,$path){
+        $uploads=$evidence->validateUploads($request);
+        $report=$workflow->execute(function() use($request,$data,$workflow){
                 $report=Report::create([
                   'tracking_id'=>'SWM-'.now()->format('Y').'-'.strtoupper(Str::random(10)),
                   'resident_id'=>(string)$request->user()->id,'zone_id'=>$data['zone_id'],'category_id'=>$data['category_id'],
                   'schedule_id'=>$data['schedule_id']??null,'incident_date'=>$data['incident_date'],
-                  'location'=>$data['location'],'description'=>$data['description'],'photo_path'=>$path,
+                  'location'=>$data['location'],'description'=>$data['description'],'photo_path'=>null,
                   'incident_type'=>$data['incident_type'],'latitude'=>$data['latitude']??null,'longitude'=>$data['longitude']??null,
                   'current_status'=>'Submitted','submitted_at'=>now(),
                 ]);
@@ -80,25 +75,35 @@ class ReportController extends Controller
                 $workflow->transition($report,'Under Review','Queued for review');
                 return $report;
             });
-        }catch(\Throwable $e){if($path)Storage::disk('local')->delete($path);throw $e;}
-        return redirect()->route('reports.show',$report)->with('status','Report submitted. Keep your reference: '.$report->tracking_id);
+        try {
+            $evidence->storeUploads($report,$request->user(),$uploads);
+        } catch (\Throwable $error) {
+            Log::error('Incident evidence upload failed after report submission',[
+                'report_id'=>(string)$report->id,'error'=>$error->getMessage()
+            ]);
+            return redirect()->route('reports.show',$report)
+                ->with('warning','Your incident was submitted, but the attachments could not be saved. You can add them while the incident is awaiting review.');
+        }
+        return redirect()->route('reports.show',$report)->with('status','Incident submitted. Reference number: '.$report->tracking_id);
     }
     public function show(Request $request,string $report)
     {
         $report=Report::findOrFail($report);$this->authorizeReport($request,$report);
         $history=StatusHistory::where('report_id',(string)$report->id)->orderBy('changed_at','asc')->get();
         $assignments=Assignment::where('report_id',(string)$report->id)->orderBy('assigned_at','desc')->get();
+        $media=IncidentMedia::where('report_id',(string)$report->id)->whereNull('removed_at')->orderBy('created_at')->get();
         $crews=User::where('role_id',(string)\App\Models\Role::where('code','crew')->firstOrFail()->id)->where('is_active',true)->get();
-        return view('reports.show',compact('report','history','assignments','crews'));
+        return view('reports.show',compact('report','history','assignments','crews','media'));
     }
-    public function edit(Request $request,string $report)
+    public function edit(Request $request,string $report,IncidentEvidence $evidence)
     {
         $report=Report::findOrFail($report);$this->authorizeReport($request,$report);
         abort_unless($request->user()->role_code==='resident' && $report->current_status==='Under Review',403,'Only an unreviewed report can be amended.');
         $categories=WasteCategory::where('is_active',true)->get();
-        return view('reports.edit',compact('report','categories'));
+        $usage=$evidence->usage($report);
+        return view('reports.edit',compact('report','categories','usage'));
     }
-    public function update(Request $request,string $report)
+    public function update(Request $request,string $report,IncidentEvidence $evidence)
     {
         $report=Report::findOrFail($report);$this->authorizeReport($request,$report);
         abort_unless($request->user()->role_code==='resident' && $report->current_status==='Under Review',403,'This report is already under staff action.');
@@ -113,14 +118,27 @@ class ReportController extends Controller
             if(!$schedule || (string)$schedule->zone_id!==(string)$report->zone_id || (string)$schedule->category_id!==(string)$data['category_id'] || $schedule->publication_status!=='published')throw ValidationException::withMessages(['schedule_id'=>'Choose a matching published schedule.']);
         }
         if(\Illuminate\Support\Carbon::parse($data['incident_date'])->lt(now()->subDays(config('swm.max_report_age_days'))->startOfDay()))throw ValidationException::withMessages(['incident_date'=>'This date is outside the allowed reporting window.']);
+        $uploads=$evidence->validateUploads($request,$report);
         $fields=['location','description','incident_date','category_id','schedule_id','incident_type','latitude','longitude'];
         $before=[];foreach($fields as $field)$before[$field]=$report->$field;
         $next=[];foreach($fields as $field)$next[$field]=$data[$field]??null;
-        if($before===$next)return back()->with('status','No changes to save.');
-        $changes=$report->amendments??[];
-        $changes[]=['before'=>$before,'after'=>$next,'actor_id'=>(string)$request->user()->id,'changed_at'=>now()->toIso8601String()];
-        $report->fill($next);$report->amendments=$changes;$report->save();
-        return redirect()->route('reports.show',$report)->with('status','Your report was amended while awaiting coordinator review.');
+        $hasFiles=count($uploads['images'])+count($uploads['videos'])>0;
+        if($before===$next && !$hasFiles)return back()->with('status','No changes to save.');
+        if($before!==$next){
+            $changes=$report->amendments??[];
+            $changes[]=['before'=>$before,'after'=>$next,'actor_id'=>(string)$request->user()->id,'changed_at'=>now()->toIso8601String()];
+            $report->fill($next);$report->amendments=$changes;$report->save();
+        }
+        try {
+            if($hasFiles)$evidence->storeUploads($report,$request->user(),$uploads);
+        }catch(\Throwable $error){
+            Log::error('Incident evidence upload failed after amendment',[
+                'report_id'=>(string)$report->id,'error'=>$error->getMessage()
+            ]);
+            return redirect()->route('reports.show',$report)
+                ->with('warning','Your incident details were saved, but attachments could not be added. Please try uploading them again.');
+        }
+        return redirect()->route('reports.show',$report)->with('status','Incident details and evidence updated.');
     }
     public function archive(Request $request,string $report)
     {
