@@ -73,6 +73,14 @@ The Composer lockfile should be committed once resolved on the development machi
 
 **Unverified:** Run browser and authorization tests with local MongoDB before sharing case PDFs or administrator tools outside the development environment.
 
+## Resident incident photos and videos, consistent forms
+
+Incident submissions now accept **up to 10 photos totaling 10 MiB** and **up to 3 video clips totaling 15 MiB**. Counts and totals include any previously stored incident evidence. Uploads are saved privately, and the incident page includes an authorized image/video gallery with preview and download options. Residents may add or remove attachments while their case is awaiting review. See [Incident evidence setup and security checks](docs/INCIDENT_EVIDENCE_UPLOADS.md).
+
+**Local PHP upload configuration:** use `file_uploads=On`, `upload_max_filesize=16M`, `post_max_size=32M`, and `max_file_uploads=20` in the PHP 8.4 `php.ini` file, and set an appropriate web-server upload limit. Run `php artisan migrate` for the new `incident_media` MongoDB collection.
+
+Shared form styles now use normal-size checkboxes, aligned month/date filters and responsive layouts. Development-language callouts have been removed from user-facing pages. Existing **fictional development records** are still sample data, not evidence of actual field operations. With `SWM_DEMO_SEED=true` on a local/testing installation, rerunning `php artisan db:seed --class=DemoDataSeeder` updates only known seed-generated placeholder labels, preserving existing record IDs and manually changed values. Never enable this seeder on a production environment.
+
 ## Application modules
 
 | Module | What works in the source |
