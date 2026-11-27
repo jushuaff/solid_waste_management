@@ -470,7 +470,7 @@
    .req {
        color:#c13932
    }
-   .field input,.field textarea,.field select {
+   .field input:not([type='checkbox']):not([type='radio']),.field textarea,.field select {
        width:100%;
        border:1px solid #cddfd6;
        border-radius:10px;
@@ -955,4 +955,133 @@ textarea.form-control{min-height:110px}
 }
 .sidefoot {
     flex: 0 0 auto;
+}
+
+
+/* Consistent checkboxes, form alignment and compact action rows. */
+.field input[type="checkbox"], .field input[type="radio"],
+.checkline input[type="checkbox"], .checkline input[type="radio"] {
+    appearance: auto;
+    -webkit-appearance: auto;
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px;
+    min-height: 17px !important;
+    flex: 0 0 17px;
+    padding: 0 !important;
+    margin: 1px 0 0 !important;
+    border: 0;
+    border-radius: 3px;
+    vertical-align: middle;
+    accent-color: var(--green);
+}
+.field .checkline, label.checkline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.45;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 24px;
+    cursor: pointer;
+}
+.formgrid > .field, .formgrid > .full { min-width: 0; }
+.filterbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
+.filterbar .field, .filterbar label.field { display: flex; flex-direction: column; min-width: min(180px,100%); gap: 7px; }
+.filterbar > .btn, .filterbar > button.btn { min-height: 42px; align-self: flex-end; }
+.filterbar input[type="month"], .filterbar input[type="date"],
+.filterbar select { min-height: 42px; }
+.formgrid .formfoot { align-items: center; }
+.formgrid .formfoot > .btn { flex: 0 0 auto; }
+
+/* Resident incident evidence uploader and authenticated preview gallery. */
+.evidence-uploader {
+    padding: 18px;
+    border: 1px solid #d9e7e0;
+    border-radius: 13px;
+    background: #f7faf8;
+}
+.evidence-title h3 { font-size: 16px; margin: 0 0 6px; color: var(--dark); }
+.evidence-title p { font-size: 12px; line-height: 1.5; color: #647a72; margin: 0 0 16px; }
+.evidence-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 16px;
+}
+.evidence-upload-field { min-width: 0; }
+.evidence-upload-field input[type=file] { width: 100%; max-width: 100%; }
+.evidence-upload-feedback {
+    margin-top: 13px;
+    padding: 11px 12px;
+    background: #e7f5ee;
+    color: #185d48;
+    border: 1px solid #c8e5d5;
+    border-radius: 9px;
+    font-size: 12px;
+}
+.evidence-upload-feedback.is-error {
+    background: #fff0ef;
+    color: #952a25;
+    border-color: #e7b9b7;
+}
+.evidence-previews,
+.incident-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+    gap: 13px;
+    margin-top: 13px;
+}
+.evidence-preview-item,
+.incident-media-card {
+    min-width: 0;
+    padding: 9px;
+    border: 1px solid #dce9e2;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+.evidence-preview-item img,
+.incident-media-card img,
+.incident-media-card video {
+    display: block;
+    width: 100%;
+    height: 125px;
+    object-fit: cover;
+    border-radius: 7px;
+    background: #eef4f0;
+}
+.incident-media-card video { object-fit: contain; background: #122e2b; }
+.evidence-preview-item span:not(.evidence-video-label),
+.incident-media-card .media-name {
+    display: block;
+    color: #51685f;
+    font-size: 11px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    padding-top: 7px;
+}
+.evidence-video-label {
+    display: grid;
+    place-items: center;
+    height: 125px;
+    background: #e9f2ec;
+    color: #166852;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.incident-media-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+.incident-media-actions .btn { flex: 1 1 auto; padding: 7px 9px; white-space: normal; }
+.incident-media-card .media-meta { color: #6a8178; font-size: 11px; margin-top: 3px; }
+@media(max-width:690px) {
+    .evidence-upload-grid { grid-template-columns: 1fr; }
+    .filterbar .field { width: 100%; min-width: 0; }
+    .filterbar > .btn, .filterbar > button.btn { flex: 1 1 auto; }
+    .formgrid .formfoot { align-items: stretch; }
 }
