@@ -2,6 +2,8 @@
 namespace Tests\Unit;
 
 use App\Services\FeeLedger;
+use App\Models\{GarbageFeeCharge,GarbageFeePayment};
+use Illuminate\Database\Eloquent\Collection;
 use PHPUnit\Framework\TestCase;
 
 final class FeeLedgerTest extends TestCase
@@ -31,4 +33,39 @@ final class FeeLedgerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         FeeLedger::centavos('10000000.00');
     }
+
+    public function test_unverified_receipt_never_counts_as_paid_in_ledger():void
+    {
+        // Pending receipts live in a separate submissions collection. Until an
+        // authorized reviewer records a verified payment, the bill is unpaid.
+        $charge=new GarbageFeeCharge(['amount_centavos'=>7500]);
+        $charge->setRelation('payments',new Collection());
+        $this->assertSame(0,FeeLedger::paid($charge));
+        $this->assertSame(7500,FeeLedger::balance($charge));
+        $this->assertSame('Unpaid',FeeLedger::status($charge));
+    }
+
+    public function test_only_recorded_payments_reduce_outstanding_balance():void
+    {
+        $charge=new GarbageFeeCharge(['amount_centavos'=>7500]);
+        $charge->setRelation('payments',new Collection([
+            new GarbageFeePayment(['amount_centavos'=>2500,'status'=>'recorded']),
+            new GarbageFeePayment(['amount_centavos'=>5000,'status'=>'void']),
+        ]));
+        $this->assertSame(2500,FeeLedger::paid($charge));
+        $this->assertSame(5000,FeeLedger::balance($charge));
+        $this->assertSame('Partial',FeeLedger::status($charge));
+    }
+
+    public function test_confirming_full_amount_changes_bill_status_to_paid():void
+    {
+        $charge=new GarbageFeeCharge(['amount_centavos'=>7500]);
+        $charge->setRelation('payments',new Collection([
+            new GarbageFeePayment(['amount_centavos'=>7500,'status'=>'recorded']),
+        ]));
+        $this->assertSame(7500,FeeLedger::paid($charge));
+        $this->assertSame(0,FeeLedger::balance($charge));
+        $this->assertSame('Paid',FeeLedger::status($charge));
+    }
+
 }
