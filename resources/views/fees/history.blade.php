@@ -81,7 +81,7 @@ Only months with an issued household charge appear here. A month without an issu
 @forelse($months as $row)
 @php($bill=$row['charge'])
 <tr>
-<td><strong>{{\Carbon\Carbon::createFromFormat('Y-m',$bill->billing_month)->format('F Y')}}</strong></td>
+<td><strong>{{\Carbon\Carbon::parse($bill->billing_month.'-01')->format('F Y')}}</strong></td>
 <td>{{$bill->household?->reference??'—'}}</td>
 <td>{{$bill->city?->name??'—'}}<small class="muted" style="display:block">{{$bill->zone?->name??''}}</small></td>
 <td>{{\App\Services\FeeLedger::money((int)$bill->amount_centavos)}}</td>
