@@ -175,6 +175,14 @@ Legend: **Manage** = read and create/update where the module permits; **View** =
 
 For each step, sign out before switching to the next account or use separate browser profiles. The seeded records are **fictional**, intended for development demonstrations only.
 
+### Payment tracking and reminders
+
+**Payment History** (staff) and **My Payment Tracker** (residents) show Paid, Partial and Unpaid billing months. Barangay admins and superadmins may filter household arrears across billing months; coordinators are limited to their assigned zone. Residents see only their linked household's bills. Only issued monthly charges count as unpaid.
+
+When staff record a verified payment, the linked resident receives a confirmation/fully-paid notification; oversight staff also receive role-appropriate alerts. The `fees:send-reminders` scheduled command sends deduplicated reminders on billed but unpaid balances after the 10th and 20th of each month, plus a monthly reminder for prior months.
+
+Superadmins can add a missing **bank or e-wallet provider** to the receiving-account dropdown; barangay admins can use the provider list and edit authorized receiving accounts. See [fee tracker and provider guide](docs/GARBAGE_FEE_NOTIFICATIONS_TRACKER.md).
+
 ## Phase 2 — Garbage fees and payment destinations
 
 The `Garbage Fee Payments` module is separate from RA 9003 compliance reporting. It is currently an **online payment-tracking module** for offline-confirmed Cash, GCash, bank and external card-terminal payments, not an online checkout.
