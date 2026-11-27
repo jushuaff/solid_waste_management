@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use App\Models\{User,Role,Zone,CollectionPoint,Schedule,ScheduleException,LocalRule,WasteCategory,Report};
 use App\Services\{ResourceRegistry,NoticeService};
+use App\Support\TableSorting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -31,7 +32,22 @@ class ManagementController extends Controller
             if(in_array($resource,['schedules','exceptions'],true))$query->where('publication_status',$search);
             else $query->where($field,'regex',new \MongoDB\BSON\Regex(preg_quote($search), 'i'));
         }
-        $rows=$query->orderBy('created_at','desc')->paginate(15)->withQueryString();
+        // Allow only the four displayed data columns to control sorting.
+        $sortable=[];
+        foreach(array_slice($spec['fields'],0,4,true) as $key=>$field){
+            if(($field['type']??'')==='relation'){
+                // Display labels, not MongoDB ObjectId values, determine alphabetical order.
+                $display=(string)$field['display'];
+                $related=$field['model']::all()->keyBy(fn($r)=>(string)$r->getKey());
+                $sortable[$key]=static function($record) use ($key,$display,$related){
+                    $id=(string)($record->$key??'');
+                    return $related->get($id)?->$display;
+                };
+            }else{
+                $sortable[$key]=$key;
+            }
+        }
+        $rows=TableSorting::paginate($query,$request,$sortable,15);
         return view('management.index',compact('rows','spec','resource'));
     }
     public function create(Request $request,string $resource)
