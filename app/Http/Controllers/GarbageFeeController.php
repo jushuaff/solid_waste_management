@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\{
     FeeCity, FeeRate, FeeReceivingAccount, FeePaymentSubmission, Zone, Household, GarbageFeeCharge, GarbageFeePayment, Notice, User
 };
-use App\Services\{FeeLedger,NoticeService};
+use App\Services\{FeeLedger,NoticeService,ResidentFeeCities};
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -134,20 +134,13 @@ class GarbageFeeController extends Controller
         $residentOutstanding=collect();
         $residentSubmissions=collect();
         $residentHouseholdCount=0;
+        $cityIds=[];
         $pendingVerificationCount=0;
         if(in_array($role,['superadmin','admin'],true)){
             $pendingVerificationCount=FeePaymentSubmission::where('status','pending')->count();
         }
         if($role==='resident'){
-            $householdIds=Household::where('resident_user_id',(string)$request->user()->id)
-                ->pluck('id')->map(fn($id)=>(string)$id)->all();
-            $zoneIds=Household::where('resident_user_id',(string)$request->user()->id)
-                ->pluck('zone_id')->map(fn($id)=>(string)$id)->all();
-            $cityIds=Zone::findMany($zoneIds)->pluck('fee_city_id')
-                ->filter()->map(fn($id)=>(string)$id)->all();
-            $pastCityIds=GarbageFeeCharge::whereIn('household_id',$householdIds)
-                ->pluck('city_id')->filter()->map(fn($id)=>(string)$id)->all();
-            $cityIds=array_values(array_unique(array_merge($cityIds,$pastCityIds)));
+            $cityIds=ResidentFeeCities::ids($request->user());
             if($cityIds){
                 $receivingAccounts=FeeReceivingAccount::with('city')
                     ->where('is_active',true)->whereIn('city_id',$cityIds)
@@ -174,7 +167,7 @@ class GarbageFeeController extends Controller
             }
         }
         return view('fees.index',compact('charges','month','role','cities','zones','status','totalDue','totalPaid','receivingAccounts',
-            'residentOutstanding','residentSubmissions','residentHouseholdCount','pendingVerificationCount'));
+            'residentOutstanding','residentSubmissions','residentHouseholdCount','pendingVerificationCount','cityIds'));
     }
 
     /** Create one immutable charge per active household and month. Re-running skips existing charges. */
