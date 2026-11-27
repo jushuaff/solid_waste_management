@@ -845,7 +845,7 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif}
 .content-table{width:100%;border-collapse:collapse;min-width:650px}
 .content-table th{padding:14px 15px;background:#edf5f1;text-transform:uppercase;color:#446d5f;font-size:11px;text-align:left;letter-spacing:.04em}
 .content-table td{border-bottom:1px solid #e5eeea;padding:13px 15px;font-size:13px;vertical-align:top}
-.content-table a{color:#0b715a;text-decoration:underline}
+.content-table a{color:#0b715a;text-decoration:none}
 .content-table .actions{white-space:nowrap}
 button.btn{font:inherit}
 .btn.warning{background:#fff6df;border-color:#edddac;color:#795515}
@@ -1226,6 +1226,14 @@ textarea.form-control{min-height:110px}
     .header-notification { width: 34px; height: 34px; }
 }
 
+
+/* Links presented as buttons or table controls should never look underlined. */
+a.btn, a.btn:hover, a.btn:focus-visible,
+.content-table a, .content-table a:hover, .content-table a:focus-visible,
+.content-table a.sortable-th, .content-table a.sortable-th:hover,
+.content-table a.sortable-th:focus-visible {
+    text-decoration: none;
+}
 
 /* Table column sorting — visible on hover/focus, clear ascending/descending state. */
 .content-table thead th { vertical-align: middle; }
