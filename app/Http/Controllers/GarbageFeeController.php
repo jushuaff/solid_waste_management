@@ -151,17 +151,13 @@ class GarbageFeeController extends Controller
             $residentSubmissions=FeePaymentSubmission::with(['charge','receivingAccount'])
                 ->where('resident_user_id',(string)$request->user()->id)
                 ->orderBy('created_at','desc')->limit(20)->get();
-            $pendingIds=FeePaymentSubmission::where('resident_user_id',(string)$request->user()->id)
-                ->where('status','pending')->pluck('charge_id')
-                ->map(fn($id)=>(string)$id)->all();
             $activeHouseholds=Household::where('resident_user_id',(string)$request->user()->id)
                 ->where('is_active',true)->whereNull('archived_at')->pluck('id')
                 ->map(fn($id)=>(string)$id)->all();
             if($activeHouseholds){
                 $residentOutstanding=GarbageFeeCharge::with(['household','payments','city'])
                     ->whereIn('household_id',$activeHouseholds)->get()
-                    ->filter(fn($bill)=>FeeLedger::balance($bill)>0
-                        && !in_array((string)$bill->id,$pendingIds,true)
+                    ->filter(fn($bill)=>FeeLedger::availableForSubmission($bill)>0
                         && $receivingAccounts->contains(fn($account)=>(string)$account->city_id===(string)$bill->city_id))
                     ->sortByDesc('billing_month')->values();
             }
