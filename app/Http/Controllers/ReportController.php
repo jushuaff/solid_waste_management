@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 use App\Models\{Report,Zone,WasteCategory,Schedule,StatusHistory,User,Assignment,IncidentMedia};
-use App\Services\{ReportWorkflow,ReportPdf,IncidentEvidence,IncidentAccess};
+use App\Services\{ReportWorkflow,ReportPdf,IncidentEvidence,IncidentAccess,NoticeService};
 use App\Support\TableSorting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -110,7 +110,7 @@ class ReportController extends Controller
         $usage=$evidence->usage($report);
         return view('reports.edit',compact('report','categories','usage'));
     }
-    public function update(Request $request,string $report,IncidentEvidence $evidence)
+    public function update(Request $request,string $report,IncidentEvidence $evidence,NoticeService $notices)
     {
         $report=Report::findOrFail($report);$this->authorizeReport($request,$report);
         abort_unless($request->user()->role_code==='resident' && $report->current_status==='Under Review',403,'This report is already under staff action.');
@@ -142,17 +142,20 @@ class ReportController extends Controller
             Log::error('Incident evidence upload failed after amendment',[
                 'report_id'=>(string)$report->id,'error'=>$error->getMessage()
             ]);
+            if($before!==$next)$notices->reportEdited($report,'Incident details updated');
             return redirect()->route('reports.show',$report)
                 ->with('warning','Your incident details were saved, but attachments could not be added. Please try uploading them again.');
         }
+        $notices->reportEdited($report,$before!==$next?'Incident details updated':'Incident evidence added');
         return redirect()->route('reports.show',$report)->with('status','Incident details and evidence updated.');
     }
-    public function archive(Request $request,string $report)
+    public function archive(Request $request,string $report,NoticeService $notices)
     {
         abort_unless($request->user()->canAdmin(),403);
         $report=Report::findOrFail($report);
         abort_unless(in_array($report->current_status,['Rejected','Resolved','Closed'],true),422,'Only finalized cases can be archived.');
         $report->archived_at=now();$report->archived_by=(string)$request->user()->id;$report->save();
+        $notices->reportArchived($report);
         return redirect()->route('reports.index')->with('status','Report archived (not destroyed).');
     }
     public function print(Request $request,string $report,ReportPdf $pdf)
