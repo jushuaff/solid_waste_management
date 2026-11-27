@@ -448,9 +448,30 @@
        font-size:12px;
        font-weight:700
    }
-   .daycard:first-child {
-       border:2px solid #50b28e;
-       background:#f7fffa
+   /* Collection schedule selection is interactive, never tied to the first card. */
+   .scheduleGrid .daycard[data-schedule-card] {
+       cursor:pointer;
+       border:2px solid #e1eae6;
+       padding:19px;
+       transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease;
+       scroll-margin-top:92px;
+   }
+   .scheduleGrid .daycard[data-schedule-card]:hover {
+       border-color:#9cd6bf;
+       background:#fafdfe;
+   }
+   .scheduleGrid .daycard[data-schedule-card].is-selected,
+   .scheduleGrid .daycard[data-schedule-card][aria-pressed="true"] {
+       border-color:#31ab84;
+       background:#f3fff8;
+       box-shadow:0 0 0 1px rgba(49,171,132,.12);
+   }
+   .scheduleGrid .daycard[data-schedule-card]:focus-visible {
+       outline:3px solid #147a63;
+       outline-offset:3px;
+   }
+   @media (prefers-reduced-motion:reduce) {
+       .scheduleGrid .daycard[data-schedule-card] { transition:none; }
    }
    .formgrid {
        display:grid;
