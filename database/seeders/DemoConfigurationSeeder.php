@@ -22,11 +22,26 @@ class DemoConfigurationSeeder extends Seeder
             'creek' => 'Demo Purok Creek',
         ];
         $zones = [];
-        foreach ($zoneNames as $key => $name) {
-            $zones[$key] = Zone::firstOrCreate(
-                ['name' => $name],
-                ['description' => 'Fictional LINIS test zone. Replace with authorized local data.', 'is_active' => true]
-            );
+        foreach ($zoneNames as $key => $legacyName) {
+            // Preserve original zone IDs when sample data have already been seeded.
+            $marker='LINIS-DEMO-ZONE-'.$key;
+            $name=preg_replace('/^Demo /','',$legacyName);
+            $zone=Zone::where('demo_key',$marker)->first() ?? Zone::where('name',$legacyName)->first();
+            if (! $zone) {
+                if (Zone::where('name',$name)->exists()) {
+                    throw new \RuntimeException('A collection zone named '.$name.' already exists. Review it before importing sample records.');
+                }
+                $zone=Zone::create(['demo_key'=>$marker,'name'=>$name,
+                    'description'=>'Purok collection service area','is_active'=>true]);
+            } elseif ($zone->name===$legacyName) {
+                $zone->name=$name;
+                $zone->demo_key=$marker;
+                if ($zone->description==='Fictional LINIS test zone. Replace with authorized local data.') {
+                    $zone->description='Purok collection service area';
+                }
+                $zone->save();
+            }
+            $zones[$key]=$zone;
         }
 
         $categories = [
@@ -41,12 +56,19 @@ class DemoConfigurationSeeder extends Seeder
                 ['demo_key' => 'LINIS-DEMO-POINT-'.$key],
                 [
                     'zone_id' => (string) $zone->id,
-                    'name' => 'Demo '.$key.' collection station',
-                    'landmark' => 'Fictional community collection point',
+                    'name' => ucfirst($key).' Collection Station',
+                    'landmark' => 'Community collection area',
                     'instructions' => 'Bring properly sorted waste only during the published collection window.',
                     'is_active' => true,
                 ]
             );
+            if ($points[$key]->name==='Demo '.$key.' collection station') {
+                $points[$key]->name=ucfirst($key).' Collection Station';
+                if ($points[$key]->landmark==='Fictional community collection point') {
+                    $points[$key]->landmark='Community collection area';
+                }
+                $points[$key]->save();
+            }
         }
 
         // key, zone, waste category, Sunday=0 ... Saturday=6, times, pickup method, point.
@@ -134,16 +156,25 @@ class DemoConfigurationSeeder extends Seeder
 
         foreach ($zones as $key => $zone) {
             foreach (range(1, 6) as $number) {
-                Household::firstOrCreate(
+                $household=Household::firstOrCreate(
                     ['demo_key'=>'LINIS-DEMO-HOUSEHOLD-'.$key.'-'.$number],
                     [
-                        'reference' => strtoupper('DEMO-'.$key).'-'.str_pad((string)$number,3,'0',STR_PAD_LEFT),
+                        'reference' => strtoupper('PUROK-'.$key).'-'.str_pad((string)$number,3,'0',STR_PAD_LEFT),
                         'zone_id' => (string) $zone->id,
-                        'location_description' => 'Fictional household reference '.$number.' in '.$zone->name,
+                        'location_description' => 'Household '.$number.' — '.$zone->name,
                         'is_active' => true,
                         'change_history' => [],
                     ]
                 );
+                if (str_starts_with((string)$household->location_description,'Fictional household reference ')) {
+                    $household->location_description='Household '.$number.' — '.$zone->name;
+                    $household->save();
+                }
+                $oldReference=strtoupper('DEMO-'.$key).'-'.str_pad((string)$number,3,'0',STR_PAD_LEFT);
+                if ($household->reference===$oldReference) {
+                    $household->reference=strtoupper('PUROK-'.$key).'-'.str_pad((string)$number,3,'0',STR_PAD_LEFT);
+                    $household->save();
+                }
             }
         }
 
