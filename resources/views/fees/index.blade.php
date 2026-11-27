@@ -11,13 +11,11 @@
 </div>
 <div class="actions">
 <a class="btn outline" href="{{route('fees.history.index')}}">{{$isStaff?'All-month history':'My payment tracker'}}</a>
-</div>
 @if($canGenerate)
-<div class="actions">
 @if($role==='superadmin')<a class="btn outline" href="{{route('fees.settings.index')}}">City rates</a>@endif
 <a class="btn outline" href="{{route('fees.accounts.index')}}">Receiving accounts</a>
-</div>
 @endif
+</div>
 </div>
 <div class="notice">This section records monthly charges and payments. Online transfers and card transactions are processed outside the application. A payment is reflected as paid only after an authorized staff member verifies and records it.</div>
 @if($canGenerate)
