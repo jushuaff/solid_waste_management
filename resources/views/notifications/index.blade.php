@@ -29,7 +29,7 @@
                             </span>
                             <span class="notification-message">{{ $n->message }}</span>
                             <span class="notification-date">{{ $n->created_at?->format('M j, Y · g:i A') }}</span>
-                            <span class="notification-view-label">{{ $n->report_id || $n->schedule_id || $n->rule_id || $n->exception_id || $n->zone_id?'View details':'Open notification' }} <span aria-hidden="true">›</span></span>
+                            <span class="notification-view-label">{{ $n->fee_charge_id || $n->report_id || $n->schedule_id || $n->rule_id || $n->exception_id || $n->zone_id?'View details':'Open notification' }} <span aria-hidden="true">›</span></span>
                         </span>
                     </span>
                 </button>
