@@ -125,7 +125,7 @@
 <div class="grid2">
 <div class="field"><label>Payment method *</label>
 <select name="method" class="form-control" required>
-<option value="cash">Cash</option><option value="gcash">GCash transfer</option><option value="card">Card (external terminal)</option>
+<option value="cash">Cash</option><option value="gcash">GCash transfer</option><option value="bank">Bank transfer / deposit</option><option value="card">Card (external terminal)</option>
 </select></div>
 <div class="field"><label>Amount received (PHP) *</label>
 <input class="form-control" name="amount" type="number" step="0.01" min="0.01" max="{{number_format($row['balance']/100,2,'.','')}}" required>
@@ -133,7 +133,7 @@
 <div class="field"><label>Payment date *</label>
 <input class="form-control" type="date" name="paid_on" value="{{now()->toDateString()}}" max="{{now()->toDateString()}}" required></div>
 <div class="field"><label>External transaction/reference</label>
-<input class="form-control" name="external_reference" maxlength="100" autocomplete="off" placeholder="Required for GCash and Card"></div>
+<input class="form-control" name="external_reference" maxlength="100" autocomplete="off" placeholder="Required for GCash, Bank and Card"></div>
 <div class="field"><label>Official receipt number (if issued)</label>
 <input class="form-control" name="official_receipt_number" maxlength="100" autocomplete="off"></div>
 <div class="field"><label>Internal note (optional)</label>
