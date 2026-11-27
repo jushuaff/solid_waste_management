@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone};
+use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone,Household};
 
 class NoticeService
 {
@@ -143,6 +143,33 @@ class NoticeService
                 !$isGlobal && (! $recipient->zone_id ||
                     ! in_array((string)$recipient->zone_id,$affected,true)))continue;
             $this->send($recipient,$title,$message,$links);
+        }
+    }
+
+    /**
+     * Receiving-account changes affect where payments are sent.
+     * Alert only residents linked to the affected city's household zones.
+     * Do not expose account numbers in the notification itself.
+     */
+    public function paymentInstructionsChanged(string $cityId):void
+    {
+        $zoneIds=Zone::where('fee_city_id',$cityId)->pluck('id')
+            ->map(fn($id)=>(string)$id)->all();
+        if(!$zoneIds)return;
+
+        $ids=Household::whereIn('zone_id',$zoneIds)->where('is_active',true)
+            ->whereNull('archived_at')->pluck('resident_user_id')
+            ->filter()->map(fn($id)=>(string)$id)->unique()->all();
+        if(!$ids)return;
+
+        $residentRole=Role::where('code','resident')->first();
+        if(!$residentRole)return;
+        foreach(User::whereIn('id',array_values($ids))
+            ->where('role_id',(string)$residentRole->id)
+            ->where('is_active',true)->get() as $recipient){
+            $this->send($recipient,'Garbage fee payment instructions updated',
+                'The receiving-account information for your city has changed. Verify the account details before making your next payment.',
+                ['fee_city_id'=>$cityId]);
         }
     }
 
