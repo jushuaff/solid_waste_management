@@ -47,6 +47,9 @@ class NotificationController extends Controller
                     || ($role==='resident' && (string)(Household::find($charge->household_id)?->resident_user_id??'')
                         ===(string)$request->user()->id);
                 if($canOpen){
+                    if(str_starts_with((string)($notice->alert_key??''),'fee:overdue:')){
+                        return redirect()->route('fees.history.index');
+                    }
                     return redirect()->route('fees.index',[
                         'month'=>$charge->billing_month,
                         'highlight'=>(string)$charge->id
