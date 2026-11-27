@@ -67,7 +67,7 @@
 @forelse($accounts as $account)
 <section class="fee-receiving-card">
 <div class="row-between">
-<div><strong>{{$account->city?->name??'City unavailable'}}</strong><p class="muted" style="margin:4px 0">{{$account->provider}} · {{strtoupper($account->method)}}</p></div>
+<div><strong>{{$account->city?->name??'City unavailable'}}</strong><p class="muted" style="margin:4px 0">{{$account->provider}} · {{in_array($account->method,['gcash','wallet'],true)?'E-wallet':'Bank transfer'}}</p></div>
 <span class="badge {{$account->is_active?'':'grey'}}">{{$account->is_active?'Active':'Inactive'}}</span>
 </div>
 <form method="POST" action="{{route('fees.accounts.update',$account->id)}}" enctype="multipart/form-data" class="stack" style="margin-top:12px">
