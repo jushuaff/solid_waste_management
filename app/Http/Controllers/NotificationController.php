@@ -34,7 +34,20 @@ class NotificationController extends Controller
         // Only local named routes are used; no untrusted redirect URLs.
         if($notice->report_id){
             $report=Report::find($notice->report_id);
-            if($report) return redirect()->route('reports.show',$report);
+            if($report){
+                $user=$request->user();
+                $role=$user->role_code;
+                $allowed=match($role){
+                    'superadmin','admin'=>true,
+                    'coordinator'=>(bool)$user->zone_id && (string)$user->zone_id===(string)$report->zone_id,
+                    'crew'=>(string)$user->id===(string)$report->assigned_crew_id,
+                    'resident'=>(string)$user->id===(string)$report->resident_id,
+                    default=>false,
+                };
+                if($allowed)return redirect()->route('reports.show',$report);
+                return redirect()->route('notifications.index')
+                    ->with('status','The report is no longer assigned to your account.');
+            }
         }
         if($notice->rule_id) return redirect()->route('rules.index');
         if($notice->schedule_id || $notice->exception_id) return redirect()->route('schedules.index');
