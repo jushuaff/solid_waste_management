@@ -56,7 +56,6 @@
                 <textarea id="new-fee-instructions" class="form-control fee-account-instructions"
                     name="instructions" maxlength="500" rows="4"
                     placeholder="Payment reference or other collection instructions for residents">{{old('instructions')}}</textarea>
-                <small class="hint">These instructions will appear alongside the receiving account.</small>
             </div>
             <div class="field">
                 <label for="new-fee-qr">Payment QR code <span class="fee-optional">Optional</span></label>
