@@ -26,10 +26,10 @@
         }
         if (balanceHint) {
             balanceHint.textContent = city
-                ? 'Outstanding amount: ₱' + balance.toLocaleString('en-PH', {
+                ? 'Available for new submissions: ₱' + balance.toLocaleString('en-PH', {
                     minimumFractionDigits: 2, maximumFractionDigits: 2
-                }) + '. You may submit a partial transfer.'
-                : 'Choose a billing month to see the outstanding amount.';
+                }) + '. Pending receipts are reserved but not yet credited.'
+                : 'Choose a billing month to see the available amount.';
         }
         if (!account) return;
         let firstEligible = null;
