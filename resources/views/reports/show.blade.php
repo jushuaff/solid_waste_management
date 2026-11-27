@@ -1,7 +1,8 @@
 @extends('layouts.app')
 @section('title','Report '.$report->tracking_id)
 @section('content')
-<div class="heading"><div><span class="eyebrow">REPORT TRACKING</span><h1>{{$report->tracking_id}}</h1><p>Case status, assigned personnel and recorded outcome.</p></div><div class="actions"><span class="badge">{{$report->current_status}}</span><a target="_blank" class="btn outline" href="{{route('reports.print',$report)}}">🖨 Print this report</a></div></div>
+<div class="heading"><div><span class="eyebrow">REPORT TRACKING</span><h1>{{$report->tracking_id}}</h1><p>Case status, assigned personnel and recorded outcome.</p></div><div class="actions"><span class="badge">{{$report->current_status}}</span><a target="_blank" rel="noopener" class="btn outline" href="{{route('reports.print',$report)}}">Preview PDF</a>
+<a class="btn outline" href="{{route('reports.print',['report'=>$report,'download'=>1])}}">Download PDF</a></div></div>
 <div class="actions" style="margin-bottom:15px">
 @if(auth()->user()->role_code==='resident' && $report->current_status==='Under Review')<a class="btn outline" href="{{route('reports.edit',$report)}}">Edit pending report</a>@endif
 @if(auth()->user()->canAdmin() && in_array($report->current_status,['Resolved','Closed','Rejected'],true) && !$report->archived_at)
