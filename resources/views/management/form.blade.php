@@ -4,6 +4,7 @@
 <div class="heading"><div><span class="eyebrow">BARANGAY OPERATIONS</span><h1>{{$item?'Edit':'Add'}} — {{$spec['title']}}</h1><p>Required fields are marked. Changes take effect based on publication settings.</p></div><a class="btn" href="{{route('management.index',$resource)}}">← Back to list</a></div>
 <div class="card" style="max-width:900px"><form class="grid2" method="POST" action="{{$item?route('management.update',[$resource,$item->id]):route('management.store',$resource)}}">@csrf @if($item)@method('PUT')@endif
 @foreach($spec['fields'] as $key=>$field)
+@if(!($resource==='users' && $item && $key==='password'))
 <div style="{{($field['type']??'')==='textarea'?'grid-column:1/-1':''}}"><label class="form-label" for="fld_{{$key}}">{{$field['label']}} @if(str_starts_with($field['rules'],'required'))<span class="req">*</span>@endif</label>
 @php($value=old($key,$item?->{$key}))
 @if(($field['type']??'')==='textarea')<textarea class="form-control" id="fld_{{$key}}" name="{{$key}}" rows="5">{{$value}}</textarea>
@@ -18,7 +19,11 @@
 @endif
 @error($key)<span class="form-error">{{$message}}</span>@enderror
 </div>
+@endif
 @endforeach
+@if($resource==='users' && $item && auth()->user()->role_code==='superadmin' && (string)$item->id!==(string)auth()->id())
+<div style="grid-column:1/-1"><a class="btn outline" href="{{route('management.users.password',$item->id)}}">Change account password</a></div>
+@endif
 <div style="grid-column:1/-1" class="row-between"><p class="muted" style="margin:0">Published content is visible to relevant residents.</p><button type="submit" class="btn primary">{{$item?'Save changes':'Create record'}}</button></div>
 </form></div>
 @endsection
