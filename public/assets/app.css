@@ -1287,3 +1287,70 @@ a.btn, a.btn:hover, a.btn:focus-visible,
 @media (max-width:690px) {
     .sortable-th { min-height: 40px; padding: 9px 10px; }
 }
+
+/* A notification is one accessible, clickable action: opening marks it as read. */
+.notification-item {
+    padding: 0;
+    overflow: hidden;
+}
+.notification-open-trigger,
+.notification-dashboard-open {
+    display: block;
+    width: 100%;
+    padding: 14px 16px;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: none;
+}
+.notification-open-trigger:hover,
+.notification-dashboard-open:hover { background: rgba(29, 126, 95, .06); }
+.notification-open-trigger:focus-visible,
+.notification-dashboard-open:focus-visible {
+    outline: 2px solid #16745e;
+    outline-offset: -3px;
+    border-radius: 10px;
+}
+.notification-title { display: flex; gap: 12px; align-items: center; }
+.notification-title strong { font-size: 13px; font-weight: 800; }
+.notification-message,
+.notification-date {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #677e74;
+    overflow-wrap: anywhere;
+}
+.notification-date { font-size: 11px; color: #80958b; }
+.notification-view-label {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #16745e;
+}
+.notification-dashboard-form { display: block; padding: 0; }
+.notification-dashboard-form.unread { background: #eff8f3; border-radius: 9px; }
+.notification-dashboard-open {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 8px;
+    border-radius: 9px;
+}
+.notification-dashboard-open .listmain { min-width: 0; }
+.notification-dashboard-open .listmain strong { display: block; font-size: 13px; }
+.notification-dashboard-open .listmain small { display: block; }
+.notification-dashboard-open .notification-view-label {
+    margin: 0 0 0 auto;
+    font-size: 20px;
+}
+.notification-dashboard-form .notification-dot { flex: 0 0 7px; }
+@media (max-width:690px) {
+    .notification-open-trigger { padding: 12px; }
+    .notification-dashboard-open { gap: 9px; }
+}
