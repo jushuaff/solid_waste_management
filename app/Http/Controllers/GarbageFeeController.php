@@ -213,70 +213,60 @@ class GarbageFeeController extends Controller
             ->with('status',$created.' monthly household charge(s) created. Existing charges and payment histories were preserved.');
     }
 
-    /** Record funds confirmed outside this application. No wallet/card gateway is used. */
+    /** Cash is recorded by authorized administrators; residents only submit online proof. */
     public function recordPayment(Request $request,string $charge,NoticeService $notices)
     {
+        abort_unless(in_array($request->user()->role_code,['superadmin','admin'],true),403);
         $bill=GarbageFeeCharge::with(['household','payments'])->findOrFail($charge);
-        $this->ensureChargeAccess($request,$bill,true);
-
         $data=$request->validate([
-            'method'=>['required','in:cash,gcash,card,bank'],
+            'method'=>['required','in:cash'],
             'amount'=>['required','regex:/^\d{1,7}(\.\d{1,2})?$/'],
             'paid_on'=>['required','date','before_or_equal:today'],
-            'external_reference'=>['nullable','string','max:100'],
             'official_receipt_number'=>['nullable','string','max:100'],
             'note'=>['nullable','string','max:500'],
             'acknowledged'=>['accepted'],
         ]);
-        if($data['method']!=='cash' && !filled($data['external_reference']??null)){
-            throw ValidationException::withMessages(['external_reference'=>'Enter the GCash, bank transfer or card terminal transaction reference.']);
-        }
         $amount=FeeLedger::centavos($data['amount']);
-        if($amount<1 || $amount>FeeLedger::balance($bill)){
-            throw ValidationException::withMessages(['amount'=>'Payment must be greater than zero and cannot exceed the remaining monthly balance.']);
+        if($amount<1)throw ValidationException::withMessages(['amount'=>'Cash payment must be greater than zero.']);
+        try{
+            $payment=Cache::lock('fee-transaction:'.$bill->id,15)->block(5,function()use($request,$bill,$data,$amount){
+                $current=GarbageFeeCharge::with('payments')->findOrFail($bill->id);
+                if($amount>FeeLedger::balance($current)){
+                    throw ValidationException::withMessages(['amount'=>'Cash amount exceeds the remaining bill balance. Refresh this household month.']);
+                }
+                return GarbageFeePayment::create([
+                    'charge_id'=>(string)$bill->id,
+                    'city_id'=>(string)$bill->city_id,
+                    'amount_centavos'=>$amount,
+                    'method'=>'cash',
+                    'paid_on'=>$data['paid_on'],
+                    'external_reference'=>null,
+                    'official_receipt_number'=>trim($data['official_receipt_number']??'')?:null,
+                    'note'=>$data['note']??null,
+                    'status'=>'recorded',
+                    'receipt_code'=>'FEE-'.Str::upper(Str::random(14)),
+                    'recorded_by'=>(string)$request->user()->id,
+                    'recorded_at'=>now(),
+                ]);
+            });
+        }catch(LockTimeoutException $e){
+            throw ValidationException::withMessages(['amount'=>'Another payment is being processed. Please retry.']);
         }
-
-        $ref=trim($data['external_reference']??'');
-        // Check for accidental duplicate external transactions in the current billing city.
-        if($ref!=='' && GarbageFeePayment::where('city_id',(string)$bill->city_id)
-            ->where('method',$data['method'])->where('external_reference',$ref)
-            ->where('status','recorded')->exists()){
-            throw ValidationException::withMessages(['external_reference'=>'This payment reference has already been recorded for the city and method.']);
-        }
-
-        // Deliberately do not collect card numbers, expiry dates, CVV or wallet credentials.
-        $payment=GarbageFeePayment::create([
-            'charge_id'=>(string)$bill->id,
-            'city_id'=>(string)$bill->city_id,
-            'amount_centavos'=>$amount,
-            'method'=>$data['method'],
-            'paid_on'=>$data['paid_on'],
-            'external_reference'=>$ref?:null,
-            'official_receipt_number'=>trim($data['official_receipt_number']??'')?:null,
-            'note'=>$data['note']??null,
-            'status'=>'recorded',
-            'receipt_code'=>'FEE-'.Str::upper(Str::random(14)),
-            'recorded_by'=>(string)$request->user()->id,
-            'recorded_at'=>now(),
-        ]);
-        Log::notice('Garbage fee payment recorded',[
+        Log::notice('Cash garbage fee payment recorded',[
             'payment_id'=>(string)$payment->id,
             'charge_id'=>(string)$bill->id,
             'actor_user_id'=>(string)$request->user()->id,
         ]);
-        // Reload the payments relation after writing, or the cached relation would
-        // show the old balance in the confirmation notification.
         $bill->unsetRelation('payments');
         $remaining=FeeLedger::balance($bill);
         $status=FeeLedger::status($bill);
-        $this->notifyResident($bill,$remaining===0?'Garbage fee fully paid':'Garbage fee payment confirmed',
-            'An authorized collector has verified a '.strtoupper($data['method']).
-            ' payment of '.FeeLedger::money($amount).' for '.$bill->billing_month.
-            '. Status: '.$status.'. Remaining balance: '.FeeLedger::money($remaining).
-            '. View your payment tracker for the recorded transaction.');
-        $notices->feePaymentRecorded($bill,$amount,$data['method'],$status,(string)$request->user()->id);
+        $this->notifyResident($bill,$remaining===0?'Garbage fee fully paid':'Cash payment confirmed',
+            'An authorized collector recorded a cash payment of '.FeeLedger::money($amount).
+            ' for '.$bill->billing_month.'. Status: '.$status.
+            '. Remaining balance: '.FeeLedger::money($remaining).'.');
+        $notices->feePaymentRecorded($bill,$amount,'cash',$status,(string)$request->user()->id);
         return redirect()->route('fees.index',['month'=>$bill->billing_month,'highlight'=>(string)$bill->id])
-            ->with('status','Payment recorded. Internal reference: '.$payment->receipt_code.'. This is not an official government receipt.');
+            ->with('status','Cash payment recorded. Internal reference: '.$payment->receipt_code.'. An official receipt must be handled through the authorized office.');
     }
 
     /** Preserve the entry as an audited void, rather than deleting financial history. */
