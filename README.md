@@ -91,6 +91,12 @@ The in-app notification system now sends relevant notices for **new and edited i
 
 See the [role-by-role notification routing and verification guide](docs/NOTIFICATION_EVENTS.md) and [the shared development checklist](MIT103-104.MD). Live notification delivery and MongoDB pagination need acceptance testing.
 
+## Garbage-fee reminders and month-by-month history
+
+**Payment History** (admins/coordinators) and **My Payment Tracker** (residents) display all generated billing months with Paid, Partial and Unpaid statuses, outstanding amounts and month filters. Residents can see only their linked households; administrators can inspect household arrears across months.
+
+The application sends **staff-verification payment confirmation notifications**, and it now has a deduplicated scheduled reminder command for current-month and prior-month unpaid bills (`php artisan fees:send-reminders --dry-run`). Delivering automatic reminders requires Laravel's scheduler to be running at 9 AM Asia/Manila. The receiving-account editor now uses a grouped **Bank / E-wallet Provider** dropdown, with a superadmin-only Add Provider action. See [payment notifications, tracker and provider setup](docs/GARBAGE_FEE_NOTIFICATIONS_TRACKER.md).
+
 ## Garbage-fee tracking (Phase 2 / CR-01)
 
 A separate monthly **household garbage-fee ledger** is available under **Garbage Fee Payments**. **Superadmins** configure city/municipality household rates, effective months and ordinance references; **barangay admins** can manage approved **GCash/bank receiving accounts and optional private QR images**. Authorized staff may record verified **Cash, GCash, Bank and Card (external terminal)** payments, including partial payments and audited superadmin reversals. Residents can see only their **linked household's** billing and their city's active payment destinations. No live payment processing is provided; the app does **not** collect card details.
