@@ -240,6 +240,10 @@ class GarbageFeeController extends Controller
         try{
             $payment=Cache::lock('fee-transaction:'.$bill->id,15)->block(5,function()use($request,$bill,$data,$amount){
                 $current=GarbageFeeCharge::with('payments')->findOrFail($bill->id);
+                if(FeePaymentSubmission::where('charge_id',(string)$bill->id)
+                    ->where('status','pending')->exists()){
+                    throw ValidationException::withMessages(['amount'=>'An online receipt is awaiting verification for this household month. Review or reject that submission before recording cash against the same bill.']);
+                }
                 if($amount>FeeLedger::balance($current)){
                     throw ValidationException::withMessages(['amount'=>'Cash amount exceeds the remaining bill balance. Refresh this household month.']);
                 }
