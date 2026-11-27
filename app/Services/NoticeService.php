@@ -164,17 +164,19 @@ class NoticeService
     }
 
     /** Significant MRF adjustments (not every daily weigh-in) need supervisor review. */
-    public function mrfAdjustment(string $zoneId):void
+    public function mrfAdjustment(string|array $zones):void
     {
+        $zones=array_values(array_unique(array_filter(array_map('strval',(array)$zones))));
+        if(!$zones)return;
         $roles=Role::whereIn('code',['superadmin','admin','coordinator'])->get()
             ->pluck('id')->map(fn($id)=>(string)$id)->all();
         if(!$roles)return;
         foreach(User::where('is_active',true)->whereIn('role_id',$roles)->get() as $recipient){
             if($recipient->role_code==='coordinator' &&
-               (string)$recipient->zone_id!==$zoneId)continue;
+               !in_array((string)$recipient->zone_id,$zones,true))continue;
             $this->send($recipient,'MRF record adjusted',
                 'A materials recovery weigh-in was changed or archived. Review the monitoring dashboard.',
-                ['zone_id'=>$zoneId]);
+                ['zone_id'=>$recipient->role_code==='coordinator'?(string)$recipient->zone_id:$zones[0]]);
         }
     }
 }
