@@ -34,6 +34,21 @@
             @if(auth()->user()->role_code === 'resident')
                 <a class="navitem" href="{{ route('reports.create') }}"><span class="ico">＋</span> Report an Incident</a>
             @endif
+            @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','resident'],true))
+            <a class="navitem {{ request()->routeIs('fees.index','fees.generate','fees.payments.*')?'active':'' }}" href="{{route('fees.index')}}">
+                <span class="ico">₱</span> Garbage Fee Payments
+            </a>
+            @endif
+            @if(in_array(auth()->user()->role_code,['superadmin','admin'],true))
+            <a class="navitem {{ request()->routeIs('fees.accounts.*')?'active':'' }}" href="{{route('fees.accounts.index')}}">
+                <span class="ico">▣</span> Receiving Accounts
+            </a>
+            @endif
+            @if(auth()->user()->role_code==='superadmin')
+            <a class="navitem {{ request()->routeIs('fees.settings.*')?'active':'' }}" href="{{route('fees.settings.index')}}">
+                <span class="ico">⚙</span> City Garbage Fee Rates
+            </a>
+            @endif
             <a class="navitem {{ request()->routeIs('notifications.*')?'active':'' }}" href="{{ route('notifications.index') }}">
                 <span class="ico">◷</span> Notifications
                 @if(($unreadNotificationCount??0)>0)
