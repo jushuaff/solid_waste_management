@@ -2,7 +2,10 @@
 @section('title','Reports & Tracking')
 @section('content')
 <div class="heading"><div><span class="eyebrow">CASE MANAGEMENT</span><h1>Collection and disposal reports</h1><p>Review report status, assignment and recorded outcomes.</p></div><div class="actions">@if(auth()->user()->role_code==='resident')<a href="{{route('reports.create')}}" class="btn primary">＋ Submit report</a>@endif
-@if(auth()->user()->canManage())<a target="_blank" href="{{route('reports.print-summary',request()->query())}}" class="btn outline">🖨 Print summary</a>@endif</div></div>
+@if(auth()->user()->canManage())
+<a target="_blank" rel="noopener" href="{{route('reports.print-summary',request()->query())}}" class="btn outline">Preview summary PDF</a>
+<a href="{{route('reports.print-summary',array_merge(request()->query(),['download'=>1]))}}" class="btn outline">Download summary PDF</a>
+@endif</div></div>
 <div class="card"><form method="GET" class="filterbar" style="flex-wrap:wrap;align-items:end">
 @if(auth()->user()->role_code!=='resident')<div class="field"><label>Zone</label><select name="zone_id" class="form-control"><option value="">All zones</option>@foreach($zones as $z)<option value="{{$z->id}}" @selected(request('zone_id')===$z->id)>{{$z->name}}</option>@endforeach</select></div>@endif
 <div class="field"><label>Status</label><select name="status" class="form-control"><option value="">All statuses</option>@foreach(config('swm.report_statuses') as $s)<option @selected(request('status')===$s)>{{$s}}</option>@endforeach</select></div>
