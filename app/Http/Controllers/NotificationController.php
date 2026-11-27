@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\{Notice,Report};
+use App\Models\{Notice,Report,Schedule,ScheduleException};
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -50,7 +50,36 @@ class NotificationController extends Controller
             }
         }
         if($notice->rule_id) return redirect()->route('rules.index');
-        if($notice->schedule_id || $notice->exception_id) return redirect()->route('schedules.index');
+        if($notice->schedule_id || $notice->exception_id){
+            // Schedule-change notices point to the underlying recurring schedule.
+            $scheduleId=(string)($notice->schedule_id??'');
+            if(!$scheduleId && $notice->exception_id){
+                $exception=ScheduleException::find($notice->exception_id);
+                $scheduleId=(string)($exception?->schedule_id??'');
+            }
+            $schedule=$scheduleId?Schedule::find($scheduleId):null;
+            if(!$schedule){
+                return redirect()->route('schedules.index')
+                    ->with('status','This notice refers to a schedule that is no longer available. Review the current collection schedules.');
+            }
+
+            // Never bypass the resident's zone when following an old notification.
+            if($request->user()->role_code==='resident'
+                && (string)($request->user()->zone_id??'')!==(string)$schedule->zone_id){
+                return redirect()->route('schedules.index')
+                    ->with('status','This schedule no longer applies to your collection area. View your current schedules below.');
+            }
+
+            $today=now()->toDateString();
+            if($schedule->publication_status!=='published'
+                || (string)$schedule->effective_from>$today
+                || ($schedule->effective_until && (string)$schedule->effective_until<$today)){
+                return redirect()->route('schedules.index')
+                    ->with('status','The schedule mentioned in this notification is not currently published or effective. Review the latest available schedules.');
+            }
+
+            return redirect()->route('schedules.index',['highlight'=>(string)$schedule->id]);
+        }
         if($notice->zone_id && in_array($request->user()->role_code,['superadmin','admin','coordinator','eco_aide'],true)){
             return redirect()->route('linis.dashboard');
         }
