@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\{AuthController,PasswordResetController,ProfileController,DashboardController,
-    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController};
+    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController,IncidentMediaController};
 use Illuminate\Support\Facades\Route;
 Route::get('/',fn()=>redirect()->route(auth()->check()?'dashboard':'login'));
 Route::middleware('guest')->group(function(){
@@ -46,6 +46,9 @@ Route::middleware(['auth','active'])->group(function(){
     Route::delete('/reports/{report}',[ReportController::class,'archive'])->middleware('role:superadmin,admin')->name('reports.archive');
     Route::get('/reports/{report}/print',[ReportController::class,'print'])->name('reports.print');
     Route::get('/reports/{report}/evidence',[ReportController::class,'evidence'])->name('reports.evidence');
+    Route::get('/reports/{report}/media/{media}',[IncidentMediaController::class,'show'])->name('reports.media.show');
+    Route::delete('/reports/{report}/media/{media}',[IncidentMediaController::class,'destroy'])
+        ->middleware(['role:resident','throttle:10,1'])->name('reports.media.destroy');
     Route::post('/reports/{report}/workflow',[ReportWorkflowController::class,'change'])->middleware('role:superadmin,admin,coordinator,crew')->name('reports.workflow');
     Route::middleware('role:superadmin,admin,coordinator')->prefix('manage')->name('management.')->group(function(){
         Route::get('/users/{id}/password',[ManagementController::class,'passwordForm'])->middleware('role:superadmin')->name('users.password');
