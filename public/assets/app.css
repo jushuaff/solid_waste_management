@@ -1225,3 +1225,36 @@ textarea.form-control{min-height:110px}
     .notification-actions .btn { flex: 1 1 auto; }
     .header-notification { width: 34px; height: 34px; }
 }
+
+
+/* Table column sorting — visible on hover/focus, clear ascending/descending state. */
+.content-table thead th { vertical-align: middle; }
+.content-table thead th:has(.sortable-th) { padding: 0; }
+.sortable-th {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 9px;
+    width: 100%;
+    min-height: 42px;
+    padding: 11px 12px;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.35;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.sortable-th:hover, .sortable-th:focus-visible {
+    color: #086c53;
+    background: rgba(22,112,88,.07);
+}
+.sortable-th:focus-visible { outline: 2px solid #147a63; outline-offset: -3px; }
+.sortable-th.is-active { color: #126d56; }
+.sort-glyph { opacity: .43; font-size: 10px; flex: 0 0 auto; }
+.sortable-th.is-active .sort-glyph { opacity: 1; }
+@media (max-width:690px) {
+    .sortable-th { min-height: 40px; padding: 9px 10px; }
+}
