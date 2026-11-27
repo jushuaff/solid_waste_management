@@ -140,14 +140,26 @@ class ManagementController extends Controller
         $spec=$this->definition($request,$resource);$model=$spec['model'];$item=$model::findOrFail($id);
         $this->ensureVisibleAccount($request,$resource,$item);
         $data=$this->validated($request,$resource,$spec,$item);
-        $publish=in_array($resource,['schedules','exceptions','rules'],true) && ($data['publication_status']??null)==='published';
+        $notifiable=in_array($resource,['schedules','exceptions','rules'],true);
+        $wasPublished=$notifiable && (string)($item->publication_status??'')==='published';
+        $isPublished=$notifiable && (string)($data['publication_status']??'')==='published';
+        $previousZone=null;
+        if($notifiable){
+            // Null marks "no old scope", while an empty string represents "all zones".
+            $previousZone=$resource==='exceptions'
+                ?(string)(Schedule::find($item->schedule_id)?->zone_id??'')
+                :(string)($item->zone_id??'');
+        }
         $changed=$item->getAttributes();
         $meaningful=false;foreach($data as $key=>$val){if((string)($changed[$key]??'')!==(string)($val??'')){$meaningful=true;break;}}
         if($resource==='schedules'&&$meaningful)$data['revision']=((int)($item->revision??1))+1;
         if($resource==='rules'&&$meaningful)$data['version']=((int)($item->version??1))+1;
-        if($publish&&$meaningful && in_array($resource,['schedules','rules'],true))$data['published_at']=now();
+        if($isPublished&&$meaningful && in_array($resource,['schedules','rules'],true))$data['published_at']=now();
         $item->update($data);
-        if($publish&&$meaningful)$notices->publication($item,$spec['title']);
+        if($notifiable && $meaningful && ($isPublished || $wasPublished)){
+            $action=!$isPublished?'withdrawn':($wasPublished?'updated':'published');
+            $notices->publication($item,$spec['title'],$action,$previousZone);
+        }
         return redirect()->route('management.index',$resource)->with('status','Record updated.');
     }
 
@@ -200,7 +212,7 @@ class ManagementController extends Controller
             default=>false};
         if($protected) return back()->withErrors(['delete'=>'This record is in use; archive or deactivate it rather than deleting it.']);
         // To preserve provenance, only delete draft/unreferenced material.
-        if(in_array($resource,['rules','exceptions'],true)&&$item->publication_status==='published')return back()->withErrors(['delete'=>'Published material cannot be deleted; mark it as draft/archived instead.']);
+        if(in_array($resource,['rules','exceptions','schedules'],true)&&$item->publication_status==='published')return back()->withErrors(['delete'=>'Published material cannot be deleted; mark it as draft/archived instead.']);
         $item->delete();return redirect()->route('management.index',$resource)->with('status','Unused record deleted.');
     }
 }
