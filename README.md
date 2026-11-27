@@ -1,5 +1,7 @@
 # Barangay Solid Waste Collection & Monitoring System
 
+**New team members / presenters:** Start with [USER_ROLES.md](USER_ROLES.md) for all 17 local sample login accounts, their default passwords, role permissions and a suggested end-to-end demonstration.
+
 **Laravel 13 · MongoDB (`mongodb/laravel-mongodb` 5.12+) · Blade · PHP 8.3+**
 
 A configurable Philippine barangay waste-management application based on the MIT 103 research and the expanded HTML design prototype. The frontend uses the same dark-teal sidebar, white content cards, green accents, responsive layouts and resident/staff workflow as the provided prototype. **It is a real Laravel application, not the standalone HTML demo.**
