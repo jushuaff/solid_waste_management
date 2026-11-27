@@ -32,9 +32,10 @@ class FeePaymentSubmissionController extends Controller
      * Resident submits an *external* bank/wallet transfer for staff verification.
      * Submission is NOT a confirmed payment and MUST NOT change the ledger balance.
      */
-    public function store(Request $request,string $charge,NoticeService $notices)
+    public function store(Request $request,NoticeService $notices)
     {
-        $bill=$this->ownedCharge($request,$charge);
+        $chargeData=$request->validate(['charge_id'=>['required','string']]);
+        $bill=$this->ownedCharge($request,$chargeData['charge_id']);
         $data=$request->validate([
             'receiving_account_id'=>['required','string'],
             'amount'=>['required','regex:/^\d{1,7}(\.\d{1,2})?$/'],
