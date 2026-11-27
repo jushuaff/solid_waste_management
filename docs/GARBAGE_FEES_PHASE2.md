@@ -37,6 +37,12 @@
 ### Crew / eco-aide
 - Have no access to private household billing ledgers or receiving-account configuration.
 
+## Online resident proof and staff verification
+
+Residents submit **receipt/screenshot/PDF evidence** for an actual transfer made through the external bank or wallet. The record begins **Pending Verification** and is never treated as a completed payment before independent staff confirmation. An admin or superadmin sees it in **Verify Online Payments**, validates that the money reached the authorized receiving account, and either confirms the payment (crediting that month's ledger) or rejects it with an explanation. Both the month view and the all-month resident tracker show Pending Verification alongside the still-outstanding financial balance. Cash is entered separately by authorized admin/superadmin.
+
+Full details, local checks and notification behavior: [Pending receipt / payment tracker guide](GARBAGE_FEE_NOTIFICATIONS_TRACKER.md).
+
 ## Payment methods and receiving details
 
 | Method | Account settings | How money is received | What the app records |
