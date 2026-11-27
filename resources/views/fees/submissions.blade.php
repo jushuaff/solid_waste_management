@@ -76,6 +76,10 @@
                                             <textarea class="form-control" name="review_note" rows="2" maxlength="500"
                                                 placeholder="Explain the rejection, or optionally record verification details"></textarea>
                                         </label>
+                                        <label class="checkline">
+                                            <input type="checkbox" name="funds_confirmed" value="1">
+                                            I independently checked that the funds reached the approved receiving account (required when verifying).
+                                        </label>
                                         <button class="btn primary" type="submit"
                                             onclick="return confirm('Have you independently verified the external transfer or the reason for rejection?')">
                                             Save decision
