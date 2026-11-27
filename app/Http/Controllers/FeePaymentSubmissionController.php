@@ -111,7 +111,7 @@ class FeePaymentSubmissionController extends Controller
         ])->with('status','Receipt submitted for verification ('.$submission->submission_code.'). Your balance remains unpaid until staff confirm the transfer.');
     }
 
-    public function update(Request $request,string $submission)
+    public function update(Request $request,string $submission,NoticeService $notices)
     {
         $entry=FeePaymentSubmission::findOrFail($submission);
         abort_unless($request->user()->role_code==='resident'
@@ -172,6 +172,7 @@ class FeePaymentSubmissionController extends Controller
         }catch(LockTimeoutException $error){
             throw ValidationException::withMessages(['receipt'=>'Another payment update is being processed. Please retry.']);
         }
+        $notices->feeSubmissionReceived(FeePaymentSubmission::findOrFail($entry->id));
         return redirect()->route('fees.index',['month'=>$bill->billing_month])
             ->with('status','Receipt updated. It remains pending staff verification.');
     }
