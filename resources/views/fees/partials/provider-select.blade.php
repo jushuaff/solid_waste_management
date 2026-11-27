@@ -1,5 +1,13 @@
 <div class="field">
-    <label for="{{ $providerInputId }}">Bank / e-wallet provider *</label>
+    <div class="row-between" style="gap:10px;align-items:center">
+        <label for="{{ $providerInputId }}">Bank / e-wallet provider *</label>
+        @if(auth()->user()->role_code==='superadmin')
+        <button type="button" class="fee-provider-add-link"
+            onclick="const panel=document.getElementById('fee-provider-create');if(panel){panel.open=true;panel.scrollIntoView({behavior:'smooth',block:'center'});}">
+            + Add provider
+        </button>
+        @endif
+    </div>
     <select class="form-control" name="provider" id="{{ $attributes->get('id','fee-provider') }}" required>
         <option value="">Select receiving institution</option>
         @foreach(['wallet'=>'E-wallets','bank'=>'Banks and digital banks'] as $type=>$groupName)
