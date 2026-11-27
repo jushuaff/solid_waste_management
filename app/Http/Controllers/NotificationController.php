@@ -32,6 +32,13 @@ class NotificationController extends Controller
         $this->markRead($notice);
 
         // Only local named routes are used; no untrusted redirect URLs.
+        if($notice->fee_submission_id){
+            if(in_array($request->user()->role_code,['superadmin','admin'],true)){
+                return redirect()->route('fees.submissions.index',['status'=>'pending']);
+            }
+            return redirect()->route('notifications.index')
+                ->with('status','This payment verification notice is not available to your account.');
+        }
         if($notice->fee_city_id){
             // Recipient ownership was verified above; the fee page independently
             // scopes the signed-in resident to their linked household accounts.
