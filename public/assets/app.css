@@ -2074,7 +2074,16 @@ a.btn, a.btn:hover, a.btn:focus-visible,
 }
 .fee-billing-help strong { font-size: 13px; }
 .fee-billing-help p { margin: 8px 0 0; line-height: 1.6; font-size: 12px; }
-.fee-billing-help a { text-decoration: none; font-weight: 750; color: #0e7356; }
+.fee-billing-help a:not(.btn) { text-decoration: none; font-weight: 750; color: #0e7356; }
+.fee-billing-help a.btn.primary,
+.fee-billing-help a.btn.primary:visited,
+.fee-billing-help a.btn.primary:hover,
+.fee-billing-help a.btn.primary:focus-visible,
+.fee-billing-help a.btn.primary:active {
+    color: #fff;
+    text-decoration: none;
+    margin-top: 12px;
+}
 .fee-online-submissions {
     margin-top: 22px;
     padding-top: 19px;
