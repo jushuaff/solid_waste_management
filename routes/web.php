@@ -48,6 +48,8 @@ Route::middleware(['auth','active'])->group(function(){
     Route::get('/reports/{report}/evidence',[ReportController::class,'evidence'])->name('reports.evidence');
     Route::post('/reports/{report}/workflow',[ReportWorkflowController::class,'change'])->middleware('role:superadmin,admin,coordinator,crew')->name('reports.workflow');
     Route::middleware('role:superadmin,admin,coordinator')->prefix('manage')->name('management.')->group(function(){
+        Route::get('/users/{id}/password',[ManagementController::class,'passwordForm'])->middleware('role:superadmin')->name('users.password');
+        Route::put('/users/{id}/password',[ManagementController::class,'changePassword'])->middleware(['role:superadmin','throttle:5,1'])->name('users.password.update');
         Route::get('/{resource}',[ManagementController::class,'index'])->name('index');
         Route::get('/{resource}/create',[ManagementController::class,'create'])->name('create');
         Route::post('/{resource}',[ManagementController::class,'store'])->name('store');
