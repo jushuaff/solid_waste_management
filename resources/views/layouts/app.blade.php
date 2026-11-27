@@ -34,7 +34,12 @@
             @if(auth()->user()->role_code === 'resident')
                 <a class="navitem" href="{{ route('reports.create') }}"><span class="ico">＋</span> Report an Incident</a>
             @endif
-            <a class="navitem" href="{{ route('notifications.index') }}"><span class="ico">◷</span> Notifications</a>
+            <a class="navitem {{ request()->routeIs('notifications.*')?'active':'' }}" href="{{ route('notifications.index') }}">
+                <span class="ico">◷</span> Notifications
+                @if(($unreadNotificationCount??0)>0)
+                <span class="notification-dot sidebar-unread-dot" title="Unread notifications" aria-label="Unread notifications"></span>
+                @endif
+            </a>
             @if(auth()->user()->canManage())
                 <div class="navHead">BARANGAY OPERATIONS</div>
                 @foreach(['schedules'=>'Manage Schedules','exceptions'=>'Schedule Changes','rules'=>'Publish Local Rules','points'=>'Collection Points'] as $key=>$label)
@@ -58,7 +63,20 @@
         <header class="topbar"><div style="display:flex;align-items:center;gap:11px">
             <button class="btn small mobilemenu" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Toggle navigation">☰</button>
             <div class="crumb">Barangay SWM / <strong>@yield('title','Dashboard')</strong></div>
-            </div><div class="topR"><span class="tag">● {{ ucwords(str_replace('_',' ',auth()->user()->role_code)) }}</span><span class="avatar" title="{{ auth()->user()->name }}">{{ mb_strtoupper(mb_substr(auth()->user()->name,0,1)) }}</span></div>
+            </div><div class="topR">
+                <a class="header-notification" href="{{route('notifications.index')}}"
+                   title="{{($unreadNotificationCount??0)>0?'You have unread notifications':'Notifications'}}"
+                   aria-label="Notifications{{($unreadNotificationCount??0)>0?' — unread updates':''}}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                        <path d="M10 21h4"/>
+                    </svg>
+                    @if(($unreadNotificationCount??0)>0)
+                    <span class="notification-dot" aria-hidden="true"></span>
+                    @endif
+                </a>
+                <span class="tag">● {{ ucwords(str_replace('_',' ',auth()->user()->role_code)) }}</span><span class="avatar" title="{{ auth()->user()->name }}">{{ mb_strtoupper(mb_substr(auth()->user()->name,0,1)) }}</span></div>
         </header>
         <div class="page">
             @if(session('status'))<div class="alert good" role="status">{{ session('status') }}</div>@endif
