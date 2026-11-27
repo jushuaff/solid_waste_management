@@ -114,11 +114,22 @@ class NoticeService
             'withdrawn'=>'withdrawn',
             default=>'published',
         };
-        $message=match($action){
-            'updated'=>'A published '.$kind.' affecting your collection area has changed. Review the latest information.',
-            'withdrawn'=>'A previously published '.$kind.' has been withdrawn. Review current collection guidance.',
-            default=>'New '.$kind.' information is available for your collection area.',
+        $details=match(true){
+            $item instanceof Schedule=>trim(($item->zone?->name??'All zones').' · '.
+                ($item->category?->local_label??'Waste collection').' · '.
+                (config('swm.days')[(int)$item->weekday]??'Scheduled day').' '.
+                ($item->start_time??'').'–'.($item->end_time??'')),
+            $item instanceof ScheduleException=>'Affected date: '.($item->affected_date??'').
+                '. '.($item->reason??''),
+            $item instanceof LocalRule=>(string)($item->title??'Collection guidelines'),
+            default=>'',
         };
+        $message=match($action){
+            'updated'=>'An existing '.$kind.' was updated.',
+            'withdrawn'=>'A previously published '.$kind.' was withdrawn.',
+            default=>'A new '.$kind.' was published.',
+        };
+        $message.= ' '.\Illuminate\Support\Str::limit($details,250).' Please review the latest barangay guidance.';
         $links=[
             'schedule_id'=>$item instanceof Schedule?(string)$item->id:null,
             'rule_id'=>$item instanceof LocalRule?(string)$item->id:null,
