@@ -17,9 +17,15 @@ class ResidentGuideController extends Controller
         $today=now()->toDateString();
         $q->where('effective_from','<=',$today)->where(function($query) use($today){$query->whereNull('effective_until')->orWhere('effective_until','>=',$today);});
         $schedules=$q->orderBy('weekday')->orderBy('start_time')->get();
+        // Only highlight a schedule already visible to this viewer (resident zone,
+        // publication status and effective-date filters are applied above).
+        $requestedHighlight=$request->query('highlight','');
+        $highlightScheduleId=is_string($requestedHighlight)
+            && $schedules->contains(fn($item)=>(string)$item->id===$requestedHighlight)
+                ? $requestedHighlight : '';
         $scheduleIds=$schedules->pluck('id')->map(fn($id)=>(string)$id)->all();
         $exceptions=$scheduleIds?ScheduleException::whereIn('schedule_id',$scheduleIds)->where('publication_status','published')->where('affected_date','>=',$today)->orderBy('affected_date')->get():collect();
-        return view('schedules.index',compact('zones','categories','schedules','exceptions','zone','category','isResident'));
+        return view('schedules.index',compact('zones','categories','schedules','exceptions','zone','category','isResident','highlightScheduleId'));
     }
     public function rules(Request $request)
     {
