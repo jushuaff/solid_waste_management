@@ -2,6 +2,8 @@
 
 **Status:** Application source added; local MongoDB/browser/financial controls acceptance testing still required before real use.
 
+**New:** The app now includes an [all-month Household Payment History / Resident Payment Tracker](GARBAGE_FEE_NOTIFICATIONS_TRACKER.md), verified-payment notifications, scheduled arrears reminders and a configurable Philippine bank/e-wallet provider list.
+
 **Change request:** CR-01, Nov 19, 2026. City / municipality monthly household rates are configured by the superadministrator. This module is **separate from RA 9003 compliance reports** and must not be mistaken for government-certified collection or payment-gateway processing.
 
 ## What the screens do
@@ -16,7 +18,7 @@
 7. Review balances and any payment reversals; only a superadmin can void an entry, and must provide a reason.
 
 ### Barangay administrator
-- Can register, edit, activate or deactivate city receiving accounts and optional QR codes.
+- Can register, edit, activate or deactivate city receiving accounts and optional QR codes, choosing the receiving institution from a grouped PH bank/e-wallet dropdown.
 - Can generate monthly charges using the **superadmin's published city rates**; cannot set or override those rates.
 - Can record manually verified **Cash**, **GCash** or **Card** payments against monthly household balances.
 - Cannot delete previous payments or change rates/fee amounts on already generated charges.
@@ -27,8 +29,8 @@
 
 ### Resident
 - Must first be **linked to an active household reference** in **Household Registry → Edit/Create → Linked resident account**. The account must be an active resident in the same zone.
-- Can view **only their linked household's** monthly charges, paid amount, remaining balance and ledger entries.
-- Can see active **GCash** or **bank** receiving accounts (including optional QR images) for their household's city.
+- Can view **only their linked household's** monthly charges, paid amount, remaining balance and ledger entries, including an all-month Paid/Partial/Unpaid tracker.
+- Can see active bank/e-wallet receiving accounts (including optional QR images) for their household's city. The superadministrator can add custom providers if a particular institution is not listed.
 - For **Cash** or **Card**, the app directs them to the official collection office.
 - Cannot edit balances, mark themselves paid, or initiate card or wallet transfers from within the app.
 
@@ -44,7 +46,9 @@
 | Card | No card number captured by the app | Physical/external card terminal | Staff-verified amount and terminal approval reference |
 | Bank transfer/deposit | Bank provider, receiving account name/number, optional QR | Resident pays through banking outside the app | Staff-verified amount and external bank transaction reference |
 
-**Important:** No live PSP/gateway integration, automatic wallet confirmation, card tokenization, webhook, or official government receipt issuance is implemented. **Do not** enter PIN, CVV, OTP, card number, password, or wallet credentials. QR images are treated as payment *instructions*, not proof of payment.
+**Important:** Monthly payment reminders depend on the Laravel scheduler and linked household resident accounts. These notifications do not send real SMS, email or initiate auto-collection.
+
+No live PSP/gateway integration, automatic wallet confirmation, card tokenization, webhook, or official government receipt issuance is implemented. **Do not** enter PIN, CVV, OTP, card number, password, or wallet credentials. QR images are treated as payment *instructions*, not proof of payment.
 
 ## Data collections
 
