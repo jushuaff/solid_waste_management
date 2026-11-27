@@ -1,5 +1,20 @@
 # Garbage-fee notifications, monthly tracking and receiving institutions
 
+## Online transfer proof and manual cash entry
+
+**Resident online-transfer workflow (new):**
+1. An authorized admin or superadmin configures the receiving account, city rate and generated household bill, and links the resident to the household.
+2. The resident opens **Garbage Fee Payments → Submit online payment**, chooses their unpaid billed month and approved bank/e-wallet destination, transfers the money using the external provider, and uploads an image/PDF receipt (maximum 5 MB) with the transaction reference and amount.
+3. The transfer submission is stored as **Pending Verification** and the original monthly bill remains **Unpaid or Partial**, with its full unconfirmed balance. Pending uploads are **never** inserted into the confirmed payment ledger.
+4. Admin and superadmin receive a notification and review the uploaded proof under **Verify Online Payments**. They must check that the money actually reached the authorized receiving account; a screenshot alone is not proof of settlement.
+5. If verified, a recorded payment is added to the ledger, the submission becomes Verified, and the resident receives a payment confirmation and updated remaining balance. If rejected, the submission becomes Rejected with a reason and the resident may submit corrected proof.
+
+**Cash payments:** Only admin/superadmin can manually credit cash received through the authorized collection office. Residents cannot submit cash confirmations. Coordinators have read-only access to the payment history for their assigned zone.
+
+The monthly ledger and all-month tracker show **Pending Verification** as a separate indicator alongside the financial state. For example, a bill can say **Unpaid · Pending Verification**, which means **no funds have been confirmed yet**. There is also a Pending Verification filter on those screens. Reminders skip bills with a currently pending proof so the resident can await a decision without receiving a contradictory overdue notice.
+
+**Security and operation:** Receipts use a private storage disk, authorized recipient checks and upload validation. The review queue is for admin/superadmin only. Live wallet/bank verification is **not** integrated. Confirm the receipt against actual receiving account records before approving. Cache lock configuration and true database concurrency/transactions require full testing before real collection.
+
 ## Payment status and notifications
 
 The ledger is a **staff-confirmed payment tracker**, not a GCash/card checkout. Residents cannot click "Pay now" and create an automatically confirmed payment.
