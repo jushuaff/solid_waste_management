@@ -222,8 +222,7 @@ class LinisController extends Controller
             $notices->segregationAlert((string)$record->zone_id,(string)$record->id);
         }
         if($businessChanged && $module==='weigh-ins'){
-            $notices->mrfAdjustment((string)$record->zone_id);
-            if($previousZone!==(string)$record->zone_id)$notices->mrfAdjustment($previousZone);
+            $notices->mrfAdjustment([$previousZone,(string)$record->zone_id]);
         }
         return redirect()->route('linis.index',$module)->with('status','Updated with revision history.');
     }
