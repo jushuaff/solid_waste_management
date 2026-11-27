@@ -62,7 +62,7 @@
                             <summary>{{$staff && $entry->status==='pending'?'Review':'Details'}}</summary>
                             <p>{{$entry->note??'No additional information.'}}</p>
                             @if($staff && $entry->status==='pending')
-                                <p class="muted">Check identity and address against Household Registry. If no record exists, register it first.</p>
+                                <p class="muted">Check identity and address against Household Registry. Choose an existing household or register a verified new household directly here.</p>
                                 <a class="btn outline small" href="{{route('linis.index','households')}}">Open Household Registry</a>
                                 <form method="POST" action="{{route('fees.household-links.review',$entry->id)}}" class="stack">
                                     @csrf
@@ -73,8 +73,29 @@
                                             <option value="reject">Reject request</option>
                                         </select>
                                     </label>
-                                    <label class="field">Verified household reference (approval only)
+                                    <label class="field">Household linking method (approval only)
+                                        <select class="form-control" name="link_mode">
+                                            <option value="existing">Link existing household</option>
+                                            <option value="new">Register new household and link</option>
+                                        </select>
+                                    </label>
+                                    <label class="field">Existing household in this zone
+                                        <select class="form-control" name="household_id">
+                                            <option value="">Choose existing household</option>
+                                            @foreach($householdsByZone->get((string)$entry->zone_id,collect()) as $householdOption)
+                                                @if(!$householdOption->resident_user_id || (string)$householdOption->resident_user_id===(string)$entry->resident_user_id)
+                                                    <option value="{{$householdOption->id}}" @selected((string)$householdOption->reference===(string)$entry->reference)>{{$householdOption->reference}} — {{$householdOption->location_description}}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <small class="muted">Choose an existing record only if you selected the existing household method.</small>
+                                    </label>
+                                    <label class="field">New household reference
                                         <input class="form-control" name="household_reference" maxlength="100" value="{{$entry->reference}}">
+                                    </label>
+                                    <label class="field">New household verified address
+                                        <input class="form-control" name="household_location" maxlength="250" value="{{$entry->location}}">
+                                        <small class="muted">For new households only. Confirm the reference and address before registering.</small>
                                     </label>
                                     <label class="checkline">
                                         <input type="checkbox" name="identity_confirmed" value="1">
