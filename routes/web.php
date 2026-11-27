@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\{AuthController,PasswordResetController,ProfileController,DashboardController,
-    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController,IncidentMediaController,FeeSettingsController,GarbageFeeController,FeeReceivingAccountController,FeeProviderController,GarbageFeeHistoryController};
+    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController,IncidentMediaController,FeeSettingsController,GarbageFeeController,FeeReceivingAccountController,FeeProviderController,GarbageFeeHistoryController,FeePaymentSubmissionController};
 use Illuminate\Support\Facades\Route;
 Route::get('/',fn()=>redirect()->route(auth()->check()?'dashboard':'login'));
 Route::middleware('guest')->group(function(){
@@ -22,10 +22,19 @@ Route::middleware(['auth','active'])->group(function(){
         ->middleware('role:superadmin,admin,coordinator,resident')->name('fees.index');
     Route::get('/garbage-fees/history',[GarbageFeeHistoryController::class,'index'])
         ->middleware('role:superadmin,admin,coordinator,resident')->name('fees.history.index');
+    // Resident-submitted online transfers: evidence remains pending until admin verification.
+    Route::post('/garbage-fees/submissions',[FeePaymentSubmissionController::class,'store'])
+        ->middleware(['role:resident','throttle:5,1'])->name('fees.submissions.store');
+    Route::get('/garbage-fees/submissions',[FeePaymentSubmissionController::class,'index'])
+        ->middleware('role:superadmin,admin')->name('fees.submissions.index');
+    Route::get('/garbage-fees/submissions/{submission}/receipt',[FeePaymentSubmissionController::class,'receipt'])
+        ->middleware('role:superadmin,admin,resident')->name('fees.submissions.receipt');
+    Route::post('/garbage-fees/submissions/{submission}/review',[FeePaymentSubmissionController::class,'review'])
+        ->middleware(['role:superadmin,admin','throttle:15,1'])->name('fees.submissions.review');
     Route::post('/garbage-fees/generate',[GarbageFeeController::class,'generate'])
         ->middleware(['role:superadmin,admin','throttle:8,1'])->name('fees.generate');
     Route::post('/garbage-fees/charges/{charge}/payments',[GarbageFeeController::class,'recordPayment'])
-        ->middleware(['role:superadmin,admin,coordinator','throttle:15,1'])->name('fees.payments.store');
+        ->middleware(['role:superadmin,admin','throttle:15,1'])->name('fees.payments.store');
     Route::post('/garbage-fees/payments/{payment}/void',[GarbageFeeController::class,'voidPayment'])
         ->middleware(['role:superadmin','throttle:6,1'])->name('fees.payments.void');
 
