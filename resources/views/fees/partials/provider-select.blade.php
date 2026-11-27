@@ -3,7 +3,7 @@
         <label for="{{ $providerInputId }}">Bank / e-wallet provider *</label>
         @if(auth()->user()->role_code==='superadmin')
         <button type="button" class="fee-provider-add-link"
-            onclick="const panel=document.getElementById('fee-provider-create');if(panel){panel.open=true;panel.scrollIntoView({behavior:'smooth',block:'center'});}">
+            onclick="const dialog=this.closest('dialog');if(dialog && dialog.open)dialog.close();const panel=document.getElementById('fee-provider-create');if(panel){panel.open=true;panel.scrollIntoView({behavior:'smooth',block:'center'});}">
             + Add provider
         </button>
         @endif
