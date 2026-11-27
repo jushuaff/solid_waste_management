@@ -126,7 +126,7 @@ class GarbageFeeController extends Controller
                 ->pluck('id')->map(fn($id)=>(string)$id)->all();
             $zoneIds=Household::where('resident_user_id',(string)$request->user()->id)
                 ->pluck('zone_id')->map(fn($id)=>(string)$id)->all();
-            $cityIds=Zone::whereIn('id',$zoneIds)->pluck('fee_city_id')
+            $cityIds=Zone::findMany($zoneIds)->pluck('fee_city_id')
                 ->filter()->map(fn($id)=>(string)$id)->all();
             $pastCityIds=GarbageFeeCharge::whereIn('household_id',$householdIds)
                 ->pluck('city_id')->filter()->map(fn($id)=>(string)$id)->all();
