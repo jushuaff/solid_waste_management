@@ -6,6 +6,7 @@
     <title>@yield('title', 'Dashboard') | {{ config('app.name') }}</title>
     <link rel="stylesheet" href="{{ asset('assets/app.css') }}">
     <script src="{{ asset('assets/password-toggle.js') }}" defer></script>
+    <script src="{{ asset('assets/incident-evidence.js') }}" defer></script>
 </head>
 <body>
 <div class="app">
@@ -61,6 +62,7 @@
         </header>
         <div class="page">
             @if(session('status'))<div class="alert good" role="status">{{ session('status') }}</div>@endif
+            @if(session('warning'))<div class="alert bad" role="alert">{{ session('warning') }}</div>@endif
             @if($errors->any())<div class="alert bad" role="alert"><strong>Please correct the following:</strong><ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
             @yield('content')
             <p class="footnote">Barangay SWM · Configurable Philippine barangay collection and monitoring platform.</p>
