@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('title', ($record?'Edit ':'Create ').(['households'=>'Household','inspections'=>'Inspection','weigh-ins'=>'MRF Weigh-in'][$module]))
 @section('content')
-<div class="heading"><div><span class="eyebrow">LINIS · ONLINE RECORD</span>
+<div class="heading"><div><span class="eyebrow">BARANGAY OPERATIONS</span>
 <h1>{{ $record?'Edit':'Record' }} {{ ['households'=>'household','inspections'=>'pickup inspection','weigh-ins'=>'MRF weigh-in'][$module] }}</h1>
-<p>All records are tied to a collection zone. Do not use actual citizen data in coursework demonstrations.</p></div>
+<p>Complete the required information and select the appropriate collection area.</p></div>
 <a class="btn outline" href="{{ route('linis.index',$module) }}">← Back to list</a></div>
 <div class="card" style="max-width:950px">
 <form method="POST" enctype="multipart/form-data" action="{{ $record?route('linis.update',[$module,$record->id]):route('linis.store',$module) }}">
@@ -49,6 +49,6 @@
 <span class="hint">Must be less than or equal to the received weight.</span></div>
 <div class="field full"><label for="note">Notes / disposition</label><textarea id="note" name="note" rows="4">{{ old('note',$record?->note) }}</textarea></div>
 @endif
-<div class="full formfoot"><p class="muted">Edits preserve a revision trail; archive keeps historical records.</p><button class="btn primary">{{ $record?'Save changes':'Save record' }}</button></div>
+<div class="full formfoot"><p class="muted">Please review the information before saving.</p><button class="btn primary">{{ $record?'Save changes':'Save record' }}</button></div>
 </div></form></div>
 @endsection
