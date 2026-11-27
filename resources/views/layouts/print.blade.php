@@ -1,5 +1,35 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>@yield('title') | Barangay SWM</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>@yield('title') | {{ config('app.name') }}</title>
 <style>
-*{box-sizing:border-box}body{font:12pt/1.5 Arial,sans-serif;color:#162f2c;max-width:960px;margin:25px auto;padding:20px}h1{font-size:22pt;margin-bottom:2px}h2{font-size:15pt;margin-top:30px;border-bottom:1px solid #9baea8;padding-bottom:5px}table{border-collapse:collapse;width:100%;font-size:10pt;margin:14px 0}th,td{border:1px solid #a9bab4;text-align:left;padding:8px;vertical-align:top}th{background:#eaf3ee}header{border-bottom:3px solid #126e58;margin-bottom:22px;padding-bottom:12px}.muted{color:#647770}.btn{padding:10px 16px;background:#176b55;color:white;border:0;border-radius:6px;font:inherit;cursor:pointer}.foot{font-size:10pt;margin-top:30px;color:#647770}.status{font-weight:700;color:#176b55}.break{page-break-before:always}@media print{body{max-width:none;margin:0;padding:0}.no-print{display:none!important}@page{margin:16mm}}
-</style></head><body><header><p style="margin:0;color:#177158;font-size:10pt;font-weight:700">BARANGAY SOLID WASTE COLLECTION &amp; MONITORING SYSTEM</p><h1>@yield('title')</h1><p class="muted">Printed {{now()->format('F j, Y · g:i A')}} · {{config('app.name')}}</p></header>
-<div class="no-print"><button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button> <a href="javascript:history.back()">Back</a></div>@yield('content')<p class="foot">Computer-generated report. Verify contents against approved barangay records before official use.</p></body></html>
+@page { margin: 18mm 14mm; }
+* { box-sizing: border-box; }
+body { font-family: "DejaVu Sans", sans-serif; font-size: 9pt; line-height: 1.38; color:#193b37; }
+header { border-bottom: 2px solid #16745e; padding: 0 0 12px; margin-bottom: 19px; }
+header .system { font-size: 8pt; text-transform: uppercase; color: #16745e; font-weight: bold; margin: 0 0 5px; }
+h1 { font-size: 17pt; line-height:1.2; margin: 0 0 6px; }
+h2 { font-size: 11pt; border-bottom: 1px solid #cbded6; margin: 18px 0 7px; padding-bottom: 6px; }
+p { margin: 6px 0 10px; overflow-wrap: break-word; }
+.muted, .foot { color:#5b716b; }
+table { width:100%; border-collapse:collapse; font-size:8pt; margin:10px 0 18px; table-layout:auto; }
+th, td { text-align:left; border:1px solid #d3ded9; padding:6px; vertical-align:top; overflow-wrap:break-word; }
+th { background:#e8f4ef; font-weight:bold; }
+thead { display:table-header-group; }
+tr { page-break-inside:avoid; }
+.status { font-weight:bold; color:#16745e; }
+.foot { font-size:7.5pt; border-top:1px solid #d3ded9; padding-top:9px; margin-top:22px; }
+.break { page-break-before:always; }
+</style>
+</head>
+<body>
+<header>
+<p class="system">Barangay Solid Waste Collection &amp; Monitoring System</p>
+<h1>@yield('title')</h1>
+<p class="muted">Generated {{now()->format('F j, Y - g:i A')}} · {{config('app.name')}}</p>
+</header>
+@yield('content')
+<p class="foot">Computer-generated PDF. Confirm all figures and records against approved barangay data before official use.</p>
+</body>
+</html>
