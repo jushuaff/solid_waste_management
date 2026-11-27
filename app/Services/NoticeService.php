@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone,Household,GarbageFeeCharge,FeePaymentSubmission};
+use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone,Household,GarbageFeeCharge,FeePaymentSubmission,HouseholdLinkRequest};
 
 class NoticeService
 {
@@ -224,6 +224,31 @@ class NoticeService
                 ' You can submit another receipt.';
         }
         $this->send($resident,$title,$message,['fee_charge_id'=>(string)$entry->charge_id]);
+    }
+
+    public function householdLinkSubmitted(HouseholdLinkRequest $entry):void
+    {
+        $links=['household_link_id'=>(string)$entry->id];
+        $roleIds=Role::whereIn('code',['superadmin','admin'])->get()->map(fn($r)=>(string)$r->id)->all();
+        foreach(User::whereIn('role_id',$roleIds)->where('is_active',true)->get() as $staff){
+            $this->send($staff,'Household link awaiting approval',
+                'A resident requested a household link. Review their identity and household details before granting access.',$links);
+        }
+        $resident=User::find($entry->resident_user_id);
+        if($resident && $resident->is_active && $resident->role_code==='resident'){
+            $this->send($resident,'Household link pending','Your request was submitted and awaits staff verification.',$links);
+        }
+    }
+
+    public function householdLinkReviewed(HouseholdLinkRequest $entry):void
+    {
+        $resident=User::find($entry->resident_user_id);
+        if(!$resident || !$resident->is_active || $resident->role_code!=='resident')return;
+        $approved=$entry->status==='approved';
+        $this->send($resident,$approved?'Household link approved':'Household link rejected',
+            $approved?'Your household is now linked. Check Garbage Fee Payments for issued bills.':
+                'Your request was rejected. Reason: '.($entry->review_note??'Contact the barangay office.').' You may submit a corrected request.',
+            ['household_link_id'=>(string)$entry->id]);
     }
 
     /** Record material segregation problems so responsible barangay staff can follow up. */
