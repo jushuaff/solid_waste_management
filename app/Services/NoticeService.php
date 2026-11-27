@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone,Household};
+use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException,Zone,Household,GarbageFeeCharge};
 
 class NoticeService
 {
@@ -169,6 +169,25 @@ class NoticeService
             $this->send($recipient,'Garbage fee payment instructions updated',
                 'The receiving-account information for your city has changed. Verify the account details before making your next payment.',
                 ['fee_city_id'=>$cityId]);
+        }
+    }
+
+    /** Confirmed outside-app payments also create oversight notices for staff. */
+    public function feePaymentRecorded(GarbageFeeCharge $charge,int $amount,string $method,
+        string $status,string $actorId):void
+    {
+        $roles=Role::whereIn('code',['superadmin','admin','coordinator'])->get()
+            ->map(fn($r)=>(string)$r->id)->all();
+        if(!$roles)return;
+        foreach(User::where('is_active',true)->whereIn('role_id',$roles)->get() as $person){
+            if((string)$person->id===$actorId)continue;
+            if($person->role_code==='coordinator'
+                && (string)$person->zone_id!==(string)$charge->zone_id)continue;
+            $this->send($person,'Household fee payment verified',
+                'A '.strtoupper($method).' payment of '.\App\Services\FeeLedger::money($amount).
+                ' was recorded for household '.($charge->household?->reference??'account').
+                ' ('.$charge->billing_month.'). Current status: '.$status.'.',
+                ['fee_charge_id'=>(string)$charge->id]);
         }
     }
 
