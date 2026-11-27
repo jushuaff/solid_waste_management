@@ -50,17 +50,15 @@ class FeePaymentSubmissionController extends Controller
         }
         $amount=FeeLedger::centavos($data['amount']);
         $reference=mb_strtoupper(trim($data['transaction_reference']));
+        if(mb_strlen($reference)<5)throw ValidationException::withMessages(['transaction_reference'=>'Enter the actual transfer reference.']);
         if($amount<1)throw ValidationException::withMessages(['amount'=>'Enter an amount greater than zero.']);
 
         try {
             $submission=Cache::lock('fee-transaction:'.$bill->id,15)->block(5,
                 function()use($request,$bill,$data,$receiving,$amount,$reference){
                     $current=GarbageFeeCharge::with('payments')->findOrFail($bill->id);
-                    if($amount>FeeLedger::balance($current)){
-                        throw ValidationException::withMessages(['amount'=>'The amount exceeds this household month’s unpaid balance. Refresh the bill and try again.']);
-                    }
-                    if(FeePaymentSubmission::where('charge_id',(string)$bill->id)->where('status','pending')->exists()){
-                        throw ValidationException::withMessages(['receipt'=>'An online payment submission is already waiting for verification for this month.']);
+                    if($amount>FeeLedger::availableForSubmission($current)){
+                        throw ValidationException::withMessages(['amount'=>'The amount exceeds the remaining balance available for new submissions after pending receipts.']);
                     }
                     if(FeePaymentSubmission::where('city_id',(string)$bill->city_id)
                         ->where('transaction_reference',$reference)
@@ -134,6 +132,7 @@ class FeePaymentSubmissionController extends Controller
         abort_unless(in_array($role,['superadmin','admin'],true)
             ||($role==='resident' && (string)$entry->resident_user_id===(string)$request->user()->id),404);
         $path=(string)$entry->receipt_path;
+        abort_if($entry->status==='verified' && !$path,410,'The verified proof was removed; the transaction reference is retained.');
         abort_unless($path && Storage::disk('local')->exists($path),404);
         $mime=(string)$entry->receipt_mime;
         $isImage=in_array($mime,['image/jpeg','image/png','image/webp'],true);
@@ -146,12 +145,34 @@ class FeePaymentSubmissionController extends Controller
         ]);
     }
 
+    private function purgeVerifiedReceipt(FeePaymentSubmission $entry):void
+    {
+        $path=(string)$entry->receipt_path;
+        if($entry->status!=='verified' || !$path)return;
+        try{
+            if(Storage::disk('local')->exists($path) && !Storage::disk('local')->delete($path)){
+                throw new \RuntimeException('Receipt deletion failed.');
+            }
+            $entry->receipt_path=null;
+            $entry->receipt_name=null;
+            $entry->receipt_mime=null;
+            $entry->receipt_size=null;
+            $entry->receipt_deleted_at=now();
+            $entry->save();
+        }catch(\Throwable $error){
+            Log::warning('Verified payment proof cleanup requires retry',[
+                'submission_id'=>(string)$entry->id,'error'=>$error->getMessage(),
+            ]);
+        }
+    }
+
     public function review(Request $request,string $submission,NoticeService $notices)
     {
         $this->staff($request);
         $data=$request->validate([
             'decision'=>['required','in:verify,reject'],
             'review_note'=>['nullable','string','max:500'],
+            'confirmed_reference'=>['required_if:decision,verify','nullable','string','min:5','max:100'],
         ]);
         if($data['decision']==='reject' && mb_strlen(trim($data['review_note']??''))<10){
             throw ValidationException::withMessages(['review_note'=>'Explain why the receipt was rejected (at least 10 characters).']);
@@ -160,8 +181,12 @@ class FeePaymentSubmissionController extends Controller
             throw ValidationException::withMessages(['funds_confirmed'=>'Confirm that the transferred funds reached the authorized receiving account before crediting the household.']);
         }
         $entry=FeePaymentSubmission::findOrFail($submission);
+        $reference=mb_strtoupper(trim($data['confirmed_reference']??''));
+        if($data['decision']==='verify' && mb_strlen($reference)<5){
+            throw ValidationException::withMessages(['confirmed_reference'=>'Enter the reference visible on the receipt and confirmed against the transaction record.']);
+        }
         try{
-            $result=Cache::lock('fee-transaction:'.$entry->charge_id,15)->block(5,function()use($entry,$request,$data){
+            $result=Cache::lock('fee-transaction:'.$entry->charge_id,15)->block(5,function()use($entry,$request,$data,$reference){
                 $current=FeePaymentSubmission::findOrFail($entry->id);
                 if($current->status!=='pending'){
                     throw ValidationException::withMessages(['decision'=>'This receipt has already been reviewed. Refresh the queue.']);
@@ -169,6 +194,13 @@ class FeePaymentSubmissionController extends Controller
                 $bill=GarbageFeeCharge::with(['payments','household'])->findOrFail($current->charge_id);
                 $record=null;
                 if($data['decision']==='verify'){
+                    if(!$current->receipt_path || !Storage::disk('local')->exists((string)$current->receipt_path)){
+                        throw ValidationException::withMessages(['decision'=>'The uploaded receipt is unavailable. Do not verify until proof is available.']);
+                    }
+                    if(FeePaymentSubmission::where('city_id',(string)$bill->city_id)->where('transaction_reference',$reference)
+                        ->where('status','!=','rejected')->get()->contains(fn($proof)=>(string)$proof->id!==(string)$current->id)){
+                        throw ValidationException::withMessages(['confirmed_reference'=>'This reference belongs to another active submission.']);
+                    }
                     $amount=(int)$current->amount_centavos;
                     // A saved payment can outlive a failed status-write. Resume the
                     // original confirmation rather than crediting a second payment.
@@ -178,7 +210,7 @@ class FeePaymentSubmissionController extends Controller
                             throw ValidationException::withMessages(['decision'=>'This month’s balance changed. The receipt cannot be confirmed at the submitted amount. Reconcile the payment before continuing.']);
                         }
                         if(GarbageFeePayment::where('city_id',(string)$bill->city_id)
-                            ->where('external_reference',(string)$current->transaction_reference)
+                            ->where('external_reference',$reference)
                             ->where('status','recorded')->exists()){
                             throw ValidationException::withMessages(['decision'=>'This transfer has already been recorded. Review the payment ledger.']);
                         }
@@ -188,7 +220,7 @@ class FeePaymentSubmissionController extends Controller
                             'amount_centavos'=>$amount,
                             'method'=>(string)$current->method,
                             'paid_on'=>$current->paid_on?->format('Y-m-d')??$current->getRawOriginal('paid_on'),
-                            'external_reference'=>(string)$current->transaction_reference,
+                            'external_reference'=>$reference,
                             'source_submission_id'=>(string)$current->id,
                             'note'=>'Resident-submitted transfer verified by authorized staff',
                             'status'=>'recorded',
@@ -196,8 +228,8 @@ class FeePaymentSubmissionController extends Controller
                             'recorded_by'=>(string)$request->user()->id,
                             'recorded_at'=>now(),
                         ]);
-                    }elseif($record->status!=='recorded'){
-                        throw ValidationException::withMessages(['decision'=>'The linked payment was reversed. Reconcile the entry before changing this submission.']);
+                    }elseif($record->status!=='recorded' || (string)$record->external_reference!==$reference){
+                        throw ValidationException::withMessages(['decision'=>'The linked payment was reversed or has a different reference. Reconcile the entry before changing this submission.']);
                     }
                 }
 
@@ -205,8 +237,14 @@ class FeePaymentSubmissionController extends Controller
                 $current->review_note=trim($data['review_note']??'')?:null;
                 $current->reviewed_by=(string)$request->user()->id;
                 $current->reviewed_at=now();
-                if($record)$current->payment_id=(string)$record->id;
+                if($record){
+                    $current->payment_id=(string)$record->id;
+                    $current->submitted_reference=$current->transaction_reference;
+                    $current->transaction_reference=$reference;
+                }
                 $current->save();
+                // Only purge evidence after both the confirmed ledger and review are saved.
+                if($record)$this->purgeVerifiedReceipt($current);
                 $bill->unsetRelation('payments');
                 return [$current,$bill,FeeLedger::balance($bill)];
             });
