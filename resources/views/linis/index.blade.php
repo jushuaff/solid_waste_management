@@ -19,12 +19,24 @@
 @endif
 <button class="btn outline">Filter</button><a class="btn" href="{{ route('linis.index',$module) }}">Reset</a>
 </form>
-<div style="overflow-x:auto"><table class="content-table"><thead><tr><th>Zone</th>
-@if($module==='households')<th>Reference</th><th>Location</th><th>Active</th>
-@elseif($module==='inspections')<th>Inspection date</th><th>Household</th><th>Segregation</th><th>Evidence</th>
-@else<th>Measurement date</th><th>Waste category</th><th>Weight (kg)</th><th>Diverted (kg)</th>
+<div style="overflow-x:auto"><table class="content-table"><thead><tr>
+<x-sortable-th key-name="zone" label="Zone" />
+@if($module==='households')
+<x-sortable-th key-name="reference" label="Reference" />
+<x-sortable-th key-name="location" label="Location" />
+<x-sortable-th key-name="active" label="Active" />
+@elseif($module==='inspections')
+<x-sortable-th key-name="inspection_date" label="Inspection date" />
+<x-sortable-th key-name="household" label="Household" />
+<x-sortable-th key-name="segregation" label="Segregation" />
+<x-sortable-th key-name="evidence" label="Evidence" />
+@else
+<x-sortable-th key-name="measurement_date" label="Measurement date" />
+<x-sortable-th key-name="category" label="Waste category" />
+<x-sortable-th key-name="weight" label="Weight (kg)" />
+<x-sortable-th key-name="diverted" label="Diverted (kg)" />
 @endif
-<th>Actions</th></tr></thead><tbody>
+<th scope="col">Actions</th></tr></thead><tbody>
 @forelse($records as $row)
 <tr><td>{{ $row->zone?->name??'—' }}</td>
 @if($module==='households')
