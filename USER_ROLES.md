@@ -175,6 +175,20 @@ Legend: **Manage** = read and create/update where the module permits; **View** =
 
 For each step, sign out before switching to the next account or use separate browser profiles. The seeded records are **fictional**, intended for development demonstrations only.
 
+## Phase 2 — Garbage fees and payment destinations
+
+The `Garbage Fee Payments` module is separate from RA 9003 compliance reporting. It is currently an **online payment-tracking module** for offline-confirmed Cash, GCash, bank and external card-terminal payments, not an online checkout.
+
+| Role | Garbage-fee access |
+| --- | --- |
+| Superadministrator | Create city rates/ordinance references, assign zones, generate monthly charges, configure receiving accounts/QR, record payments and reverse erroneous entries with reasons |
+| Barangay Administrator | Manage active GCash and bank receiving accounts with optional QR, generate charges from configured rates and record verified payments; cannot change city rates |
+| Coordinator | Review and record confirmed payments for assigned-zone households only |
+| Resident | View fees and payments for linked household only; see approved receiving account name/number and optional QR code for their city |
+| Crew / Eco-Aide | No access to household payment history or receiving-account settings |
+
+A staff member links residents through **Household Registry → Edit → Linked resident account**. Fee account changes create relevant resident notifications. Accounts are privately served, and payments are never auto-confirmed from a QR scan. See [full CR-01 setup and safeguards](docs/GARBAGE_FEES_PHASE2.md).
+
 ## 5. Notifications and reports
 
 - A **small dot on the bell and Notifications menu** indicates unread items. Opening an item marks it as read and routes the user to the relevant record or page; the dot disappears when no unread notices remain.
