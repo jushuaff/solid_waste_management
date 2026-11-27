@@ -33,12 +33,12 @@
     @if($residentHouseholdCount===0)
         <div class="fee-billing-help">
             <strong>Your resident account isn't linked to an active household yet.</strong>
-            <p>Ask the barangay administrator to link your account in Household Registry before submitting a garbage-fee payment.</p>
+            <p>You can view your area's payment instructions below. Ask the barangay administrator to link your account in Household Registry and issue a bill before transferring funds.</p>
         </div>
     @elseif($receivingAccounts->isEmpty())
         <div class="fee-billing-help">
             <strong>No approved online receiving account is available for your household.</strong>
-            <p>Please ask the barangay administrator to publish a verified bank or e-wallet account for your city. Do not transfer funds to an unverified destination.</p>
+            <p>{{ empty($cityIds) ? 'Ask the barangay administrator to assign your collection zone to its billing city.' : 'Ask the barangay administrator to publish a verified bank or e-wallet account for your city.' }} Do not transfer funds to an unverified destination.</p>
         </div>
     @elseif($residentOutstanding->isEmpty())
         <div class="fee-billing-help">
@@ -311,7 +311,7 @@
 @elseif(!$isStaff)
 <div class="card" style="margin-top:20px">
 <h2 class="paneltitle">Payment instructions</h2>
-<p class="muted">Online receiving-account details are not available for your linked household. Contact your barangay office for official payment instructions.</p>
+<p class="muted">{{ empty($cityIds) ? 'Your collection zone or household is not yet linked to a billing city. Ask the barangay office to confirm your zone and city assignment.' : 'No active receiving account has been published for your billing city. Contact your barangay office for official payment instructions.' }}</p>
 </div>
 @endif
 @endsection
