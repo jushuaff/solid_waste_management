@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\{Notice,Report,Schedule,ScheduleException,GarbageFeeCharge,Household};
+use App\Models\{Notice,Report,Schedule,ScheduleException,GarbageFeeCharge,Household,HouseholdLinkRequest};
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -32,6 +32,15 @@ class NotificationController extends Controller
         $this->markRead($notice);
 
         // Only local named routes are used; no untrusted redirect URLs.
+        if($notice->household_link_id){
+            $entry=HouseholdLinkRequest::find($notice->household_link_id);
+            $role=$request->user()->role_code;
+            if($entry && (in_array($role,['admin','superadmin'],true)
+                || ($role==='resident' && (string)$entry->resident_user_id===(string)$request->user()->id))){
+                return redirect()->route('fees.household-links.index',['status'=>$entry->status,'highlight'=>(string)$entry->id]);
+            }
+            return redirect()->route('notifications.index')->with('status','This household link request is no longer available.');
+        }
         if($notice->fee_submission_id){
             if(in_array($request->user()->role_code,['superadmin','admin'],true)){
                 return redirect()->route('fees.submissions.index',['status'=>'pending']);
