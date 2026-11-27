@@ -127,7 +127,16 @@ class LinisController extends Controller
         $households=Household::where('is_active',true)->whereNull('archived_at')->get()->filter(
            fn($h)=>$zones->contains(fn($z)=>(string)$z->id===(string)$h->zone_id)
         );
-        return view('linis.form',compact('module','record','zones','categories','households'));
+        $residents=collect();
+        if($module==='households' && in_array($request->user()->role_code,['superadmin','admin','coordinator'],true)){
+            $zoneIds=$zones->map(fn($z)=>(string)$z->id)->all();
+            $residentRole=\App\Models\Role::where('code','resident')->first();
+            if($residentRole && $zoneIds){
+                $residents=User::where('role_id',(string)$residentRole->id)->whereIn('zone_id',$zoneIds)
+                    ->where('is_active',true)->orderBy('name')->get();
+            }
+        }
+        return view('linis.form',compact('module','record','zones','categories','households','residents'));
     }
 
     private function validated(Request $request,string $module):array
@@ -137,6 +146,7 @@ class LinisController extends Controller
             'households'=>[
                 'reference'=>'required|string|max:100',
                 'location_description'=>'required|string|max:250',
+                'resident_user_id'=>'nullable|string',
                 'is_active'=>'sometimes|boolean'],
             'inspections'=>[
                 'household_id'=>'nullable|string',
@@ -156,6 +166,15 @@ class LinisController extends Controller
         $this->allowedZone($request,(string)$data['zone_id']);
         if($module==='households'){
             $data['is_active']=$request->boolean('is_active');
+            $residentId=(string)($data['resident_user_id']??'');
+            if($residentId!==''){
+                $resident=User::find($residentId);
+                if(!$resident || !$resident->is_active || $resident->role_code!=='resident'
+                    || (string)$resident->zone_id!==(string)$data['zone_id']){
+                    throw ValidationException::withMessages(['resident_user_id'=>'Choose an active resident assigned to the same collection zone.']);
+                }
+            }
+            $data['resident_user_id']=$residentId!==''?$residentId:null;
         } elseif($module==='inspections'){
             if(!empty($data['household_id'])){
                 $h=Household::find($data['household_id']);
