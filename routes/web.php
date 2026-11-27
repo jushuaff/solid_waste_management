@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\{AuthController,PasswordResetController,ProfileController,DashboardController,
-    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController,IncidentMediaController,FeeSettingsController,GarbageFeeController,FeeReceivingAccountController};
+    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController,IncidentMediaController,FeeSettingsController,GarbageFeeController,FeeReceivingAccountController,FeeProviderController,GarbageFeeHistoryController};
 use Illuminate\Support\Facades\Route;
 Route::get('/',fn()=>redirect()->route(auth()->check()?'dashboard':'login'));
 Route::middleware('guest')->group(function(){
@@ -20,6 +20,8 @@ Route::middleware(['auth','active'])->group(function(){
     // Phase 2: role-scoped garbage-fee tracking and externally confirmed payments.
     Route::get('/garbage-fees',[GarbageFeeController::class,'index'])
         ->middleware('role:superadmin,admin,coordinator,resident')->name('fees.index');
+    Route::get('/garbage-fees/history',[GarbageFeeHistoryController::class,'index'])
+        ->middleware('role:superadmin,admin,coordinator,resident')->name('fees.history.index');
     Route::post('/garbage-fees/generate',[GarbageFeeController::class,'generate'])
         ->middleware(['role:superadmin,admin','throttle:8,1'])->name('fees.generate');
     Route::post('/garbage-fees/charges/{charge}/payments',[GarbageFeeController::class,'recordPayment'])
@@ -42,6 +44,10 @@ Route::middleware(['auth','active'])->group(function(){
         ->middleware(['role:superadmin,admin','throttle:10,1'])->name('fees.accounts.store');
     Route::put('/garbage-fees/accounts/{account}',[FeeReceivingAccountController::class,'update'])
         ->middleware(['role:superadmin,admin','throttle:10,1'])->name('fees.accounts.update');
+    Route::post('/garbage-fees/providers',[FeeProviderController::class,'store'])
+        ->middleware(['role:superadmin','throttle:10,1'])->name('fees.providers.store');
+    Route::patch('/garbage-fees/providers/{provider}/toggle',[FeeProviderController::class,'toggle'])
+        ->middleware('role:superadmin')->name('fees.providers.toggle');
     Route::get('/garbage-fees/accounts/{account}/qr',[FeeReceivingAccountController::class,'qr'])
         ->middleware('role:superadmin,admin,resident')->name('fees.accounts.qr');
 
