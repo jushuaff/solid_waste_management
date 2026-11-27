@@ -5,7 +5,9 @@
 @if($resource==='schedules')<div class="notice">Support different pickup methods, recurring weekday schedules, time windows and resident instructions. Only published schedules appear to residents.</div>@endif
 <div class="card"><form method="GET" class="filterbar management-filters"><input class="form-control" name="q" value="{{request('q')}}" placeholder="Search name or publication status" aria-label="Search records"><button class="btn outline" type="submit">Filter</button><a href="{{route('management.index',$resource)}}" class="btn">Reset</a></form>
 <div style="overflow:auto"><table class="content-table"><thead><tr>
-@foreach(array_slice($spec['fields'],0,4,true) as $key=>$field)<th>{{$field['label']}}</th>@endforeach<th>Actions</th></tr></thead><tbody>
+@foreach(array_slice($spec['fields'],0,4,true) as $key=>$field)
+<x-sortable-th :key-name="$key" :label="$field['label']" />
+@endforeach<th scope="col">Actions</th></tr></thead><tbody>
 @forelse($rows as $row)
 <tr>@foreach(array_slice($spec['fields'],0,4,true) as $key=>$field)
 <td>
