@@ -2,7 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{
-    FeeCity, FeeRate, Zone, Household, GarbageFeeCharge, GarbageFeePayment, Notice, User, Role
+    FeeCity, FeeRate, FeeReceivingAccount, Zone, Household, GarbageFeeCharge, GarbageFeePayment, Notice, User
 };
 use App\Services\FeeLedger;
 use Carbon\Carbon;
@@ -120,7 +120,24 @@ class GarbageFeeController extends Controller
         if($role==='coordinator'){
             $zones=$zones->filter(fn($z)=>(string)$z->id===(string)$request->user()->zone_id);
         }
-        return view('fees.index',compact('charges','month','role','cities','zones','status','totalDue','totalPaid'));
+        $receivingAccounts=collect();
+        if($role==='resident'){
+            $householdIds=Household::where('resident_user_id',(string)$request->user()->id)
+                ->pluck('id')->map(fn($id)=>(string)$id)->all();
+            $zoneIds=Household::whereIn('_id',$householdIds)
+                ->pluck('zone_id')->map(fn($id)=>(string)$id)->all();
+            $cityIds=Zone::whereIn('_id',$zoneIds)->pluck('fee_city_id')
+                ->filter()->map(fn($id)=>(string)$id)->all();
+            $pastCityIds=GarbageFeeCharge::whereIn('household_id',$householdIds)
+                ->pluck('city_id')->filter()->map(fn($id)=>(string)$id)->all();
+            $cityIds=array_values(array_unique(array_merge($cityIds,$pastCityIds)));
+            if($cityIds){
+                $receivingAccounts=FeeReceivingAccount::with('city')
+                    ->where('is_active',true)->whereIn('city_id',$cityIds)
+                    ->orderBy('provider')->get();
+            }
+        }
+        return view('fees.index',compact('charges','month','role','cities','zones','status','totalDue','totalPaid','receivingAccounts'));
     }
 
     /** Create one immutable charge per active household and month. Re-running skips existing charges. */
