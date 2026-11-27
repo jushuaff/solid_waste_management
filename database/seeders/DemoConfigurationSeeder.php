@@ -120,11 +120,17 @@ class DemoConfigurationSeeder extends Seeder
                 'replacement_date' => null,
                 'replacement_start_time' => '09:30',
                 'replacement_end_time' => '11:00',
-                'reason' => 'Fictional collection truck maintenance notice for demo purposes.',
+                'reason' => 'Collection time adjusted due to vehicle maintenance.',
                 'publication_status' => 'published',
                 'created_by' => null,
             ]
         );
+
+        $exception=ScheduleException::where('demo_key','LINIS-DEMO-EXCEPTION-PINE-REGULAR')->first();
+        if ($exception && $exception->reason==='Fictional collection truck maintenance notice for demo purposes.') {
+            $exception->reason='Collection time adjusted due to vehicle maintenance.';
+            $exception->save();
+        }
 
         $rules = [
             ['all-sorting',null,null,'Sort waste before collection',
