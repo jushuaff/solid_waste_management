@@ -184,7 +184,7 @@
 <label class="field">Payment status
 <select class="form-control" name="status">
 <option value="">All statuses</option>
-@foreach(['Unpaid','Partial','Paid'] as $value)<option value="{{$value}}" @selected($status===$value)>{{$value}}</option>@endforeach
+@foreach(['Unpaid','Partial','Paid','Pending Verification'] as $value)<option value="{{$value}}" @selected($status===$value)>{{$value}}</option>@endforeach
 </select></label>
 <button class="btn outline" type="submit">Apply</button>
 <a class="btn" href="{{route('fees.index')}}">Reset</a>
@@ -219,12 +219,18 @@
 <td>{{\App\Services\FeeLedger::money((int)$bill->amount_centavos)}}</td>
 <td>{{\App\Services\FeeLedger::money($row['paid'])}}</td>
 <td><strong>{{\App\Services\FeeLedger::money($row['balance'])}}</strong></td>
-<td><span class="badge {{$row['status']==='Unpaid'?'amber':($row['status']==='Partial'?'grey':'')}}">{{$row['status']}}</span></td>
+<td>
+<span class="badge {{$row['status']==='Unpaid'?'amber':($row['status']==='Partial'?'grey':'')}}">{{$row['status']}}</span>
+@if($row['pending'])
+<span class="badge amber fee-pending-badge" title="Receipt submitted; no funds credited yet">Pending Verification</span>
+@endif
+</td>
 <td><details class="fee-details" @if(request('highlight')===(string)$bill->id) open @endif>
 <summary>View</summary>
 <div class="fee-details-content">
 <p><strong>Billing month:</strong> {{$bill->billing_month}}</p>
 <p><strong>Monthly fee:</strong> {{\App\Services\FeeLedger::money((int)$bill->amount_centavos)}} · <strong>Balance:</strong> {{\App\Services\FeeLedger::money($row['balance'])}}</p>
+@if($row['pending'])<p class="fee-pending-note">An online payment receipt has been submitted and is awaiting administrator verification. The remaining balance will only change after confirmation.</p>@endif
 @if($bill->payments->isNotEmpty())
 <h4>Recorded payment history</h4>
 <div style="overflow-x:auto"><table class="content-table">
