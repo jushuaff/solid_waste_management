@@ -17,7 +17,8 @@ class DemoUsersSeeder extends Seeder
 
         $zones = [];
         foreach (['Demo Purok Pine'=>'pine','Demo Purok Ridge'=>'ridge','Demo Purok Creek'=>'creek'] as $name=>$key) {
-            $zones[$name] = Zone::where('demo_key','LINIS-DEMO-ZONE-'.$key)->firstOrFail();
+            $zones[$name] = Zone::where('demo_key','LINIS-DEMO-ZONE-'.$key)->first()
+                ?? Zone::where('name',$name)->firstOrFail();
         }
 
         // name, email, role, assigned zone (null means barangay-wide authority).
