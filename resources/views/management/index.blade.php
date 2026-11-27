@@ -3,7 +3,7 @@
 @section('content')
 <div class="heading"><div><span class="eyebrow">BARANGAY CONFIGURATION</span><h1>{{$spec['title']}}</h1><p>Create, update, filter and manage records.</p></div><a href="{{route('management.create',$resource)}}" class="btn primary">＋ Add new</a></div>
 @if($resource==='schedules')<div class="notice">Support different pickup methods, recurring weekday schedules, time windows and resident instructions. Only published schedules appear to residents.</div>@endif
-<div class="card"><form method="GET" class="filterbar"><input class="form-control" name="q" value="{{request('q')}}" placeholder="Search name or publication status" aria-label="Search records"><button class="btn outline">Filter</button><a href="{{route('management.index',$resource)}}" class="btn">Reset</a></form>
+<div class="card"><form method="GET" class="filterbar management-filters"><input class="form-control" name="q" value="{{request('q')}}" placeholder="Search name or publication status" aria-label="Search records"><button class="btn outline" type="submit">Filter</button><a href="{{route('management.index',$resource)}}" class="btn">Reset</a></form>
 <div style="overflow:auto"><table class="content-table"><thead><tr>
 @foreach(array_slice($spec['fields'],0,4,true) as $key=>$field)<th>{{$field['label']}}</th>@endforeach<th>Actions</th></tr></thead><tbody>
 @forelse($rows as $row)
