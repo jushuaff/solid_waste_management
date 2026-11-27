@@ -152,7 +152,7 @@ class DemoOperationsSeeder extends Seeder
             $report = Report::firstOrCreate(
                 ['demo_key'=>'LINIS-DEMO-CASE-'.$key],
                 [
-                    'tracking_id'=>'SWM-DEMO-'.strtoupper(str_replace('_','-',$key)),
+                    'tracking_id'=>'SWM-'.now()->format('Y').'-'.strtoupper(substr(sha1('LINIS-'. $key),0,10)),
                     'resident_id'=>(string)$resident->id,
                     'zone_id'=>(string)$zones[$zoneKey]->id,
                     'category_id'=>(string)$categories['residual']->id,
@@ -170,6 +170,9 @@ class DemoOperationsSeeder extends Seeder
                 ]
             );
 
+            if (str_starts_with((string)$report->tracking_id,'SWM-DEMO-')) {
+                $report->tracking_id='SWM-'.now()->format('Y').'-'.strtoupper(substr(sha1('LINIS-'.$key),0,10));
+            }
             if (str_starts_with((string)$report->location,'FICTIONAL ')) {
                 $report->location=$zones[$zoneKey]->name.' collection area';
             }
