@@ -32,7 +32,7 @@
                 <a class="navitem {{ request()->is('linis/households*')?'active':'' }}" href="{{ route('linis.index','households') }}"><span class="ico">▦</span> Household Registry</a>
             @endif
             @if(auth()->user()->role_code === 'resident')
-                <a class="navitem" href="{{ route('reports.create') }}"><span class="ico">＋</span> Report Missed Pickup</a>
+                <a class="navitem" href="{{ route('reports.create') }}"><span class="ico">＋</span> Report an Incident</a>
             @endif
             <a class="navitem" href="{{ route('notifications.index') }}"><span class="ico">◷</span> Notifications</a>
             @if(auth()->user()->canManage())
@@ -65,7 +65,7 @@
             @if(session('warning'))<div class="alert bad" role="alert">{{ session('warning') }}</div>@endif
             @if($errors->any())<div class="alert bad" role="alert"><strong>Please correct the following:</strong><ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
             @yield('content')
-            <p class="footnote">Barangay SWM · Configurable Philippine barangay collection and monitoring platform.</p>
+            <p class="footnote">Barangay Solid Waste Collection &amp; Monitoring</p>
         </div>
     </main>
 </div>
