@@ -34,8 +34,7 @@
              autocomplete="new-password" required>
     </div>
     <div class="actions">
-      <button type="submit" class="btn primary"
-        onclick="return confirm('Change the password for {{$user->name}}?')">Update password</button>
+      <button type="submit" class="btn primary">Update password</button>
       <a class="btn outline" href="{{route('management.index','users')}}">Cancel</a>
     </div>
   </form>
