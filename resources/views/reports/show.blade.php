@@ -13,6 +13,37 @@
 <dl class="info-list"><dt>Concern type</dt><dd>{{ ($report->incident_type??'missed_collection')==='illegal_dumping'?'Illegal dumping / improper disposal':'Missed collection' }}</dd><dt>Tracking ID</dt><dd>{{$report->tracking_id}}</dd><dt>Status</dt><dd>{{$report->current_status}}</dd><dt>Collection zone</dt><dd>{{$report->zone?->name}}</dd><dt>Waste category</dt><dd>{{$report->category?->local_label}}</dd><dt>Incident date</dt><dd>{{$report->incident_date}}</dd><dt>Location / landmark</dt><dd>{{$report->location}}</dd><dt>Concern</dt><dd>{{$report->description}}</dd>
 @if($report->latitude!==null && $report->longitude!==null)<dt>Location pin</dt><dd>{{ $report->latitude }}, {{ $report->longitude }} · <a class="greenText" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat={{ urlencode((string)$report->latitude) }}&mlon={{ urlencode((string)$report->longitude) }}#map=16/{{ urlencode((string)$report->latitude) }}/{{ urlencode((string)$report->longitude) }}">View on map</a></dd>@endif
 @if($report->photo_path)<dt>Photo evidence</dt><dd><a class="greenText" href="{{route('reports.evidence',$report)}}">Download attached photo</a></dd>@endif</dl></article>
+@if($media->isNotEmpty())
+<article class="card">
+<h2 class="paneltitle">Photos and videos ({{ $media->count() }})</h2>
+<p class="muted">Supporting files provided with this incident.</p>
+<div class="incident-media-grid">
+@foreach($media as $item)
+@php($url=route('reports.media.show',['report'=>$report,'media'=>$item]))
+<div class="incident-media-card">
+@if($item->kind==='image')
+<a href="{{ $url }}" target="_blank" rel="noopener" aria-label="View {{ $item->original_name }}">
+<img src="{{ $url }}" alt="Incident evidence photo" loading="lazy">
+</a>
+@else
+<video controls playsinline preload="metadata" src="{{ $url }}">Your browser cannot play this video.</video>
+@endif
+<span class="media-name" title="{{ $item->original_name }}">{{ $item->original_name }}</span>
+<div class="media-meta">{{ number_format((int)$item->size_bytes/1024/1024,2) }} MB</div>
+<div class="incident-media-actions">
+<a class="btn small outline" href="{{route('reports.media.show',['report'=>$report,'media'=>$item,'download'=>1])}}">Download</a>
+@if(auth()->user()->role_code==='resident' && (string)auth()->id()===(string)$report->resident_id && $report->current_status==='Under Review')
+<form method="POST" action="{{route('reports.media.destroy',['report'=>$report,'media'=>$item])}}" onsubmit="return confirm('Remove this attachment?')">
+@csrf @method('DELETE')
+<button type="submit" class="btn small danger">Remove</button>
+</form>
+@endif
+</div>
+</div>
+@endforeach
+</div>
+</article>
+@endif
 <article class="card"><h2 class="paneltitle">Status history</h2>
 <div class="timeline">@foreach($history as $event)<div class="event"><strong>{{$event->to_status}}</strong><time>{{ $event->changed_at?->format('M d, Y · h:i A') ?? $event->changed_at }} · {{$event->actor_type==='system'?'System':'Authorized user'}}</time><p>{{$event->reason}}</p></div>@endforeach</div>
 </article>
