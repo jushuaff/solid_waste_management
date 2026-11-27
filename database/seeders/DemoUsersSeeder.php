@@ -16,8 +16,8 @@ class DemoUsersSeeder extends Seeder
         $this->assertDemoSeedingAllowed();
 
         $zones = [];
-        foreach (['Demo Purok Pine','Demo Purok Ridge','Demo Purok Creek'] as $name) {
-            $zones[$name] = Zone::where('name', $name)->firstOrFail();
+        foreach (['Demo Purok Pine'=>'pine','Demo Purok Ridge'=>'ridge','Demo Purok Creek'=>'creek'] as $name=>$key) {
+            $zones[$name] = Zone::where('demo_key','LINIS-DEMO-ZONE-'.$key)->firstOrFail();
         }
 
         // name, email, role, assigned zone (null means barangay-wide authority).
@@ -54,7 +54,7 @@ class DemoUsersSeeder extends Seeder
             $account = User::firstOrCreate(
                 ['email' => $email],
                 [
-                    'name' => $name,
+                    'name' => preg_replace('/^Demo /','',$name),
                     'password' => Hash::make('password1234'),
                     'role_id' => (string) $roles[$role]->id,
                     'zone_id' => $zone ? (string) $zones[$zone]->id : null,
@@ -69,14 +69,18 @@ class DemoUsersSeeder extends Seeder
 
             // Old fixture migration: do NOT change a real account sharing the email,
             // or a demo account whose password was deliberately changed by the user.
-            $isExpectedDemo = (string) $account->name === $name
-                && (string) $account->role_id === (string) $roles[$role]->id
-                && (string) ($account->zone_id ?? '') === ($zone ? (string) $zones[$zone]->id : '');
-            if ($isExpectedDemo && Hash::check('1234', (string) $account->password)) {
-                $account->password = Hash::make('password1234');
-                $account->save();
+            $displayName=preg_replace('/^Demo /','',$name);
+            $isExpectedDemo = in_array((string)$account->name,[$name,$displayName],true)
+                && (string)$account->role_id === (string)$roles[$role]->id
+                && (string)($account->zone_id ?? '') === ($zone ? (string)$zones[$zone]->id : '');
+            if ($isExpectedDemo && Hash::check('1234', (string)$account->password)) {
+                $account->password=Hash::make('password1234');
                 $upgradedCount++;
             }
+            if ($isExpectedDemo && (string)$account->name===$name) {
+                $account->name=$displayName;
+            }
+            if ($account->isDirty()) $account->save();
         }
         $this->command?->warn('DEMO ONLY: '.count($users).' fictional identities, '.$newCount.' newly created and '.$upgradedCount.' upgraded from the old 1234 password to password1234. Other existing accounts were untouched.');
     }
