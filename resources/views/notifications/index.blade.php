@@ -11,37 +11,29 @@
 <div class="card">
     <div class="notifications-list">
         @forelse($notices as $n)
-            <div class="notification-item {{ !$n->is_read?'unread':'' }}">
-                <div class="notification-item-content">
-                    <span class="roundico" aria-hidden="true">◷</span>
-                    <div class="listmain">
-                        <div class="row-between">
-                            <b>{{ $n->title }}</b>
-                            @if(!$n->is_read)
-                                <span class="notification-dot notification-indicator" aria-label="Unread"></span>
-                            @endif
-                        </div>
-                        <small>{{ $n->message }}</small>
-                        <small>{{ $n->created_at?->format('M j, Y · g:i A') }}</small>
-                        <div class="notification-actions" style="margin-top:12px">
-                            <form method="POST" action="{{route('notifications.open',$n->id)}}">
-                                @csrf
-                                <button type="submit" class="btn small {{ !$n->is_read?'primary':'outline' }}">
-                                    {{ $n->report_id || $n->schedule_id || $n->rule_id || $n->exception_id || $n->zone_id?'View details':'Open notification' }}
-                                </button>
-                            </form>
-                            @if(!$n->is_read)
-                                <form method="POST" action="{{route('notifications.read',$n->id)}}">
-                                    @csrf
-                                    <button type="submit" class="btn small outline">Mark as read</button>
-                                </form>
-                            @else
-                                <span class="badge grey">Read</span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <form method="POST" action="{{ route('notifications.open',$n->id) }}"
+                  class="notification-item {{ !$n->is_read?'unread':'' }}">
+                @csrf
+                <button type="submit" class="notification-open-trigger"
+                        aria-label="Open notification: {{ $n->title }}{{ !$n->is_read?' (unread)':'' }}">
+                    <span class="notification-item-content">
+                        <span class="roundico" aria-hidden="true">◷</span>
+                        <span class="listmain">
+                            <span class="row-between notification-title">
+                                <strong>{{ $n->title }}</strong>
+                                @if(!$n->is_read)
+                                    <span class="notification-dot notification-indicator" title="Unread" aria-label="Unread"></span>
+                                @else
+                                    <span class="badge grey">Read</span>
+                                @endif
+                            </span>
+                            <span class="notification-message">{{ $n->message }}</span>
+                            <span class="notification-date">{{ $n->created_at?->format('M j, Y · g:i A') }}</span>
+                            <span class="notification-view-label">{{ $n->report_id || $n->schedule_id || $n->rule_id || $n->exception_id || $n->zone_id?'View details':'Open notification' }} <span aria-hidden="true">›</span></span>
+                        </span>
+                    </span>
+                </button>
+            </form>
         @empty
             <p class="muted">No notifications yet.</p>
         @endforelse
