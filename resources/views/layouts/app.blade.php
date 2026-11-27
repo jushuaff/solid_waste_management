@@ -20,6 +20,12 @@
             @if(auth()->user()->role_code!=='eco_aide')
             <a class="navitem {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}"><span class="ico">◎</span> Reports &amp; Tracking</a>
             @endif
+            <a class="navitem {{ request()->routeIs('notifications.*')?'active':'' }}" href="{{ route('notifications.index') }}">
+                <span class="ico">◷</span> Notifications
+                @if(($unreadNotificationCount??0)>0)
+                <span class="notification-dot sidebar-unread-dot" title="Unread notifications" aria-label="Unread notifications"></span>
+                @endif
+            </a>
             @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','eco_aide','crew'],true))
                 <div class="navHead">LINIS · ECOLOGICAL MONITORING</div>
                 @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','eco_aide'],true))
@@ -59,12 +65,6 @@
                 <span class="ico">⚙</span> City Garbage Fee Rates
             </a>
             @endif
-            <a class="navitem {{ request()->routeIs('notifications.*')?'active':'' }}" href="{{ route('notifications.index') }}">
-                <span class="ico">◷</span> Notifications
-                @if(($unreadNotificationCount??0)>0)
-                <span class="notification-dot sidebar-unread-dot" title="Unread notifications" aria-label="Unread notifications"></span>
-                @endif
-            </a>
             @if(auth()->user()->canManage())
                 <div class="navHead">BARANGAY OPERATIONS</div>
                 @foreach(['schedules'=>'Manage Schedules','exceptions'=>'Schedule Changes','rules'=>'Publish Local Rules','points'=>'Collection Points'] as $key=>$label)
