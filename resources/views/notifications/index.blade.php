@@ -5,7 +5,7 @@
     <div>
         <span class="eyebrow">RECENT UPDATES</span>
         <h1>Notifications</h1>
-        <p>New reports, assigned work, collection schedules and barangay announcements.</p>
+        <p>Reports, collection schedules, household linking, payment reviews and barangay announcements.</p>
     </div>
 </div>
 <div class="card">
@@ -29,7 +29,7 @@
                             </span>
                             <span class="notification-message">{{ $n->message }}</span>
                             <span class="notification-date">{{ $n->created_at?->format('M j, Y · g:i A') }}</span>
-                            <span class="notification-view-label">{{ $n->fee_charge_id || $n->report_id || $n->schedule_id || $n->rule_id || $n->exception_id || $n->zone_id?'View details':'Open notification' }} <span aria-hidden="true">›</span></span>
+                            <span class="notification-view-label">{{ $n->household_link_id || $n->fee_submission_id || $n->fee_city_id || $n->fee_charge_id || $n->report_id || $n->schedule_id || $n->rule_id || $n->exception_id || $n->zone_id?'View details':'Open notification' }} <span aria-hidden="true">›</span></span>
                         </span>
                     </span>
                 </button>
