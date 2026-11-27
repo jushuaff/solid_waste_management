@@ -1992,3 +1992,113 @@ a.btn, a.btn:hover, a.btn:focus-visible,
     .fee-dialog-actions > .btn { flex: 1 1 auto; }
     .fee-dialog-actions > .btn.primary { margin-left: 0; }
 }
+
+
+/* Resident online fee payment and admin proof review — Phase 2. */
+.fee-online-submit {
+    margin-bottom: 18px;
+    padding: clamp(18px, 2.2vw, 27px);
+}
+.fee-online-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+.fee-online-heading .eyebrow { display: block; margin-bottom: 7px; }
+.fee-online-heading h2 { margin: 0 0 7px; font-size: 20px; }
+.fee-online-heading p { margin: 0; font-size: 12px; line-height: 1.5; }
+.fee-payment-steps {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 15px;
+    border: 1px solid #d8e8df;
+    border-radius: 10px;
+    background: #f5faf7;
+    font-size: 11px;
+    color: #42695b;
+    margin-bottom: 20px;
+}
+.fee-payment-steps span { display: flex; align-items: center; gap: 6px; }
+.fee-payment-steps strong {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    color: #fff;
+    background: #137b60;
+    font-size: 11px;
+}
+.fee-online-form { display: grid; gap: 17px; }
+.fee-online-fields {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 15px 20px;
+}
+.fee-online-form .field { min-width: 0; gap: 8px; }
+.fee-online-form .field > label {
+    font-size: 12px;
+    font-weight: 750;
+    color: #214b3e;
+}
+.fee-online-form .form-control {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    border-radius: 9px;
+}
+.fee-online-form .hint { display: block; font-size: 11px; line-height: 1.4; color: #647d73; }
+.fee-online-form .hint a { color: #11755a; text-decoration: none; font-weight: 750; }
+.fee-online-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 15px;
+    border-top: 1px solid #dfeae3;
+}
+.fee-online-action p { margin: 0; max-width: 530px; font-size: 11px; line-height: 1.5; }
+.fee-online-action > .btn { flex: 0 0 auto; }
+.fee-billing-help {
+    padding: 18px 20px;
+    border: 1px solid #d3e5da;
+    border-radius: 11px;
+    background: #f6fbf8;
+    color: #24513f;
+}
+.fee-billing-help strong { font-size: 13px; }
+.fee-billing-help p { margin: 8px 0 0; line-height: 1.6; font-size: 12px; }
+.fee-billing-help a { text-decoration: none; font-weight: 750; color: #0e7356; }
+.fee-online-submissions {
+    margin-top: 22px;
+    padding-top: 19px;
+    border-top: 1px solid #e4ede7;
+}
+.fee-online-submissions h3 { margin: 0 0 13px; font-size: 14px; color: #204e3c; }
+.fee-review-scroll { overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.fee-review-table { min-width: 900px; }
+.fee-resident-proof-table { min-width: 630px; }
+.fee-resident-proof-table td,
+.fee-review-table td { vertical-align: middle; font-size: 12px; }
+.fee-resident-proof-table a { color: #176f54; font-weight: 750; text-decoration: none; white-space: nowrap; }
+.fee-review-small { display: block; margin-top: 6px; font-size: 11px; color: #6e8278; line-height: 1.4; }
+.fee-review-details { min-width: 110px; }
+.fee-review-details > summary { cursor: pointer; color: #0c7358; font-weight: 750; }
+.fee-review-panel { padding: 13px 0 10px; width: min(410px,70vw); line-height: 1.5; }
+.fee-review-panel p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.fee-review-actions { display: grid; gap: 12px; margin-top: 15px; }
+.fee-review-actions .field { min-width: 0; gap: 8px; }
+.fee-review-actions .form-control { width: 100%; }
+.fee-review-actions > .btn { justify-self: start; }
+@media (max-width: 760px) {
+    .fee-online-fields { grid-template-columns: minmax(0,1fr); }
+    .fee-online-action { flex-wrap: wrap; }
+    .fee-online-action > .btn { width: 100%; }
+    .fee-review-panel { width: min(360px,86vw); }
+}
