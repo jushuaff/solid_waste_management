@@ -147,6 +147,31 @@
                                 @else
                                     <span class="muted">Unavailable</span>
                                 @endif
+                                @if($proof->status==='pending')
+                                    <details class="fee-review-details">
+                                        <summary>Edit pending submission</summary>
+                                        <form method="POST" action="{{route('fees.submissions.update',$proof->id)}}" enctype="multipart/form-data" class="stack">
+                                            @csrf
+                                            @method('PUT')
+                                            <label class="field">Amount transferred (PHP)
+                                                <input class="form-control" name="amount" type="number" min="0.01" step="0.01" value="{{number_format($proof->amount_centavos/100,2,'.','')}}" required>
+                                            </label>
+                                            <label class="field">Transfer date
+                                                <input class="form-control" name="paid_on" type="date" value="{{$proof->paid_on?->format('Y-m-d')}}" max="{{now()->toDateString()}}" required>
+                                            </label>
+                                            <label class="field">Transaction reference
+                                                <input class="form-control" name="transaction_reference" value="{{$proof->transaction_reference}}" minlength="5" maxlength="100" required>
+                                            </label>
+                                            <label class="field">Replace receipt (optional)
+                                                <input class="form-control" name="receipt" type="file" accept="image/jpeg,image/png,image/webp,application/pdf">
+                                            </label>
+                                            <label class="field">Additional details
+                                                <textarea class="form-control" name="note" maxlength="400" rows="2">{{$proof->note}}</textarea>
+                                            </label>
+                                            <button class="btn primary small" type="submit">Save pending submission</button>
+                                        </form>
+                                    </details>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
