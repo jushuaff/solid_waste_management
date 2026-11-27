@@ -1,7 +1,7 @@
 <?php
 namespace Database\Seeders;
 
-use App\Models\{Role, User, Zone};
+use App\Models\{Role, User, Zone, Household};
 use Database\Seeders\Concerns\AllowsDemoSeeding;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -82,6 +82,19 @@ class DemoUsersSeeder extends Seeder
                 $account->name=$displayName;
             }
             if ($account->isDirty()) $account->save();
+        }
+        // Connect six fictional resident accounts to their fictional households.
+        // Never replace a real household's manually assigned resident.
+        foreach (['pine','ridge','creek'] as $zoneKey) {
+            for ($number=1; $number<=2; $number++) {
+                $user=User::where('email','resident.'.$zoneKey.$number.'@linis.test')->first();
+                $household=Household::where('demo_key','LINIS-DEMO-HOUSEHOLD-'.$zoneKey.'-'.$number)->first();
+                if($user && $household && !$household->resident_user_id
+                    && (string)$user->zone_id===(string)$household->zone_id){
+                    $household->resident_user_id=(string)$user->id;
+                    $household->save();
+                }
+            }
         }
         $this->command?->warn('DEMO ONLY: '.count($users).' fictional identities, '.$newCount.' newly created and '.$upgradedCount.' upgraded from the old 1234 password to password1234. Other existing accounts were untouched.');
     }
