@@ -10,6 +10,12 @@ class DashboardController extends Controller
         $q=Report::query();
         if($role==='resident')$q->where('resident_id',(string)$user->id);
         if($role==='crew')$q->where('assigned_crew_id',(string)$user->id);
+        if($role==='coordinator'){
+            abort_unless($user->zone_id,403,'A collection zone must be assigned to this account.');
+            $q->where('zone_id',(string)$user->zone_id);
+        }
+        // Eco-aides work with inspection and MRF records, not private incident cases.
+        if($role==='eco_aide')$q->where('resident_id','__no_incident_access__');
         $counts=['under_review'=>(clone $q)->where('current_status','Under Review')->count(),
           'active'=>(clone $q)->whereIn('current_status',['Verified','Assigned','In Progress','Exception'])->count(),
           'resolved'=>(clone $q)->where('current_status','Resolved')->count(),
