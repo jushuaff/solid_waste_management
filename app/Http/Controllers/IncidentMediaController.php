@@ -2,7 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Report,IncidentMedia};
-use App\Services\IncidentAccess;
+use App\Services\{IncidentAccess,NoticeService};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,7 +35,7 @@ class IncidentMediaController extends Controller
     }
 
     /** Residents may withdraw their own attachments only before staff action. */
-    public function destroy(Request $request,string $report,string $media,IncidentAccess $access)
+    public function destroy(Request $request,string $report,string $media,IncidentAccess $access,NoticeService $notices)
     {
         $case=Report::findOrFail($report);
         $access->authorize($request,$case);
@@ -50,6 +50,7 @@ class IncidentMediaController extends Controller
         $item->removed_by=(string)$request->user()->id;
         $item->save();
         Storage::disk('local')->delete($item->storage_path);
+        $notices->reportEdited($case,'Incident evidence removed');
 
         return back()->with('status','Attachment removed from your incident report.');
     }
