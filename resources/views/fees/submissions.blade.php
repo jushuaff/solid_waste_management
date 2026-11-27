@@ -56,6 +56,7 @@
                                 <p><strong>External payment date:</strong> {{$submission->paid_on?->format('M j, Y')}}</p>
                                 <p><strong>Receiving institution:</strong> {{$submission->provider}}</p>
                                 <p><strong>Receiving account name:</strong> {{$submission->account_name}}</p>
+                                <p><strong>Receiving account number:</strong> {{$submission->receivingAccount?->account_number??'Account details were updated; consult the original collection record.'}}</p>
                                 @if($submission->note)<p><strong>Resident's note:</strong> {{$submission->note}}</p>@endif
                                 <a class="btn outline small" target="_blank" rel="noopener noreferrer"
                                     href="{{route('fees.submissions.receipt',$submission->id)}}">
