@@ -7,7 +7,8 @@
     "php": "^8.3",
     "laravel/framework": "^13.0",
     "laravel/tinker": "^3.0",
-    "mongodb/laravel-mongodb": "^5.12.1"
+    "mongodb/laravel-mongodb": "^5.12.1",
+    "barryvdh/laravel-dompdf": "^3.1.2"
   },
   "require-dev": {
     "fakerphp/faker": "^1.24",
