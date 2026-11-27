@@ -124,9 +124,9 @@ class GarbageFeeController extends Controller
         if($role==='resident'){
             $householdIds=Household::where('resident_user_id',(string)$request->user()->id)
                 ->pluck('id')->map(fn($id)=>(string)$id)->all();
-            $zoneIds=Household::whereIn('_id',$householdIds)
+            $zoneIds=Household::where('resident_user_id',(string)$request->user()->id)
                 ->pluck('zone_id')->map(fn($id)=>(string)$id)->all();
-            $cityIds=Zone::whereIn('_id',$zoneIds)->pluck('fee_city_id')
+            $cityIds=Zone::whereIn('id',$zoneIds)->pluck('fee_city_id')
                 ->filter()->map(fn($id)=>(string)$id)->all();
             $pastCityIds=GarbageFeeCharge::whereIn('household_id',$householdIds)
                 ->pluck('city_id')->filter()->map(fn($id)=>(string)$id)->all();
