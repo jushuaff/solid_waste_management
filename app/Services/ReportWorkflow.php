@@ -11,7 +11,7 @@ class ReportWorkflow
         if(config('swm.mongo_transactions')) return DB::connection('mongodb')->transaction($callback);
         return $callback(); // Development standalone MongoDB; set transactions=true in a replica set for production.
     }
-    public function transition(Report $report,string $next,string $reason,?User $actor=null): void
+    public function transition(Report $report,string $next,string $reason,?User $actor=null,bool $notify=true): void
     {
         $prior=(string)$report->current_status;
         if(!\App\Support\ReportStateMachine::canTransition($prior,$next))throw ValidationException::withMessages(['status'=>'Invalid transition: '.$prior.' → '.$next]);
@@ -22,6 +22,6 @@ class ReportWorkflow
           'actor_type'=>$actor?'user':'system','from_status'=>$prior,'to_status'=>$next,
           'reason'=>$reason,'changed_at'=>now()]);
         $report->current_status=$next;
-        $this->notices->report($report,$next);
+        if($notify)$this->notices->report($report,$next);
     }
 }
