@@ -19,7 +19,7 @@
 <select name="city_id" required class="form-control"><option value="">Choose city</option>
 @foreach($cities as $city)<option value="{{$city->id}}" @selected(old('city_id')===(string)$city->id)>{{$city->name}} · {{$city->region}}</option>@endforeach
 </select></div>
-@include('fees.partials.provider-select',['selected'=>old('provider',''),'attributes'=>new \Illuminate\View\ComponentAttributeBag(['id'=>'new-fee-provider'])])
+@include('fees.partials.provider-select',['selected'=>old('provider',''),'providerInputId'=>'new-fee-provider'])
 <div class="field"><label>Registered account name *</label><input required maxlength="160" class="form-control" name="account_name" value="{{old('account_name')}}"></div>
 <div class="field"><label>Receiving account number *</label><input required maxlength="60" class="form-control" name="account_number" value="{{old('account_number')}}" autocomplete="off"></div>
 <div class="field"><label>Optional QR code (JPG, PNG, WebP · 2 MB max)</label><input type="file" name="qr_code" class="form-control" accept="image/jpeg,image/png,image/webp"></div>
@@ -76,7 +76,7 @@
 <div class="field"><label>City *</label><select class="form-control" required name="city_id">
 @foreach($cities as $city)<option value="{{$city->id}}" @selected((string)$city->id===(string)$account->city_id)>{{$city->name}}</option>@endforeach
 </select></div>
-@include('fees.partials.provider-select',['selected'=>$account->provider,'attributes'=>new \Illuminate\View\ComponentAttributeBag(['id'=>'fee-provider-'.$account->id])])
+@include('fees.partials.provider-select',['selected'=>$account->provider,'providerInputId'=>'fee-provider-'.$account->id])
 <div class="field"><label>Account holder *</label><input class="form-control" name="account_name" required maxlength="160" value="{{$account->account_name}}"></div>
 <div class="field full"><label>Account number *</label><input class="form-control" name="account_number" required maxlength="60" value="{{$account->account_number}}"></div>
 <div class="field full"><label>Instructions</label><textarea class="form-control" name="instructions" rows="2" maxlength="500">{{$account->instructions}}</textarea></div>
