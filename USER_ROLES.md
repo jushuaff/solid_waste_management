@@ -175,6 +175,12 @@ Legend: **Manage** = read and create/update where the module permits; **View** =
 
 For each step, sign out before switching to the next account or use separate browser profiles. The seeded records are **fictional**, intended for development demonstrations only.
 
+### Resident online payment submissions
+
+Residents can now submit **proof of an external GCash/bank/e-wallet transfer** for their own billed household month. They enter amount, date and transaction reference, choose the approved receiving account and upload JPG/PNG/WebP/PDF evidence (up to 5 MB). The submission is **Pending Verification** and their ledger balance remains unpaid until reviewed.
+
+**Barangay admins/superadmins** have a dedicated **Verify Online Payments** queue. Only these roles may verify funds received and credit the household balance, or reject the proof with a reason. They alone may record a separate cash payment received at the office; residents cannot mark themselves paid. Coordinators may review zone-scoped payment history but cannot credit payments or approve receipts. See [full pending-payment workflow](docs/GARBAGE_FEE_NOTIFICATIONS_TRACKER.md).
+
 ### Payment tracking and reminders
 
 **Payment History** (staff) and **My Payment Tracker** (residents) show Paid, Partial and Unpaid billing months. Barangay admins and superadmins may filter household arrears across billing months; coordinators are limited to their assigned zone. Residents see only their linked household's bills. Only issued monthly charges count as unpaid.
