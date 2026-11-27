@@ -3,8 +3,8 @@
 @section('content')
 @php($titles=['households'=>'Household Registry','inspections'=>'Eco-Aide Pickup Inspections','weigh-ins'=>'MRF Waste Weigh-ins'])
 @php($mayWrite=($module!=='households' || in_array(auth()->user()->role_code,['superadmin','admin','coordinator'],true)))
-<div class="heading"><div><span class="eyebrow">LINIS · ONLINE OPERATIONS</span><h1>{{ $titles[$module] }}</h1>
-<p>Data are stored in MongoDB. Updates are audited and deletion archives operational records.</p></div>
+<div class="heading"><div><span class="eyebrow">BARANGAY RECORDS</span><h1>{{ $titles[$module] }}</h1>
+<p>{{ ['households'=>'View and maintain household information by collection area.','inspections'=>'Review inspection results and record waste segregation findings.','weigh-ins'=>'Record collected waste weights and recovered materials.'][$module] }}</p></div>
 @if($mayWrite)<a class="btn primary" href="{{ route('linis.create',$module) }}">＋ New record</a>@endif</div>
 <div class="card">
 <form class="filterbar" method="GET">
