@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 use App\Models\{Report,Zone,WasteCategory,Schedule,StatusHistory,User,Assignment};
-use App\Services\ReportWorkflow;
+use App\Services\{ReportWorkflow,ReportPdf};
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +12,11 @@ class ReportController extends Controller
     {
         $q=Report::query();$role=$request->user()->role_code;$id=(string)$request->user()->id;
         if(!$request->boolean('include_archived') || !in_array($role,['superadmin','admin'],true))$q->whereNull('archived_at');
+        if($role==='eco_aide')abort(403,'Eco-aides cannot access resident case records.');
+        if($role==='coordinator'){
+            abort_unless($request->user()->zone_id,403,'A coordinator zone must be assigned.');
+            $q->where('zone_id',(string)$request->user()->zone_id);
+        }
         if($role==='resident')$q->where('resident_id',$id);
         if($role==='crew')$q->where('assigned_crew_id',$id);
         if($request->filled('zone_id')&&$role!=='resident')$q->where('zone_id',$request->query('zone_id'));
@@ -23,6 +28,8 @@ class ReportController extends Controller
     private function authorizeReport(Request $request, Report $report): void
     {
         $role=$request->user()->role_code;$id=(string)$request->user()->id;
+        if($role==='eco_aide')abort(403,'Eco-aides cannot access resident case records.');
+        if($role==='coordinator')abort_unless($request->user()->zone_id && (string)$report->zone_id===(string)$request->user()->zone_id,404);
         if($role==='resident')abort_unless((string)$report->resident_id===$id,404);
         if($role==='crew')abort_unless((string)$report->assigned_crew_id===$id,404);
     }
@@ -123,11 +130,12 @@ class ReportController extends Controller
         $report->archived_at=now();$report->archived_by=(string)$request->user()->id;$report->save();
         return redirect()->route('reports.index')->with('status','Report archived (not destroyed).');
     }
-    public function print(Request $request,string $report)
+    public function print(Request $request,string $report,ReportPdf $pdf)
     {
         $report=Report::findOrFail($report);$this->authorizeReport($request,$report);
         $history=StatusHistory::where('report_id',(string)$report->id)->orderBy('changed_at')->get();
-        return view('print.report',compact('report','history'));
+        $filename='case-'.preg_replace('/[^A-Za-z0-9_-]/','-',(string)$report->tracking_id).'.pdf';
+        return $pdf->respond('print.report',compact('report','history'),$filename,$request->boolean('download'));
     }
     public function evidence(Request $request,string $report)
     {
@@ -135,11 +143,11 @@ class ReportController extends Controller
         abort_unless($report->photo_path&&Storage::disk('local')->exists($report->photo_path),404);
         return Storage::disk('local')->download($report->photo_path);
     }
-    public function printableSummary(Request $request)
+    public function printableSummary(Request $request,ReportPdf $pdf)
     {
         abort_unless($request->user()->canManage(),403);
         $records=$this->scope($request)->orderBy('incident_date','desc')->limit(2000)->get();
         $total=$records->count();$byStatus=$records->groupBy('current_status')->map->count();
-        return view('print.summary',compact('records','total','byStatus'));
+        return $pdf->respond('print.summary',compact('records','total','byStatus'),'collection-report-summary-'.now()->format('Ymd-His').'.pdf',$request->boolean('download'),'landscape');
     }
 }
