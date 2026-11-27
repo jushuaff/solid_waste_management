@@ -116,97 +116,172 @@
 @endif
 
 <section class="card fee-account-list" aria-labelledby="fee-accounts-heading">
-    <div class="fee-account-section-header">
+    <div class="fee-account-section-header fee-account-table-heading">
         <div>
             <h2 class="paneltitle" id="fee-accounts-heading">Configured receiving accounts</h2>
-            <p class="muted">Select Edit account to update details, replace a QR code or change publication status.</p>
+            <p class="muted">View approved payment destinations and edit an account without leaving the list.</p>
         </div>
         <span class="fee-account-count">{{ $accounts->count() }} {{ $accounts->count()===1?'account':'accounts' }}</span>
     </div>
 
-    <div class="fee-receiving-grid">
-        @forelse($accounts as $account)
-            <article class="fee-receiving-card">
-                <div class="fee-receiving-card-header">
-                    <div>
-                        <span class="eyebrow">{{in_array($account->method,['gcash','wallet'],true)?'E-WALLET':'BANK TRANSFER'}}</span>
-                        <h3>{{$account->provider}}</h3>
-                        <p>{{$account->city?->name??'City unavailable'}}</p>
-                    </div>
-                    <span class="badge {{$account->is_active?'':'grey'}}">{{$account->is_active?'Active':'Inactive'}}</span>
-                </div>
-                <div class="fee-receiving-summary">
-                    <div><span>Account name</span><strong>{{$account->account_name}}</strong></div>
-                    <div><span>Account number</span><strong>{{$account->account_number}}</strong></div>
-                </div>
+    <form method="GET" action="{{route('fees.accounts.index')}}" class="fee-account-search">
+        <label for="fee-account-search-field" class="fee-sr-only">Search receiving accounts</label>
+        <input id="fee-account-search-field" type="search" class="form-control" name="q"
+            value="{{is_string(request('q'))?request('q'):''}}" maxlength="100"
+            placeholder="Search city, provider, account name or number">
+        <button type="submit" class="btn outline">Search</button>
+        @if(request()->filled('q'))
+            <a class="btn" href="{{route('fees.accounts.index')}}">Clear</a>
+        @endif
+    </form>
 
-                <details class="fee-account-edit-panel">
-                    <summary>Edit account <span aria-hidden="true">⌄</span></summary>
-                    <form method="POST" action="{{route('fees.accounts.update',$account->id)}}"
-                        enctype="multipart/form-data" class="fee-account-form">
-                        @csrf @method('PUT')
-                        <div class="fee-account-fields">
-                            <div class="field">
-                                <label for="fee-city-{{$account->id}}">City / municipality <span class="req">*</span></label>
-                                <select id="fee-city-{{$account->id}}" class="form-control" required name="city_id">
-                                    @foreach($cities as $city)
-                                        <option value="{{$city->id}}" @selected((string)$city->id===(string)$account->city_id)>{{$city->name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @include('fees.partials.provider-select',['selected'=>$account->provider,'providerInputId'=>'fee-provider-'.$account->id])
-                            <div class="field">
-                                <label for="fee-holder-{{$account->id}}">Registered account name <span class="req">*</span></label>
-                                <input id="fee-holder-{{$account->id}}" class="form-control" name="account_name"
-                                    required maxlength="160" value="{{$account->account_name}}">
-                            </div>
-                            <div class="field">
-                                <label for="fee-number-{{$account->id}}">Receiving account number <span class="req">*</span></label>
-                                <input id="fee-number-{{$account->id}}" class="form-control" name="account_number"
-                                    required maxlength="60" value="{{$account->account_number}}">
-                            </div>
-                        </div>
-                        <div class="fee-account-extras">
-                            <div class="field">
-                                <label for="fee-instructions-{{$account->id}}">Payment instructions <span class="fee-optional">Optional</span></label>
-                                <textarea id="fee-instructions-{{$account->id}}" class="form-control fee-account-instructions"
-                                    name="instructions" rows="4" maxlength="500">{{$account->instructions}}</textarea>
-                            </div>
-                            <div class="field">
-                                <label for="fee-qr-{{$account->id}}">Payment QR code <span class="fee-optional">Optional</span></label>
-                                <div class="fee-qr-upload" data-fee-qr-upload>
-                                    @if($account->qr_path)
-                                        <img class="fee-qr-existing" src="{{route('fees.accounts.qr',$account->id)}}"
-                                            alt="Current QR code for {{$account->provider}}">
-                                        <label class="checkline">
-                                            <input type="checkbox" name="remove_qr" value="1"> Remove current QR
-                                        </label>
-                                    @else
-                                        <div class="fee-qr-upload-label">No QR code uploaded</div>
-                                    @endif
-                                    <p>Upload a replacement · JPG, PNG or WebP · 2 MB max</p>
-                                    <input id="fee-qr-{{$account->id}}" class="form-control" type="file" name="qr_code"
-                                        accept="image/jpeg,image/png,image/webp">
-                                    <img class="fee-qr-selected-preview" data-fee-qr-preview alt="New QR code preview" hidden>
-                                    <small class="fee-qr-file-label" data-fee-qr-filename aria-live="polite"></small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="fee-account-actions">
-                            <label class="checkline fee-account-publish">
-                                <input type="checkbox" name="is_active" value="1" @checked($account->is_active)>
-                                <span><strong>Active · show to residents</strong><small>Turn off to hide these payment instructions.</small></span>
-                            </label>
-                            <button class="btn primary" type="submit">Save changes</button>
-                        </div>
-                    </form>
-                </details>
-            </article>
-        @empty
-            <p class="muted">No receiving accounts configured. Add a receiving account above to begin.</p>
-        @endforelse
+    <div class="fee-receiving-table-scroll" role="region" tabindex="0"
+        aria-label="Receiving accounts table; scroll horizontally for more columns on smaller screens">
+        <table class="content-table fee-receiving-table">
+            <thead>
+                <tr>
+                    <x-sortable-th key-name="city" label="City / Municipality" />
+                    <x-sortable-th key-name="provider" label="Provider" />
+                    <x-sortable-th key-name="type" label="Type" />
+                    <x-sortable-th key-name="account_name" label="Account holder" />
+                    <x-sortable-th key-name="account_number" label="Account number" />
+                    <x-sortable-th key-name="qr" label="QR code" />
+                    <x-sortable-th key-name="status" label="Status" />
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($accounts as $account)
+                    <tr>
+                        <td><strong>{{$account->city?->name??'City unavailable'}}</strong></td>
+                        <td class="fee-table-provider"><strong>{{$account->provider}}</strong></td>
+                        <td>
+                            <span class="fee-type-label">{{in_array($account->method,['gcash','wallet'],true)?'E-wallet':'Bank transfer'}}</span>
+                        </td>
+                        <td>{{$account->account_name}}</td>
+                        <td><span class="fee-table-number">{{$account->account_number}}</span></td>
+                        <td>
+                            @if($account->qr_path)
+                                <a class="fee-qr-table-link" href="{{route('fees.accounts.qr',$account->id)}}"
+                                    target="_blank" rel="noopener noreferrer" aria-label="View QR code for {{$account->provider}}">
+                                    View QR
+                                </a>
+                            @else
+                                <span class="muted">Not added</span>
+                            @endif
+                        </td>
+                        <td>
+                            <span class="badge {{$account->is_active?'':'grey'}}">{{$account->is_active?'Active':'Inactive'}}</span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn small outline fee-account-edit-button"
+                                data-fee-dialog-open="{{$account->id}}"
+                                aria-haspopup="dialog" aria-controls="fee-account-dialog-{{$account->id}}">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="fee-table-empty">
+                            {{ request()->filled('q')?'No receiving accounts match your search.':'No receiving accounts configured yet. Add an account using the form above.' }}
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </section>
+
+@foreach($accounts as $account)
+    @php($editOld=(string)old('_edit_account')===(string)$account->id)
+    <dialog id="fee-account-dialog-{{$account->id}}" class="fee-account-dialog"
+        aria-labelledby="fee-account-dialog-title-{{$account->id}}">
+        <div class="fee-dialog-heading">
+            <div>
+                <span class="eyebrow">RECEIVING ACCOUNT</span>
+                <h2 id="fee-account-dialog-title-{{$account->id}}">Edit receiving account</h2>
+                <p>{{$account->provider}} · {{$account->city?->name??'City unavailable'}}</p>
+            </div>
+            <button type="button" class="fee-dialog-close" data-fee-dialog-close
+                aria-label="Close edit account window">×</button>
+        </div>
+
+        <form method="POST" action="{{route('fees.accounts.update',$account->id)}}"
+            enctype="multipart/form-data" class="fee-account-form fee-account-dialog-form">
+            @csrf @method('PUT')
+            <input type="hidden" name="_edit_account" value="{{$account->id}}">
+            <div class="fee-account-fields">
+                <div class="field">
+                    <label for="fee-city-{{$account->id}}">City / municipality <span class="req">*</span></label>
+                    <select id="fee-city-{{$account->id}}" class="form-control" required name="city_id">
+                        @foreach($cities as $city)
+                            <option value="{{$city->id}}"
+                                @selected((string)($editOld?old('city_id'):$account->city_id)===(string)$city->id)>
+                                {{$city->name}}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @include('fees.partials.provider-select',[
+                    'selected'=>$editOld?old('provider',$account->provider):$account->provider,
+                    'providerInputId'=>'fee-provider-'.$account->id
+                ])
+                <div class="field">
+                    <label for="fee-holder-{{$account->id}}">Registered account name <span class="req">*</span></label>
+                    <input id="fee-holder-{{$account->id}}" class="form-control" name="account_name"
+                        required maxlength="160" value="{{$editOld?old('account_name',$account->account_name):$account->account_name}}">
+                </div>
+                <div class="field">
+                    <label for="fee-number-{{$account->id}}">Receiving account number <span class="req">*</span></label>
+                    <input id="fee-number-{{$account->id}}" class="form-control" name="account_number"
+                        required maxlength="60" autocomplete="off"
+                        value="{{$editOld?old('account_number',$account->account_number):$account->account_number}}">
+                </div>
+            </div>
+
+            <div class="fee-account-extras">
+                <div class="field">
+                    <label for="fee-instructions-{{$account->id}}">Payment instructions <span class="fee-optional">Optional</span></label>
+                    <textarea id="fee-instructions-{{$account->id}}" class="form-control fee-account-instructions"
+                        name="instructions" rows="4" maxlength="500">{{$editOld?old('instructions',$account->instructions):$account->instructions}}</textarea>
+                </div>
+                <div class="field">
+                    <label for="fee-qr-{{$account->id}}">Payment QR code <span class="fee-optional">Optional</span></label>
+                    <div class="fee-qr-upload" data-fee-qr-upload>
+                        @if($account->qr_path)
+                            <img class="fee-qr-existing" src="{{route('fees.accounts.qr',$account->id)}}"
+                                alt="Current QR code for {{$account->provider}}">
+                            <label class="checkline">
+                                <input type="checkbox" name="remove_qr" value="1"> Remove current QR
+                            </label>
+                        @else
+                            <div class="fee-qr-upload-label">No QR code uploaded</div>
+                        @endif
+                        <p>Upload a replacement · JPG, PNG or WebP · 2 MB max</p>
+                        <input id="fee-qr-{{$account->id}}" class="form-control" type="file" name="qr_code"
+                            accept="image/jpeg,image/png,image/webp">
+                        <img class="fee-qr-selected-preview" data-fee-qr-preview alt="New QR code preview" hidden>
+                        <small class="fee-qr-file-label" data-fee-qr-filename aria-live="polite"></small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fee-account-actions fee-dialog-actions">
+                <label class="checkline fee-account-publish">
+                    <input type="checkbox" name="is_active" value="1"
+                        @checked($editOld?old('is_active','0')==='1':$account->is_active)>
+                    <span>
+                        <strong>Active · show payment instructions to residents</strong>
+                        <small>Deactivate to hide this receiving account from residents.</small>
+                    </span>
+                </label>
+                <button type="button" class="btn outline" data-fee-dialog-close>Cancel</button>
+                <button class="btn primary" type="submit">Save changes</button>
+            </div>
+        </form>
+    </dialog>
+@endforeach
 @endsection
 @section('scripts')
 <script src="{{asset('assets/fee-account-form.js')}}" defer></script>
