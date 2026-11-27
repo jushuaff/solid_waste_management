@@ -1412,3 +1412,21 @@ a.btn, a.btn:hover, a.btn:focus-visible,
     .fee-receiving-grid { grid-template-columns:1fr; }
     .fee-details-content { width:min(92vw,600px); }
 }
+
+
+/* Payment history and provider selection adjustments. */
+.fee-provider-admin > summary { cursor:pointer; display:inline-block; list-style:none; }
+.fee-provider-admin > summary::-webkit-details-marker { display:none; }
+.fee-provider-admin[open] > summary { margin-bottom:14px; }
+.fee-provider-admin .filterbar { align-items:flex-end; }
+.fee-provider-tags { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+.fee-provider-tag {
+    display:flex; align-items:center; flex-wrap:wrap; gap:9px;
+    border:1px solid #dae8df; border-radius:10px; padding:9px 12px;
+    background:#f9fcfa; font-size:12px;
+}
+.fee-provider-tag button { min-height:34px; }
+.fee-receiving-grid .fee-receiving-card .hint { font-size:11px; }
+@media(max-width:690px) {
+    .fee-provider-tag { width:100%; justify-content:space-between; }
+}
