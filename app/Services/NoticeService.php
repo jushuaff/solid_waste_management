@@ -1,13 +1,59 @@
 <?php
 namespace App\Services;
-use App\Models\{Notice,User,Report,Schedule,LocalRule,ScheduleException};
+use App\Models\{Notice,User,Role,Report,Schedule,LocalRule,ScheduleException};
 class NoticeService
 {
     public function report(Report $report, string $status): void
     {
-        Notice::create(['recipient_user_id'=>(string)$report->resident_id,'report_id'=>(string)$report->id,
-            'title'=>'Report '.$status,'message'=>'Your report '.$report->tracking_id.' is now '.$status.'.',
-            'is_read'=>false,'created_at'=>now()]);
+        // Notify the resident whenever an incident status changes.
+        Notice::create([
+            'recipient_user_id'=>(string)$report->resident_id,
+            'report_id'=>(string)$report->id,
+            'title'=>'Report '.$status,
+            'message'=>'Your report '.$report->tracking_id.' is now '.$status.'.',
+            'is_read'=>false,'created_at'=>now(),
+        ]);
+
+        // New/exception/resolved incidents require attention from designated office staff.
+        if(in_array($status,['Under Review','Exception','Resolved'],true)){
+            $codes=['superadmin','admin','coordinator'];
+            $roleIds=Role::whereIn('code',$codes)->get()
+                ->map(fn($role)=>(string)$role->id)->all();
+            if($roleIds){
+                $staff=User::where('is_active',true)->whereIn('role_id',$roleIds)->get();
+                foreach($staff as $recipient){
+                    if($recipient->role_code==='coordinator'
+                        && (!$recipient->zone_id || (string)$recipient->zone_id!==(string)$report->zone_id)){
+                        continue;
+                    }
+                    Notice::create([
+                        'recipient_user_id'=>(string)$recipient->id,
+                        'report_id'=>(string)$report->id,
+                        'title'=>match($status){
+                            'Under Review'=>'New incident report',
+                            'Exception'=>'Collection issue needs attention',
+                            default=>'Collection report resolved',
+                        },
+                        'message'=>'Report '.$report->tracking_id.' is now '.$status.'.',
+                        'is_read'=>false,'created_at'=>now(),
+                    ]);
+                }
+            }
+        }
+
+        // The assigned crew receives a direct task notification.
+        if($status==='Assigned' && $report->assigned_crew_id){
+            $crew=User::find($report->assigned_crew_id);
+            if($crew && $crew->is_active && $crew->role_code==='crew'){
+                Notice::create([
+                    'recipient_user_id'=>(string)$crew->id,
+                    'report_id'=>(string)$report->id,
+                    'title'=>'New collection assignment',
+                    'message'=>'You have been assigned incident '.$report->tracking_id.'.',
+                    'is_read'=>false,'created_at'=>now(),
+                ]);
+            }
+        }
     }
     public function publication(object $item, string $kind): void
     {
