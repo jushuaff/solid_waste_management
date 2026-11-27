@@ -1,7 +1,7 @@
 <?php
 namespace App\Console\Commands;
 
-use App\Models\{GarbageFeeCharge,Household,Notice,User};
+use App\Models\{GarbageFeeCharge,FeePaymentSubmission,Household,Notice,User};
 use App\Services\FeeLedger;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -37,11 +37,16 @@ class GarbageFeeReminders extends Command
         $stage=$day>=20?'20':($day>=10?'10':null);
         $current=0;$overdue=0;
 
+        // Residents who already uploaded proof must receive a review decision,
+        // not repeated unpaid reminders while administrators verify the transfer.
+        $pendingIds=FeePaymentSubmission::where('status','pending')
+            ->pluck('charge_id')->map(fn($id)=>(string)$id)->unique()->all();
+
         if($stage){
             $charges=GarbageFeeCharge::with(['household','payments'])
                 ->where('billing_month',$month)->get();
             foreach($charges as $charge){
-                if(FeeLedger::balance($charge)<=0)continue;
+                if(FeeLedger::balance($charge)<=0 || in_array((string)$charge->id,$pendingIds,true))continue;
                 $resident=$this->resident($charge);
                 if(!$resident)continue;
                 $key='fee:current:'.$month.':'.$stage.':'.(string)$charge->id.':'.(string)$resident->id;
@@ -64,7 +69,7 @@ class GarbageFeeReminders extends Command
         $byHousehold=[];
         foreach($prior as $charge){
             $balance=FeeLedger::balance($charge);
-            if($balance<=0)continue;
+            if($balance<=0 || in_array((string)$charge->id,$pendingIds,true))continue;
             $resident=$this->resident($charge);
             if(!$resident)continue;
             $key=(string)$charge->household_id.'|'.(string)$resident->id;
