@@ -43,7 +43,7 @@
     @elseif($residentOutstanding->isEmpty())
         <div class="fee-billing-help">
             <strong>No eligible unpaid billing month is available for receipt submission.</strong>
-            <p>This may mean your bills are already paid, a transfer receipt is waiting for verification, or your barangay has not generated a charge for the selected household. See <a href="{{route('fees.history.index')}}">My Payment Tracker</a> for all billed months.</p>
+            <p>Your bills may be paid, fully covered by pending receipts, or not yet issued. See <a href="{{route('fees.history.index')}}">My Payment Tracker</a> for all billed months.</p>
         </div>
     @else
         <div class="fee-payment-steps">
@@ -61,14 +61,14 @@
                         <option value="">Choose unpaid month</option>
                         @foreach($residentOutstanding as $billOption)
                             <option value="{{$billOption->id}}" data-fee-city="{{$billOption->city_id}}"
-                                data-fee-balance="{{\App\Services\FeeLedger::balance($billOption)}}"
+                                data-fee-balance="{{\App\Services\FeeLedger::availableForSubmission($billOption)}}"
                                 @selected(old('charge_id')===(string)$billOption->id)>
                                 {{$billOption->household?->reference??'Household'}} · {{\Carbon\Carbon::parse($billOption->billing_month.'-01')->format('F Y')}}
-                                · Balance {{\App\Services\FeeLedger::money(\App\Services\FeeLedger::balance($billOption))}}
+                                · Available to submit {{\App\Services\FeeLedger::money(\App\Services\FeeLedger::availableForSubmission($billOption))}}
                             </option>
                         @endforeach
                     </select>
-                    <small class="hint">Only months with an issued, outstanding charge can be submitted.</small>
+                    <small class="hint">You can submit multiple distinct partial payments for a month, up to the amount not already covered by pending receipts.</small>
                 </div>
                 <div class="field">
                     <label for="fee-submit-account">Receiving bank / e-wallet *</label>
@@ -113,7 +113,7 @@
                     placeholder="Any helpful details for verifying your transfer">{{old('note')}}</textarea>
             </div>
             <div class="fee-online-action">
-                <p class="muted">Submitting a receipt does not mark a bill as paid. Staff must confirm the money was received.</p>
+                <p class="muted">Each receipt remains pending until staff confirm the transfer and its reference. Once verified, the record is locked and the uploaded file is removed.</p>
                 <button class="btn primary" type="submit">Submit receipt for verification</button>
             </div>
         </form>
@@ -130,7 +130,7 @@
                         <tr>
                             <td>{{$proof->charge?->billing_month??'—'}}</td>
                             <td>{{\App\Services\FeeLedger::money((int)$proof->amount_centavos)}}</td>
-                            <td>{{$proof->submission_code}}</td>
+                            <td>{{$proof->transaction_reference}}<small class="fee-review-small">{{$proof->submission_code}}</small></td>
                             <td>
                                 <span class="badge {{$proof->status==='pending'?'amber':($proof->status==='rejected'?'grey':'')}}">
                                     {{ ['pending' => 'Pending verification', 'verified' => 'Verified', 'rejected' => 'Rejected'][$proof->status] ?? 'Under review' }}
@@ -139,8 +139,15 @@
                                     <small class="fee-review-small">Reason: {{$proof->review_note}}</small>
                                 @endif
                             </td>
-                            <td><a href="{{route('fees.submissions.receipt',$proof->id)}}" target="_blank"
-                                rel="noopener noreferrer">View receipt</a></td>
+                            <td>
+                                @if($proof->status==='verified' && !$proof->receipt_path)
+                                    <span class="muted">Verified · proof removed</span>
+                                @elseif($proof->receipt_path)
+                                    <a href="{{route('fees.submissions.receipt',$proof->id)}}" target="_blank" rel="noopener noreferrer">View receipt</a>
+                                @else
+                                    <span class="muted">Unavailable</span>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>
