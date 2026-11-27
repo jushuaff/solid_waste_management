@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\{AuthController,PasswordResetController,ProfileController,DashboardController,
-    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController,IncidentMediaController};
+    ManagementController,ResidentGuideController,ReportController,ReportWorkflowController,NotificationController,LinisController,IncidentMediaController,FeeSettingsController,GarbageFeeController,FeeReceivingAccountController};
 use Illuminate\Support\Facades\Route;
 Route::get('/',fn()=>redirect()->route(auth()->check()?'dashboard':'login'));
 Route::middleware('guest')->group(function(){
@@ -16,6 +16,34 @@ Route::middleware('guest')->group(function(){
 Route::post('/logout',[AuthController::class,'logout'])->middleware('auth')->name('logout');
 Route::middleware(['auth','active'])->group(function(){
     Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
+
+    // Phase 2: role-scoped garbage-fee tracking and externally confirmed payments.
+    Route::get('/garbage-fees',[GarbageFeeController::class,'index'])
+        ->middleware('role:superadmin,admin,coordinator,resident')->name('fees.index');
+    Route::post('/garbage-fees/generate',[GarbageFeeController::class,'generate'])
+        ->middleware(['role:superadmin,admin','throttle:8,1'])->name('fees.generate');
+    Route::post('/garbage-fees/charges/{charge}/payments',[GarbageFeeController::class,'recordPayment'])
+        ->middleware(['role:superadmin,admin,coordinator','throttle:15,1'])->name('fees.payments.store');
+    Route::post('/garbage-fees/payments/{payment}/void',[GarbageFeeController::class,'voidPayment'])
+        ->middleware(['role:superadmin','throttle:6,1'])->name('fees.payments.void');
+
+    Route::get('/garbage-fees/settings',[FeeSettingsController::class,'index'])
+        ->middleware('role:superadmin')->name('fees.settings.index');
+    Route::post('/garbage-fees/settings/cities',[FeeSettingsController::class,'storeCity'])
+        ->middleware('role:superadmin')->name('fees.settings.cities.store');
+    Route::post('/garbage-fees/settings/cities/{city}/rates',[FeeSettingsController::class,'storeRate'])
+        ->middleware('role:superadmin')->name('fees.settings.rates.store');
+    Route::put('/garbage-fees/settings/cities/{city}/zones',[FeeSettingsController::class,'assignZones'])
+        ->middleware('role:superadmin')->name('fees.settings.zones.update');
+
+    Route::get('/garbage-fees/accounts',[FeeReceivingAccountController::class,'index'])
+        ->middleware('role:superadmin,admin')->name('fees.accounts.index');
+    Route::post('/garbage-fees/accounts',[FeeReceivingAccountController::class,'store'])
+        ->middleware(['role:superadmin,admin','throttle:10,1'])->name('fees.accounts.store');
+    Route::put('/garbage-fees/accounts/{account}',[FeeReceivingAccountController::class,'update'])
+        ->middleware(['role:superadmin,admin','throttle:10,1'])->name('fees.accounts.update');
+    Route::get('/garbage-fees/accounts/{account}/qr',[FeeReceivingAccountController::class,'qr'])
+        ->middleware('role:superadmin,admin,resident')->name('fees.accounts.qr');
 
     // MIT 104 LINIS — online-first inspection, household and MRF monitoring.
     Route::get('/linis/dashboard',[LinisController::class,'dashboard'])->name('linis.dashboard');
