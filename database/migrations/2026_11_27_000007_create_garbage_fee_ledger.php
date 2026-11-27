@@ -19,6 +19,12 @@ return new class extends Migration {
                 $collection->index('effective_month');
             });
         }
+        if(!$db->hasCollection('fee_receiving_accounts')){
+            $db->create('fee_receiving_accounts',function(Blueprint $collection){
+                $collection->index('city_id');
+                $collection->index('is_active');
+            });
+        }
         if(!$db->hasCollection('garbage_fee_charges')){
             $db->create('garbage_fee_charges',function(Blueprint $collection){
                 $collection->unique(['household_id','billing_month']);
