@@ -39,6 +39,11 @@
                 <span class="ico">₱</span> Garbage Fee Payments
             </a>
             @endif
+            @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','resident'],true))
+            <a class="navitem {{ request()->routeIs('fees.history.*')?'active':'' }}" href="{{route('fees.history.index')}}">
+                <span class="ico">▦</span> {{auth()->user()->role_code==='resident'?'My Payment Tracker':'Payment History'}}
+            </a>
+            @endif
             @if(in_array(auth()->user()->role_code,['superadmin','admin'],true))
             <a class="navitem {{ request()->routeIs('fees.accounts.*')?'active':'' }}" href="{{route('fees.accounts.index')}}">
                 <span class="ico">▣</span> Receiving Accounts
