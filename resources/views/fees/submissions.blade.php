@@ -58,10 +58,19 @@
                                 <p><strong>Receiving account name:</strong> {{$submission->account_name}}</p>
                                 <p><strong>Receiving account number:</strong> {{$submission->receivingAccount?->account_number??'Account details were updated; consult the original collection record.'}}</p>
                                 @if($submission->note)<p><strong>Resident's note:</strong> {{$submission->note}}</p>@endif
-                                <a class="btn outline small" target="_blank" rel="noopener noreferrer"
-                                    href="{{route('fees.submissions.receipt',$submission->id)}}">
-                                    View / download receipt
-                                </a>
+                                @if($submission->receipt_path)
+                                    <a class="btn outline small" target="_blank" rel="noopener noreferrer"
+                                        href="{{route('fees.submissions.receipt',$submission->id)}}">
+                                        View / download receipt
+                                    </a>
+                                    @if($submission->status==='verified')
+                                        <p class="muted">Previously verified proof retained; cleanup has not completed.</p>
+                                    @endif
+                                @elseif($submission->status==='verified')
+                                    <p class="muted">Verified record locked. Receipt removed; transaction reference retained.</p>
+                                @else
+                                    <p class="muted">Receipt unavailable.</p>
+                                @endif
                                 @if($submission->status==='pending')
                                     <p class="muted" style="margin-top:12px">Confirm that funds actually reached the approved bank or wallet account. Verify the reference, amount and date.</p>
                                     <form method="POST" action="{{route('fees.submissions.review',$submission->id)}}" class="fee-review-actions">
@@ -72,6 +81,11 @@
                                                 <option value="verify">Verify — credit household balance</option>
                                                 <option value="reject">Reject — request corrected proof</option>
                                             </select>
+                                        </label>
+                                        <label class="field">Reference shown on receipt <small>(required if verifying)</small>
+                                            <input class="form-control" name="confirmed_reference" minlength="5" maxlength="100"
+                                                value="{{$submission->transaction_reference}}" autocomplete="off">
+                                            <small class="hint">Check or correct this against the receipt and actual bank or wallet record. The file is deleted after verification; the confirmed reference is retained.</small>
                                         </label>
                                         <label class="field">Review note <small>(required if rejecting)</small>
                                             <textarea class="form-control" name="review_note" rows="2" maxlength="500"
