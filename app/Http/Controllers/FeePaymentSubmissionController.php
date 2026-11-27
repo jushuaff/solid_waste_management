@@ -111,6 +111,71 @@ class FeePaymentSubmissionController extends Controller
         ])->with('status','Receipt submitted for verification ('.$submission->submission_code.'). Your balance remains unpaid until staff confirm the transfer.');
     }
 
+    public function update(Request $request,string $submission)
+    {
+        $entry=FeePaymentSubmission::findOrFail($submission);
+        abort_unless($request->user()->role_code==='resident'
+            && (string)$entry->resident_user_id===(string)$request->user()->id,404);
+        $bill=$this->ownedCharge($request,(string)$entry->charge_id);
+        $data=$request->validate([
+            'amount'=>['required','regex:/^\d{1,7}(\.\d{1,2})?$/'],
+            'paid_on'=>['required','date','before_or_equal:today'],
+            'transaction_reference'=>['required','string','min:5','max:100'],
+            'receipt'=>['nullable','file','mimes:jpg,jpeg,png,webp,pdf','max:5120'],
+            'note'=>['nullable','string','max:400'],
+        ]);
+        $amount=FeeLedger::centavos($data['amount']);
+        $reference=mb_strtoupper(trim($data['transaction_reference']));
+        if($amount<1 || mb_strlen($reference)<5){
+            throw ValidationException::withMessages(['transaction_reference'=>'Enter a positive amount and valid transfer reference.']);
+        }
+        try{
+            Cache::lock('fee-transaction:'.$bill->id,15)->block(5,function()use($request,$entry,$bill,$data,$amount,$reference){
+                $current=FeePaymentSubmission::findOrFail($entry->id);
+                if($current->status!=='pending' || GarbageFeePayment::where('source_submission_id',(string)$current->id)->exists()){
+                    throw ValidationException::withMessages(['receipt'=>'This submission has already been reviewed or credited and cannot be edited.']);
+                }
+                $charge=GarbageFeeCharge::with('payments')->findOrFail($bill->id);
+                if($amount>FeeLedger::availableForSubmission($charge,(string)$current->id)){
+                    throw ValidationException::withMessages(['amount'=>'The amount exceeds the available balance after other pending receipts.']);
+                }
+                if(FeePaymentSubmission::where('city_id',(string)$charge->city_id)
+                    ->where('transaction_reference',$reference)->where('status','!=','rejected')->get()
+                    ->contains(fn($proof)=>(string)$proof->id!==(string)$current->id)
+                    || GarbageFeePayment::where('city_id',(string)$charge->city_id)
+                        ->where('external_reference',$reference)->where('status','recorded')->exists()){
+                    throw ValidationException::withMessages(['transaction_reference'=>'This transaction reference has already been submitted.']);
+                }
+                $oldPath=(string)$current->receipt_path;
+                $newPath=null;
+                if($request->hasFile('receipt')){
+                    $file=$request->file('receipt');
+                    $newPath=$file->store('fee-payment-proofs','local');
+                    if(!$newPath)throw ValidationException::withMessages(['receipt'=>'Could not store the replacement receipt.']);
+                    $current->receipt_path=$newPath;
+                    $current->receipt_name=mb_substr((string)$file->getClientOriginalName(),0,150);
+                    $current->receipt_mime=(string)$file->getMimeType();
+                    $current->receipt_size=(int)$file->getSize();
+                }
+                $current->amount_centavos=$amount;
+                $current->paid_on=$data['paid_on'];
+                $current->transaction_reference=$reference;
+                $current->note=$data['note']??null;
+                try{
+                    $current->save();
+                }catch(\Throwable $error){
+                    if($newPath)Storage::disk('local')->delete($newPath);
+                    throw $error;
+                }
+                if($newPath && $oldPath)Storage::disk('local')->delete($oldPath);
+            });
+        }catch(LockTimeoutException $error){
+            throw ValidationException::withMessages(['receipt'=>'Another payment update is being processed. Please retry.']);
+        }
+        return redirect()->route('fees.index',['month'=>$bill->billing_month])
+            ->with('status','Receipt updated. It remains pending staff verification.');
+    }
+
     public function index(Request $request)
     {
         $this->staff($request);
@@ -193,6 +258,9 @@ class FeePaymentSubmissionController extends Controller
                 }
                 $bill=GarbageFeeCharge::with(['payments','household'])->findOrFail($current->charge_id);
                 $record=null;
+                if($data['decision']==='reject' && GarbageFeePayment::where('source_submission_id',(string)$current->id)->exists()){
+                    throw ValidationException::withMessages(['decision'=>'A linked payment already exists. Reconcile the ledger before rejecting this submission.']);
+                }
                 if($data['decision']==='verify'){
                     if(!$current->receipt_path || !Storage::disk('local')->exists((string)$current->receipt_path)){
                         throw ValidationException::withMessages(['decision'=>'The uploaded receipt is unavailable. Do not verify until proof is available.']);
