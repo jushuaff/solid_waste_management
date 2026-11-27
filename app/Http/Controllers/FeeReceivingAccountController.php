@@ -5,7 +5,7 @@ use App\Models\{FeeCity,FeeReceivingAccount,GarbageFeeCharge,Household};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Str;
+use App\Services\NoticeService;
 
 class FeeReceivingAccountController extends Controller
 {
@@ -37,7 +37,7 @@ class FeeReceivingAccountController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request,NoticeService $notices)
     {
         $this->manager($request);
         $data=$this->validateAccount($request);
@@ -73,10 +73,13 @@ class FeeReceivingAccountController extends Controller
             if($qrPath)Storage::disk('local')->delete($qrPath);
             throw $e;
         }
+        if($request->boolean('is_active',true)){
+            $notices->paymentInstructionsChanged((string)$data['city_id']);
+        }
         return redirect()->route('fees.accounts.index')->with('status','Receiving account saved. Residents in this city can view its active payment instructions.');
     }
 
-    public function update(Request $request,string $account)
+    public function update(Request $request,string $account,NoticeService $notices)
     {
         $this->manager($request);
         $entry=FeeReceivingAccount::findOrFail($account);
@@ -97,6 +100,8 @@ class FeeReceivingAccountController extends Controller
             if(!$newQr)throw ValidationException::withMessages(['qr_code'=>'Could not save the QR code securely.']);
         }
         $oldQr=$entry->qr_path;
+        $previousCityId=(string)$entry->city_id;
+        $changed=false;
         try{
             $previous=[
                 'city_id'=>$entry->city_id,'method'=>$entry->method,
@@ -117,6 +122,7 @@ class FeeReceivingAccountController extends Controller
             if($newQr)$entry->qr_path=$newQr;
             elseif($request->boolean('remove_qr'))$entry->qr_path=null;
             if($entry->isDirty()){
+                $changed=true;
                 $history=(array)($entry->change_history??[]);
                 $history[]=['actor_id'=>(string)$request->user()->id,'at'=>now()->toIso8601String(),'before'=>$previous];
                 $entry->change_history=$history;
@@ -127,7 +133,13 @@ class FeeReceivingAccountController extends Controller
             if($newQr)Storage::disk('local')->delete($newQr);
             throw $e;
         }
-        // Old files are retained so account updates do not destroy previous QR evidence.
+        // Old QR files are retained outside the public webroot for audit purposes.
+        if($changed){
+            $notices->paymentInstructionsChanged((string)$entry->city_id);
+            if($previousCityId!==(string)$entry->city_id){
+                $notices->paymentInstructionsChanged($previousCityId);
+            }
+        }
         return redirect()->route('fees.accounts.index')->with('status','Receiving account updated. Earlier payment records were not changed.');
     }
 
