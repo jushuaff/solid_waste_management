@@ -91,6 +91,12 @@ The in-app notification system now sends relevant notices for **new and edited i
 
 See the [role-by-role notification routing and verification guide](docs/NOTIFICATION_EVENTS.md) and [the shared development checklist](MIT103-104.MD). Live notification delivery and MongoDB pagination need acceptance testing.
 
+## Resident online receipt uploads and payment verification
+
+Residents can now submit proof of an external bank/e-wallet transfer from **Garbage Fee Payments**, choosing a billed month and uploaded JPG/PNG/WebP/PDF receipt. Each submission remains **Pending Verification** until an authorized **admin or superadmin** independently checks funds and approves it from **Verify Online Payments**. Rejected submissions include a reason and may be resubmitted. Pending proof does **not** reduce the monthly ledger balance; staff may separately record verified **cash-only** office collections. Proof images/PDFs are private. See [online transfer receipt workflow](docs/GARBAGE_FEE_NOTIFICATIONS_TRACKER.md).
+
+**Setup:** Run `php artisan migrate` after pulling; this adds `fee_payment_submissions` without deleting existing financial history. Existing billing-month charges, receiving-account configuration, and household-resident linking are prerequisites for seeing eligible payment options.
+
 ## Garbage-fee reminders and month-by-month history
 
 **Payment History** (admins/coordinators) and **My Payment Tracker** (residents) display all generated billing months with Paid, Partial and Unpaid statuses, outstanding amounts and month filters. Residents can see only their linked households; administrators can inspect household arrears across months.
