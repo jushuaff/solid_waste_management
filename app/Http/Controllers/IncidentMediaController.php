@@ -26,7 +26,6 @@ class IncidentMediaController extends Controller
             'Cache-Control'=>'private, no-store, max-age=0',
             'Pragma'=>'no-cache',
             'X-Content-Type-Options'=>'nosniff',
-            'Content-Security-Policy'=>"default-src 'none'; sandbox",
         ];
         if($request->boolean('download')) {
             return $disk->download($item->storage_path,$item->original_name,$headers);
