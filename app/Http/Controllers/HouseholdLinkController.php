@@ -29,7 +29,15 @@ class HouseholdLinkController extends Controller
             $hasPending=HouseholdLinkRequest::where('resident_user_id',(string)$request->user()->id)
                 ->where('status','pending')->exists();
         }
-        return view('fees.household-links',compact('requests','staff','status','hasLink','hasPending'));
+        $householdsByZone=collect();
+        if($staff){
+            $zoneIds=$requests->getCollection()->pluck('zone_id')->filter()->map(fn($id)=>(string)$id)->unique()->all();
+            if($zoneIds){
+                $householdsByZone=Household::whereIn('zone_id',$zoneIds)->where('is_active',true)
+                    ->whereNull('archived_at')->orderBy('reference')->get()->groupBy('zone_id');
+            }
+        }
+        return view('fees.household-links',compact('requests','staff','status','hasLink','hasPending','householdsByZone'));
     }
 
     public function store(Request $request,NoticeService $notices)
@@ -73,7 +81,10 @@ class HouseholdLinkController extends Controller
         abort_unless(in_array($request->user()->role_code,['admin','superadmin'],true),403);
         $data=$request->validate([
             'decision'=>['required','in:approve,reject'],
-            'household_reference'=>['required_if:decision,approve','nullable','string','max:100'],
+            'link_mode'=>['required_if:decision,approve','nullable','in:existing,new'],
+            'household_id'=>['nullable','string','max:64'],
+            'household_reference'=>['nullable','string','max:100'],
+            'household_location'=>['nullable','string','max:250'],
             'reason'=>['required_if:decision,reject','nullable','string','max:500'],
             'identity_confirmed'=>['nullable','boolean'],
         ]);
@@ -97,14 +108,50 @@ class HouseholdLinkController extends Controller
                             || (string)$resident->zone_id!==(string)$current->zone_id){
                             throw ValidationException::withMessages(['decision'=>'The resident account or zone has changed. Reject and request a new submission.']);
                         }
-                        $matches=Household::where('zone_id',(string)$current->zone_id)
-                            ->where('reference',trim($data['household_reference']))
-                            ->where('is_active',true)->whereNull('archived_at')->get();
-                        if($matches->count()!==1){
-                            throw ValidationException::withMessages(['household_reference'=>'Select an existing active, unique household reference in this zone. Create the household in the registry first if needed.']);
+                        $zone=Zone::find((string)$current->zone_id);
+                        if(!$zone || !$zone->is_active){
+                            throw ValidationException::withMessages(['decision'=>'This collection zone is not active. Verify the zone before approving.']);
                         }
-                        $household=$matches->first();
                         $residentId=(string)$resident->id;
+                        $household=null;
+                        if($data['link_mode']==='new'){
+                            $reference=trim($data['household_reference']??'');
+                            $location=trim($data['household_location']??'');
+                            if($reference==='' || mb_strlen($location)<5){
+                                throw ValidationException::withMessages(['household_reference'=>'Enter a verified household reference and address to create a new registry record.']);
+                            }
+                            $household=Cache::lock('household-registry-zone:'.$zone->id,20)->block(5,
+                                function()use($zone,$reference,$location,$residentId,$current,$request){
+                                    // Do not create a second record if a reference or exact address is already registered.
+                                    $existing=Household::where('zone_id',(string)$zone->id)->get()
+                                        ->filter(fn($h)=>mb_strtolower(trim((string)$h->reference))===mb_strtolower($reference)
+                                            || mb_strtolower(trim((string)$h->location_description))===mb_strtolower($location));
+                                    if($existing->isNotEmpty()){
+                                        // Recover a previously created household if the request status write failed.
+                                        if($existing->count()===1 && (string)$existing->first()->link_request_id===(string)$current->id
+                                            && (string)$existing->first()->resident_user_id===$residentId
+                                            && $existing->first()->is_active && !$existing->first()->archived_at){
+                                            return $existing->first();
+                                        }
+                                        throw ValidationException::withMessages(['household_reference'=>'A matching household reference or address already exists in this zone. Select the existing record or resolve the duplicate in Household Registry.']);
+                                    }
+                                    if(Household::where('resident_user_id',$residentId)->where('is_active',true)->whereNull('archived_at')->exists()){
+                                        throw ValidationException::withMessages(['household_reference'=>'This resident already has an active household link.']);
+                                    }
+                                    return Household::create([
+                                        'zone_id'=>(string)$zone->id,'reference'=>$reference,
+                                        'location_description'=>$location,'resident_user_id'=>$residentId,
+                                        'is_active'=>true,'link_request_id'=>(string)$current->id,
+                                        'created_by'=>(string)$request->user()->id,'change_history'=>[],
+                                    ]);
+                                });
+                        }else{
+                            $household=Household::find($data['household_id']??'');
+                            if(!$household || (string)$household->zone_id!==(string)$zone->id
+                                || !$household->is_active || $household->archived_at){
+                                throw ValidationException::withMessages(['household_id'=>'Select an active household in the resident’s collection zone.']);
+                            }
+                        }
                         if($household->resident_user_id && (string)$household->resident_user_id!==$residentId){
                             throw ValidationException::withMessages(['household_reference'=>'This household is already linked to another account. Resolve ownership in the registry first.']);
                         }
@@ -117,7 +164,7 @@ class HouseholdLinkController extends Controller
                             $updated=Household::whereKey($household->id)->where('zone_id',(string)$current->zone_id)
                                 ->where('is_active',true)->whereNull('archived_at')
                                 ->where(function($q){$q->whereNull('resident_user_id')->orWhere('resident_user_id','');})
-                                ->update(['resident_user_id'=>$residentId]);
+                                ->update(['resident_user_id'=>$residentId,'linked_by'=>(string)$request->user()->id,'linked_at'=>now()]);
                             if(!$updated){
                                 throw ValidationException::withMessages(['household_reference'=>'The household changed while reviewing. Reload and check its owner.']);
                             }
