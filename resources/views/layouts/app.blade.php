@@ -16,7 +16,9 @@
             <a class="navitem {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="ico">▦</span> Dashboard</a>
             <a class="navitem {{ request()->routeIs('schedules.*') ? 'active' : '' }}" href="{{ route('schedules.index') }}"><span class="ico">▣</span> Collection Schedules</a>
             <a class="navitem {{ request()->routeIs('rules.*') ? 'active' : '' }}" href="{{ route('rules.index') }}"><span class="ico">☷</span> Rules &amp; Guidelines</a>
+            @if(auth()->user()->role_code!=='eco_aide')
             <a class="navitem {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}"><span class="ico">◎</span> Reports &amp; Tracking</a>
+            @endif
             @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','eco_aide','crew'],true))
                 <div class="navHead">LINIS · ECOLOGICAL MONITORING</div>
                 @if(in_array(auth()->user()->role_code,['superadmin','admin','coordinator','eco_aide'],true))
