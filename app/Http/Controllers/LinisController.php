@@ -2,7 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Household, PickupInspection, MrfWeighIn, Zone, WasteCategory, User};
-use App\Services\LinisMetrics;
+use App\Services\{LinisMetrics,ReportPdf};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -215,13 +215,13 @@ class LinisController extends Controller
         $results=$metrics->forPeriod($request->user(),$from,$to);
         return view('linis.dashboard',compact('results','month','from','to'));
     }
-    public function monthlyReport(Request $request,LinisMetrics $metrics)
+    public function monthlyReport(Request $request,LinisMetrics $metrics,ReportPdf $pdf)
     {
         abort_unless(in_array($request->user()->role_code,['superadmin','admin','coordinator'],true),403);
         $month=(string)$request->query('month',now()->format('Y-m'));
         abort_unless(preg_match('/^\d{4}-(0[1-9]|1[0-2])$/',$month),422,'Invalid month.');
         $from=\Carbon\Carbon::createFromFormat('!Y-m',$month)->startOfMonth();$to=$from->copy()->endOfMonth();
         $results=$metrics->forPeriod($request->user(),$from,$to);
-        return view('linis.print-monthly',compact('results','month','from','to'));
+        return $pdf->respond('linis.print-monthly',compact('results','month','from','to'),'linis-monthly-monitoring-'.$month.'.pdf',$request->boolean('download'),'landscape');
     }
 }
