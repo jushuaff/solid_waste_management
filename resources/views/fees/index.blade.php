@@ -133,7 +133,7 @@
                             <td>{{$proof->submission_code}}</td>
                             <td>
                                 <span class="badge {{$proof->status==='pending'?'amber':($proof->status==='rejected'?'grey':'')}}">
-                                    {{match($proof->status){'pending'=>'Pending verification','verified'=>'Verified','rejected'=>'Rejected',default=>'Under review'}}}
+                                    {{ ['pending' => 'Pending verification', 'verified' => 'Verified', 'rejected' => 'Rejected'][$proof->status] ?? 'Under review' }}
                                 </span>
                                 @if($proof->status==='rejected' && $proof->review_note)
                                     <small class="fee-review-small">Reason: {{$proof->review_note}}</small>
