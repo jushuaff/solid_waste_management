@@ -83,6 +83,14 @@ Incident submissions now accept **up to 10 photos totaling 10 MiB** and **up to 
 
 Shared form styles now use normal-size checkboxes, aligned month/date filters and responsive layouts. Development-language callouts have been removed from user-facing pages. Existing **fictional development records** are still sample data, not evidence of actual field operations. With `SWM_DEMO_SEED=true` on a local/testing installation, rerunning `php artisan db:seed --class=DemoDataSeeder` updates only known seed-generated placeholder labels, preserving existing record IDs and manually changed values. Never enable this seeder on a production environment.
 
+## Sortable tables and role-aware notifications
+
+All interactive data tables (management records, incident reports, household registry, eco-aide inspections, MRF weigh-ins and the compliance dashboard) have clickable ascending/descending column headers. Sorting preserves filters, searches and pagination, and excludes the Actions column. This is server-side for basic MongoDB columns; related-name ordering uses filtered-set sorting before pagination. No npm changes are needed.
+
+The in-app notification system now sends relevant notices for **new and edited incident reports, assignments/reassignments, incident status changes, publication/revision/withdrawal of schedules and rules, non-segregated inspections and corrections to MRF entries**. Residents and assigned-zone staff only receive notices appropriate to their role. A dot beside Notifications and the header bell indicates unread notices; opening a notification marks it read. The online-first version refreshes notices on page requests, without WebSockets.
+
+See the [role-by-role notification routing and verification guide](docs/NOTIFICATION_EVENTS.md) and [the shared development checklist](MIT103-104.MD). Live notification delivery and MongoDB pagination need acceptance testing.
+
 ## Application modules
 
 | Module | What works in the source |
